@@ -18,7 +18,8 @@ public class Recepcion {
     private Vehiculo vehiculo;
 
     @Column(name = "fecha_ingreso", nullable = false)
-    @Builder.Default`r`nprivate LocalDateTime fechaIngreso = LocalDateTime.now();
+    @Builder.Default
+    private LocalDateTime fechaIngreso = LocalDateTime.now();
 
     @Column(name = "problema_reportado", nullable = false, columnDefinition = "TEXT")
     private String problemaReportado;
@@ -26,7 +27,7 @@ public class Recepcion {
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    @Builder.Default`r`nprivate EstadoRecepcion estado = EstadoRecepcion.PENDIENTE;
+    private EstadoRecepcion estado = EstadoRecepcion.PENDIENTE;
 
     @Column(name = "nivel_combustible", length = 20)
     private String nivelCombustible;

@@ -43,7 +43,8 @@ public class ComprobanteDetalle {
     private BigDecimal precioUnitario;
 
     @Column(name = "tipo_afectacion", nullable = false, length = 2)
-    @Builder.Default`r`nprivate String tipoAfectacion = "10"; // 10 = gravado, operación onerosa
+    @Builder.Default
+    private String tipoAfectacion = "10"; // 10 = gravado, operación onerosa
 
     @Column(name = "valor_venta", nullable = false, precision = 12, scale = 2)
     private BigDecimal valorVenta;

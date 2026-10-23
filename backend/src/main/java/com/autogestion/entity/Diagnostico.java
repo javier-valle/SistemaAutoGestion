@@ -25,5 +25,6 @@ public class Diagnostico {
     private String descripcion;
 
     @Column(nullable = false)
-    @Builder.Default`r`nprivate LocalDateTime fecha = LocalDateTime.now();
+    @Builder.Default
+    private LocalDateTime fecha = LocalDateTime.now();
 }
