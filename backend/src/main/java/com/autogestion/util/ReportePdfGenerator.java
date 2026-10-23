@@ -18,8 +18,8 @@ public final class ReportePdfGenerator {
     public static byte[] generar(List<Seccion> secciones, String tituloGeneral,
                                   LocalDate desde, LocalDate hasta, String rol) {
         try (PDDocument doc = new PDDocument()) {
-            PDType1Font fontBold = PDType1Font.load(doc, org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName.HELVETICA_BOLD);
-            PDType1Font fontNormal = PDType1Font.load(doc, org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName.HELVETICA);
+            PDType1Font fontBold = org.apache.pdfbox.pdmodel.font.Standard14Fonts.getFont(org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName.HELVETICA_BOLD);
+            PDType1Font fontNormal = org.apache.pdfbox.pdmodel.font.Standard14Fonts.getFont(org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName.HELVETICA);
 
             for (Seccion sec : secciones) {
                 PDPage page = new PDPage();
