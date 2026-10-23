@@ -130,15 +130,11 @@ public final class ReporteExcelGenerator {
                                 cell.setCellStyle(totalStyle);
                             }
                         } else if (val instanceof java.time.LocalDate ld) {
-                            Cell cell = row.createCell(i);
                             cell.setCellValue(java.util.Date.from(ld.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()));
                             cell.setCellStyle(dateCellStyle);
-                            continue;
                         } else if (val instanceof java.time.LocalDateTime ldt) {
-                            Cell cell = row.createCell(i);
                             cell.setCellValue(java.util.Date.from(ldt.atZone(java.time.ZoneId.systemDefault()).toInstant()));
                             cell.setCellStyle(dateCellStyle);
-                            continue;
                         } else {
                             cell.setCellValue(val.toString());
                             cell.setCellStyle(bodyStyle);
