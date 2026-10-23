@@ -20,6 +20,10 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 | Version | Fecha | Lo destacado |
 | :-- | :-- | :-- |
+| [2.9.0](#-290---2026-10-22) | 2026-10-22 | 🔧 Módulo Reportes refactorizado: 13 bugs críticos corregidos, PDFBox, Excel con freeze/autofilter, rango RangoFechas, seguridad por rol, XSS escapado, mecanismo por id |
+| [2.8.0](#-280---2026-10-03) | 2026-10-03 | 🙋 Género del cliente + placas y persona de escala en el visor 3D |
+| [2.7.0](#-270---2026-10-03) | 2026-10-03 | 🏎️ Renders de vehículos rediseñados (alta fidelidad) + visor 3D interactivo |
+| [2.6.0](#-260---2026-10-02) | 2026-10-02 | 🚗 Preview de vehículos: marcas con logo, render y modelo manual |
 | [2.5.0](#-250---2026-10-02) | 2026-10-02 | ✨ Jornada visual + SOLID + fixes de comprobantes (todo el día en una entrada) |
 | [1.4.2](#-142---2026-10-01) | 2026-10-01 | 📄 Descarga PDF real + impresion sin encabezados del navegador |
 | [1.4.1](#-141---2026-10-01) | 2026-10-01 | 🎫 Impresion fiel a pantalla + descarga de constancia |
@@ -31,6 +35,88 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 | [1.0.0](#-100---2026-09-14) | 2026-09-14 | 🐛 Correccion de errores fundacionales (DTOs, pagos, cache) |
 
 <img src="./readme-assets/divider.svg" width="100%" height="6" alt="" />
+
+## 🙋 2.8.0 — 2026-10-03
+
+### Género del cliente + placa y persona de escala en el visor 3D
+
+- **Género opcional del cliente:** nuevo campo `genero`
+  (`MASCULINO` / `FEMENINO` / `OTROS`, o sin especificar) con enum propio
+  (`Genero`), validación en `ClienteRequest`, migración
+  `V4__cliente_genero.sql` (idempotente, con CHECK, PG16 + H2) y presencia
+  en `GET /clientes/{id}/resumen`. Selector en el formulario de
+  `clientes.html` y en el paso 1 del wizard de `recepcion.html` (alta con
+  `clienteGenero`); la identidad del cliente sigue siendo (tipoDocumento,
+  documento). Semilla demo con género asignado.
+- **Placas delantera y trasera en 3D:** el visor dibuja ahora la placa real
+  del vehículo (canvas con el texto de la placa, estilo de la app) en el
+  parachoques frontal y en el trasero, calculando la posición sobre el
+  contorno real de la carrocería. Si no hay placa muestra `___-___`.
+- **Mini persona junto a la puerta:** figura humana de escala (altura ≈ 1.15
+  × la del auto) junto a la puerta del conductor, cuyo diseño cambia con el
+  género del cliente: masculino (hombros anchos, pelo corto, polo azul),
+  femenino (hombros estrechos, pelo largo, top malva) y otros/sin
+  especificar (complexión media, pelo medio, verde). El género viaja del
+  formulario → `data-genero` del botón 3D → `vehAbrir3D(v)`.
+- **Vista inicial:** el visor abre en frontal 3/4 del lado del conductor
+  para que se vean la placa y la persona de entrada.
+- **Verificado:** `mvn test` 49/49 en verde (2 tests nuevos de género:
+  guardado/resumen y parseo) + `node --check` + navegador: 3 variantes de
+  género montadas, placa delantera/trasera visibles y 12 aperturas/cierres
+  seguidos sin fallos ni fugas.
+
+## 🏎️ 2.7.0 — 2026-10-03
+
+### Renders rediseñados con fidelidad real + visor 3D interactivo
+
+- **`vehiculos.js` reescrito:** las 4 siluetas genéricas pasan a
+  carrocerías parametrizadas por modelo real (sedán, hatch, SUV, pickup y
+  van/vagoneta) con tabla de modelos (Hilux, Tucson, Sportage, HR-V,
+  Picanto, Yaris, Urvan, Hiace…), proporciones propias por segmento,
+  pintura metálica con degradados, faros y parrilla recortados a la
+  silueta, llantas con pinza de freno, cintura lateral, líneas de puerta,
+  espejos, manijas y sombra de contacto. Mismo API de siempre
+  (`vehPreviewHTML`, `vehMiniHTML`, `vehPerfil`, guards intactos).
+- **Nuevo visor 3D (`vehiculo3d.js` + three.js r160 local en
+  `js/vendor/`, sin CDN):** botón "Ver en 3D" en previews y minis. La
+  MISMA silueta 2D se extruye con taper de techo y morro, así el 3D
+  replica las proporciones del render lateral exactas. Pintura PBR con
+  clearcoat, cristales, faros divididos a los lados, parrilla, faro
+  trasero continuo tipo Tucson, llantas con radios, entorno de estudio
+  (PMREM), sombras suaves y sombra de contacto.
+- **Controles:** arrastrar con inercia, rueda/pellizco para zoom,
+  flechas/±, reset, auto-rotación tras 2.6 s (apagable; off en móvil),
+  táctil completo y ESC para cerrar. Render bajo demanda con pausa por
+  visibilidad/pestaña, DPR limitado (1.5 en móvil, 1.25 con ≤4 GB RAM).
+- **Ciclo de vida sin fugas:** el contexto WebGL, la escena base y el
+  entorno se reutilizan entre aperturas (crear un contexto por apertura
+  colgaba los frames en aperturas rápidas); al cerrar se liberan
+  geometrías, materiales y texturas del vehículo y se desconectan
+  listeners, observers y rAF. Verificado con 12 aperturas/cierres
+  seguidos: la escena no crece ni acumula contextos.
+- **Compatibilidad:** sin WebGL o si falla el import de three, el botón
+  3D no aparece o cae al render SVG con aviso (fallback). Integrado en
+  `recepcion.html` y `clientes.html` (`?v=20261003`), responsive hasta
+  390 px y `prefers-reduced-motion` respetado. Estilos en las secciones
+  19/20 de `panels-premium.css`.
+
+## 🚗 2.6.0 — 2026-10-02
+
+### Preview de vehículos con marca, logo y render
+
+- **Nuevo `js/vehiculos.js`:** catálogo de 12 marcas (las más vistas en
+  talleres del Perú) con emblema propio, color y carrocería; 4 renders SVG
+  laterales (sedán, SUV, pickup, hatch) con llantas, vidrios, luces, placa
+  y emblema en la puerta. Marcas libres usan color estable por hash de placa.
+- **Recepción, paso Vehículo:** la marca ahora es dropdown (Toyota, Hyundai,
+  Kia, Nissan, Honda, Chevrolet, Volkswagen, Suzuki, Mazda, Ford, Mitsubishi
+  + Otra marca con texto libre) y el modelo sigue manual; debajo hay un
+  **preview en vivo** (render + logo + placa estilo Perú + modelo/año) que se
+  arma mientras escribes. Sin cambios de backend: marca/modelo ya eran texto.
+- **Donde más se ve:** logo en las tarjetas de vehículo del wizard, preview
+  completo en el paso de confirmación y minis con render en la ficha del
+  cliente. Todo con guards: si el script no carga, los formularios siguen
+  funcionando.
 
 ## ✨ 2.5.0 — 2026-10-02
 
