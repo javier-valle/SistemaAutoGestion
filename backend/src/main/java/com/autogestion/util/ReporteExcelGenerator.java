@@ -161,6 +161,10 @@ public final class ReporteExcelGenerator {
                 sh.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(r - 1, r - 1, 0, sec.encabezados != null ? sec.encabezados.length - 1 : 3));
             }
 
+            if (sec.encabezados != null && sec.encabezados.length > 0) {
+                sh.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(1, 1 + (sec.datos != null ? sec.datos.size() : 0), 0, sec.encabezados.length - 1));
+                sh.createFreezePane(0, 2);
+            }
             for (int i = 0; i < (sec.encabezados != null ? sec.encabezados.length : 4); i++) {
                 sh.autoSizeColumn(i);
             }
