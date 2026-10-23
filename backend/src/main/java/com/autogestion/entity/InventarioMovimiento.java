@@ -58,5 +58,5 @@ public class InventarioMovimiento {
     private Integer stockDespues;
 
     @Column(nullable = false)
-    private LocalDateTime fecha = LocalDateTime.now();
+    @Builder.Default`r`nprivate LocalDateTime fecha = LocalDateTime.now();
 }

@@ -21,5 +21,5 @@ public class SerieComprobante {
     private TipoComprobante tipo;
 
     @Column(name = "ultimo_numero", nullable = false)
-    private Integer ultimoNumero = 0;
+    @Builder.Default`r`nprivate Integer ultimoNumero = 0;
 }

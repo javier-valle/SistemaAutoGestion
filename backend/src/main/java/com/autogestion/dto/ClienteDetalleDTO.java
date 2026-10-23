@@ -17,6 +17,8 @@ public class ClienteDetalleDTO {
     private String telefono;
     private String email;
     private String direccion;
+    /** MASCULINO, FEMENINO u OTROS (null = sin especificar). */
+    private String genero;
     private Boolean activo;
     private Long visitas;
     private LocalDateTime ultimaVisita;

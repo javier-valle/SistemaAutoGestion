@@ -18,6 +18,7 @@ public class Cotizacion {
     @JoinColumn(name = "diagnostico_id", nullable = false)
     private Diagnostico diagnostico;
 
+    @Builder.Default
     @Column(nullable = false)
     private BigDecimal total = BigDecimal.ZERO;
 
@@ -26,6 +27,7 @@ public class Cotizacion {
     @Column(nullable = false, length = 20)
     private EstadoCotizacion estado = EstadoCotizacion.PENDIENTE;
 
+    @Builder.Default
     @Column(nullable = false)
     private LocalDateTime fecha = LocalDateTime.now();
 }

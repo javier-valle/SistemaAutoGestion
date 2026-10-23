@@ -190,11 +190,27 @@
                             <p class="ag-field-hint">La serie se asigna sola: <b id="seriePreview">B001-000001</b> · Comprobante interno, no es facturacion electronica SUNAT.</p>
                         </div>
                         <div class="pay-pane" data-pane="2" hidden>
-                            <div class="ag-form-group">
-                                <label class="ag-form-label" for="pagoDoc" id="pagoDocLabel">DNI (8 digitos)</label>
-                                <input class="ag-form-control" id="pagoDoc" placeholder="Ej. 12345678" maxlength="11" inputmode="numeric">
-                                <p class="ag-field-hint" id="pagoDocHint">Sin puntos ni guiones.</p>
+                            <div class="ag-grid ag-grid-2">
+                                <div class="ag-form-group" style="margin:0;">
+                                    <label class="ag-form-label" for="pagoTipoDoc">Tipo de documento</label>
+                                    <select class="ag-form-control" id="pagoTipoDoc">
+                                        <option value="DNI">DNI (8 dígitos)</option>
+                                        <option value="RUC">RUC (11 dígitos)</option>
+                                        <option value="CE">CE</option>
+                                        <option value="PASAPORTE">Pasaporte</option>
+                                    </select>
+                                </div>
+                                <div class="ag-form-group" style="margin:0;">
+                                    <label class="ag-form-label" for="pagoDoc" id="pagoDocLabel">DNI (8 digitos)</label>
+                                    <input class="ag-form-control" id="pagoDoc" placeholder="Ej. 12345678" maxlength="12" inputmode="text">
+                                    <p class="ag-field-hint" id="pagoDocHint">Sin puntos ni guiones.</p>
+                                </div>
                             </div>
+                            <div class="ag-d-flex ag-gap-3 ag-mt-2 ag-flex-wrap">
+                                <button type="button" class="ag-btn ag-btn-outline ag-btn-sm" id="btnRucPrueba" onclick="rellenarRucPrueba()" hidden>Rellenar RUC válido de prueba</button>
+                                <button type="button" class="ag-btn ag-btn-outline ag-btn-sm" id="btnRucDesdeDni" onclick="generarRucDesdeDni()" hidden>Generar RUC desde el DNI (10 + DNI + DV)</button>
+                            </div>
+                            <p class="ag-field-hint" id="rucAyuda" hidden style="margin-top:0.4rem;">El RUC de persona natural es <b>10 + DNI (8) + dígito verificador</b> (ej. DNI 41369852 → RUC 10413698524). No es el DNI + 3 números al azar: esos casi siempre fallan el dígito de control SUNAT y la factura se rechaza.</p>
                             <div class="ag-form-group">
                                 <label class="ag-form-label" for="pagoNombre" id="pagoNombreLabel">Nombre del cliente</label>
                                 <input class="ag-form-control" id="pagoNombre" placeholder="Nombre y apellido">
@@ -285,7 +301,7 @@
         let pagoActual = null;      // { otId }
         let previewData = null;     // totales + adquirente sugerido, todo del servidor
         const SERIES = { BOLETA: 'B001', FACTURA: 'F001' };
-        const CAMPO_A_INPUT = { numDoc: 'pagoDoc', nombre: 'pagoNombre', direccion: 'pagoDireccion', metodoPago: 'pagoMetodo', tipo: null, ordenTrabajoId: null };
+        const CAMPO_A_INPUT = { numDoc: 'pagoDoc', tipoDoc: 'pagoTipoDoc', nombre: 'pagoNombre', direccion: 'pagoDireccion', metodoPago: 'pagoMetodo', tipo: null, ordenTrabajoId: null };
 
         function debounce(fn, ms) {
             let t = null;
@@ -374,6 +390,7 @@
         function collectPay() {
             return {
                 tipo: tipoCompSel(),
+                tipoDoc: document.getElementById('pagoTipoDoc').value,
                 doc: document.getElementById('pagoDoc').value.trim(),
                 nombre: document.getElementById('pagoNombre').value.trim(),
                 direccion: document.getElementById('pagoDireccion').value.trim(),
@@ -383,30 +400,107 @@
         function onTipoCompChange() {
             const tipo = tipoCompSel();
             const isFac = tipo === 'FACTURA';
-            document.getElementById('pagoDirGroup').hidden = !isFac;
-            document.getElementById('pagoDocLabel').textContent = isFac ? 'RUC (11 digitos)' : 'DNI (8 digitos)';
-            document.getElementById('pagoNombreLabel').textContent = isFac ? 'Razon social' : 'Nombre del cliente';
-            document.getElementById('pagoDoc').placeholder = isFac ? 'Ej. 20123456786' : 'Ej. 45123698';
-            document.getElementById('pagoDocHint').textContent = isFac ? 'RUC de 11 digitos, sin puntos ni guiones.' : 'DNI de 8 digitos, sin puntos ni guiones.';
+            const selDoc = document.getElementById('pagoTipoDoc');
+            const curDoc = document.getElementById('pagoDoc').value.trim();
+            const soloDig = curDoc.replace(/\D/g, '');
+            if (isFac) {
+                // Factura exige RUC: preseleccionar RUC y no arrastrar un DNI de 8 dígitos
+                selDoc.value = 'RUC';
+                if (soloDig.length === 8) document.getElementById('pagoDoc').value = '';
+            } else {
+                // Boleta acepta DNI/CE/PASAPORTE/RUC: si el valor actual parece RUC válido, marcar RUC
+                if (soloDig.length === 11) selDoc.value = 'RUC';
+                else if (selDoc.value === 'RUC' && soloDig.length !== 11) selDoc.value = 'DNI';
+            }
+            syncDocUI();
             document.getElementById('seriePreview').textContent = `${SERIES[tipo]} - número al emitir`;
             if (previewData) previewData.serie = SERIES[tipo];
             validarDocEnVivo();
             updatePayPreview();
         }
-        /* Validación en vivo contra el backend (la misma regla que acepta la emisión) */
+        function syncDocUI() {
+            const td = document.getElementById('pagoTipoDoc').value;
+            const isFac = tipoCompSel() === 'FACTURA';
+            const docInput = document.getElementById('pagoDoc');
+            const conf = {
+                DNI: { label: 'DNI (8 digitos)', ph: 'Ej. 45123698', hint: 'DNI de 8 digitos, sin puntos ni guiones.', max: '8', mode: 'numeric' },
+                RUC: { label: 'RUC (11 digitos)', ph: 'Ej. 20123456786', hint: 'RUC de 11 digitos con dígito verificador válido.', max: '11', mode: 'numeric' },
+                CE: { label: 'CE (9 a 12 caracteres)', ph: 'Ej. 001234567', hint: 'Carné de extranjería: 9 a 12 caracteres.', max: '12', mode: 'text' },
+                PASAPORTE: { label: 'Pasaporte', ph: 'Ej. AB123456', hint: 'Pasaporte: letras y números.', max: '12', mode: 'text' }
+            }[td] || {};
+            document.getElementById('pagoDocLabel').textContent = conf.label || 'Documento';
+            docInput.placeholder = conf.ph || '';
+            docInput.maxLength = conf.max || 12;
+            docInput.inputMode = conf.mode || 'text';
+            if (!document.getElementById('pagoDoc').value) {
+                document.getElementById('pagoDocHint').textContent = conf.hint || '';
+                document.getElementById('pagoDocHint').style.color = '';
+            }
+            document.getElementById('pagoNombreLabel').textContent = isFac ? 'Razon social' : 'Nombre del cliente';
+            document.getElementById('pagoDirGroup').hidden = !isFac && td !== 'RUC';
+            document.getElementById('btnRucPrueba').hidden = !(isFac || td === 'RUC');
+            const showRucHelp = isFac || td === 'RUC';
+            document.getElementById('btnRucDesdeDni').hidden = !showRucHelp;
+            document.getElementById('rucAyuda').hidden = !showRucHelp;
+        }
+        /* RUC persona natural = 10 + DNI(8) + DV (mismo algoritmo SUNAT del backend).
+           No vale inventar "DNI + 3 números": el último dígito es de control. */
+        function rucDV10(base10) {
+            const pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+            let suma = 0;
+            for (let i = 0; i < 10; i++) suma += (base10.charCodeAt(i) - 48) * pesos[i];
+            let dv = 11 - (suma % 11);
+            if (dv === 10) dv = 0;
+            else if (dv === 11) dv = 1;
+            return dv;
+        }
+        window.generarRucDesdeDni = function() {
+            // Fuente del DNI: lo escrito (si son 8) o el documento del cliente del preview
+            let dni = (document.getElementById('pagoDoc').value || '').replace(/\D/g, '');
+            if (dni.length === 11) dni = dni.slice(2, 10); // si pegó un RUC, extraer el DNI del medio
+            if (dni.length !== 8 && previewData && previewData.clienteNumDoc) {
+                const c = String(previewData.clienteNumDoc).replace(/\D/g, '');
+                if (c.length === 8) dni = c;
+                else if (c.length === 11) dni = c.slice(2, 10);
+            }
+            if (dni.length !== 8) {
+                payError('Para generar el RUC necesito el DNI de 8 dígitos (escríbelo primero en el campo).', 'pagoDoc');
+                return;
+            }
+            const base10 = '10' + dni;
+            const ruc = base10 + rucDV10(base10);
+            document.getElementById('pagoTipoDoc').value = 'RUC';
+            document.getElementById('pagoDoc').value = ruc;
+            payError(null);
+            syncDocUI();
+            validarDocEnVivo();
+            updatePayPreview();
+            toast(`RUC ${ruc} generado desde el DNI ${dni}`, 'success');
+        };
+        window.rellenarRucPrueba = function() {
+            document.getElementById('pagoTipoDoc').value = 'RUC';
+            document.getElementById('pagoDoc').value = '20123456786';
+            syncDocUI();
+            validarDocEnVivo();
+            updatePayPreview();
+        };
+        /* Validación en vivo contra el backend (la misma regla que acepta la emisión).
+           Con guarda anti-carrera: si escribes rápido, la respuesta vieja no pisa a la nueva. */
+        let docValSeq = 0;
         const validarDocEnVivo = debounce(async () => {
-            const tipo = tipoCompSel();
+            const miTurno = ++docValSeq;
+            const tipoDoc = document.getElementById('pagoTipoDoc').value || (tipoCompSel() === 'FACTURA' ? 'RUC' : 'DNI');
             const num = document.getElementById('pagoDoc').value.trim();
             const hint = document.getElementById('pagoDocHint');
-            const tipoDoc = tipo === 'FACTURA' ? 'RUC' : 'DNI';
-            if (!num) { hint.textContent = tipo === 'FACTURA' ? 'RUC de 11 digitos, sin puntos ni guiones.' : 'DNI de 8 digitos, sin puntos ni guiones.'; return; }
+            if (!num) { syncDocUI(); return; }
             try {
                 const r = await apiFetch(`/documentos/validar?tipo=${tipoDoc}&numero=${encodeURIComponent(num)}`);
+                if (miTurno !== docValSeq) return; // llegó tarde: ignorar
                 hint.textContent = (r.valido ? '✔ ' : '✖ ') + r.mensaje;
                 hint.style.color = r.valido ? 'var(--ag-signal-go)' : 'var(--ag-signal-stop)';
                 document.getElementById('pagoDoc').classList.toggle('is-bad', !r.valido);
             } catch (_) { /* sin conexión: el backend valida al emitir */ }
-            updatePayPreview();
+            if (miTurno === docValSeq) updatePayPreview();
         }, 450);
         function setPayStep(n) {
             payPane = Math.min(3, Math.max(1, n));
@@ -428,7 +522,7 @@
         }
         function payError(msg, badId) {
             const e = document.getElementById('pagoError');
-            ['pagoDoc', 'pagoNombre', 'pagoDireccion'].forEach(id => document.getElementById(id).classList.remove('is-bad'));
+            ['pagoDoc', 'pagoTipoDoc', 'pagoNombre', 'pagoDireccion'].forEach(id => document.getElementById(id).classList.remove('is-bad'));
             if (!msg) { e.hidden = true; return true; }
             e.textContent = msg;
             e.hidden = false;
@@ -438,12 +532,24 @@
         function validatePayStep2() {
             /* Chequeo rápido local; la verdad la dice el backend al emitir */
             const f = collectPay();
+            const dig = (f.doc || '').replace(/\D/g, '');
             if (f.tipo === 'FACTURA') {
-                if (!f.doc) return !payError('Escribe el RUC del cliente.', 'pagoDoc'), false;
+                if (!f.doc) return !payError('Escribe el RUC del cliente (11 dígitos).', 'pagoDoc'), false;
+                if (dig.length !== 11) return !payError(`El RUC debe tener 11 dígitos (llevas ${dig.length}). Si solo tienes el DNI de 8, usa el botón "Generar RUC desde el DNI" o emite BOLETA.`, 'pagoDoc'), false;
+                if (!/^((10|15|16|17|20)\d{9})$/.test(dig)) return !payError('El RUC debe empezar con 10, 15, 16, 17 o 20 (el de persona natural empieza con 10).', 'pagoDoc'), false;
+                const dvEsp = rucDV10(dig.slice(0, 10));
+                if (dig.charCodeAt(10) - 48 !== dvEsp) return !payError(`RUC inválido: con esos 10 primeros dígitos debería terminar en ${dvEsp} (el último es de control). Revisa o usa "Generar RUC desde el DNI".`, 'pagoDoc'), false;
                 if (!f.nombre) return !payError('La factura exige la razon social.', 'pagoNombre'), false;
                 if (!f.direccion) return !payError('La factura exige la direccion fiscal.', 'pagoDireccion'), false;
             } else {
-                if (!f.doc) return !payError('Escribe el DNI del cliente (u omítelo solo si la boleta es de S/ 700 o menos).', 'pagoDoc'), false;
+                // Boleta: DNI (8), RUC (11), CE o pasaporte — pero siempre con documento salvo boleta chica
+                if (!f.doc) return !payError('Escribe el documento del cliente (u omítelo solo si la boleta es de S/ 700 o menos).', 'pagoDoc'), false;
+                if (f.tipoDoc === 'DNI' && dig.length !== 8) return !payError(`El DNI debe tener 8 dígitos (llevas ${dig.length}). ¿Es RUC? Cambia el tipo a RUC.`, 'pagoDoc'), false;
+                if (f.tipoDoc === 'RUC') {
+                    if (dig.length !== 11) return !payError(`El RUC debe tener 11 dígitos (llevas ${dig.length}). ¿Es DNI? Cambia el tipo a DNI.`, 'pagoDoc'), false;
+                    const dvEsp = rucDV10(dig.slice(0, 10));
+                    if (dig.charCodeAt(10) - 48 !== dvEsp) return !payError(`RUC inválido: debería terminar en ${dvEsp}.`, 'pagoDoc'), false;
+                }
                 if (!f.nombre) return !payError('Escribe el nombre del cliente.', 'pagoNombre'), false;
             }
             return payError(null);
@@ -466,7 +572,7 @@
                 <div class="ag-mini-ticket" style="position:static;">
                     <h4>Revisa antes de cobrar</h4>
                     <div class="row"><span>Comprobante</span><b>${f.tipo} ${previewData.serie} - número al emitir</b></div>
-                    <div class="row"><span>${f.tipo === 'FACTURA' ? 'RUC' : 'DNI'}</span><b>${f.doc || previewData.clienteNumDoc || '-'}</b></div>
+                    <div class="row"><span>${f.tipoDoc || (f.tipo === 'FACTURA' ? 'RUC' : 'DNI')}</span><b>${f.doc || previewData.clienteNumDoc || '-'}</b></div>
                     <div class="row"><span>Cliente</span><b>${f.nombre || previewData.clienteNombre}</b></div>
                     ${(f.direccion || previewData.clienteDireccion) ? `<div class="row"><span>Direccion</span><b>${f.direccion || previewData.clienteDireccion}</b></div>` : ''}
                     <div class="row"><span>Pago</span><b>${f.metodo} · CONTADO</b></div>
@@ -480,8 +586,25 @@
             if (!pagoActual) return;
             try {
                 previewData = await apiFetch(`/comprobantes/previsualizar?ordenTrabajoId=${pagoActual.otId}&tipo=${tipoCompSel()}`);
+                // Autocompletar tipoDoc según el documento del cliente (DNI 8 / RUC 11 / otro)
+                try {
+                    const docCli = String(previewData.clienteNumDoc || '').replace(/\D/g, '');
+                    const tdCli = (previewData.clienteTipoDoc || '').toUpperCase();
+                    const sel = document.getElementById('pagoTipoDoc');
+                    if (['DNI', 'RUC', 'CE', 'PASAPORTE'].includes(tdCli)) sel.value = tdCli;
+                    else if (docCli.length === 11) sel.value = 'RUC';
+                    else if (docCli.length === 8) sel.value = 'DNI';
+                    if (tipoCompSel() === 'FACTURA') sel.value = 'RUC';
+                } catch (_) {}
+                syncDocUI();
                 if (!document.getElementById('pagoDoc').value && previewData.clienteNumDoc) {
-                    document.getElementById('pagoDoc').value = previewData.clienteNumDoc;
+                    // No arrastrar un DNI a una factura: solo prellenar si el largo coincide
+                    const curTd = document.getElementById('pagoTipoDoc').value;
+                    const docCli = String(previewData.clienteNumDoc);
+                    const okLen = (curTd === 'RUC' && docCli.replace(/\D/g, '').length === 11)
+                        || (curTd === 'DNI' && docCli.replace(/\D/g, '').length === 8)
+                        || (['CE', 'PASAPORTE'].includes(curTd));
+                    if (okLen || tipoCompSel() === 'BOLETA') document.getElementById('pagoDoc').value = previewData.clienteNumDoc;
                 }
                 if (!document.getElementById('pagoNombre').value && previewData.clienteNombre) {
                     document.getElementById('pagoNombre').value = previewData.clienteNombre;
@@ -496,6 +619,7 @@
             pagoActual = { otId };
             previewData = null;
             document.querySelector('input[name="tipoComp"][value="BOLETA"]').checked = true;
+            document.getElementById('pagoTipoDoc').value = 'DNI';
             document.getElementById('pagoDoc').value = '';
             document.getElementById('pagoNombre').value = '';
             document.getElementById('pagoDireccion').value = '';
@@ -509,6 +633,15 @@
         function cerrarPagoModal() { document.getElementById('pagoModal').classList.remove('show'); pagoActual = null; }
 
         document.querySelectorAll('input[name="tipoComp"]').forEach(r => r.addEventListener('change', onTipoCompChange));
+        document.getElementById('pagoTipoDoc').addEventListener('change', () => { syncDocUI(); validarDocEnVivo(); updatePayPreview(); });
+        document.getElementById('pagoDoc').addEventListener('input', () => {
+            // autodetectar DNI/RUC por largo para no bloquear al usuario
+            const dig = document.getElementById('pagoDoc').value.replace(/\D/g, '');
+            const sel = document.getElementById('pagoTipoDoc');
+            if (dig.length === 11 && sel.value === 'DNI' && tipoCompSel() === 'BOLETA') { sel.value = 'RUC'; syncDocUI(); }
+            else if (dig.length === 8 && sel.value === 'RUC' && tipoCompSel() === 'BOLETA') { sel.value = 'DNI'; syncDocUI(); }
+            validarDocEnVivo();
+        });
         ['pagoDoc', 'pagoNombre', 'pagoDireccion', 'pagoMetodo'].forEach(id => {
             document.getElementById(id).addEventListener('input', updatePayPreview);
             document.getElementById(id).addEventListener('change', updatePayPreview);
@@ -524,10 +657,11 @@
             try {
                 /* El monto lo calcula el backend desde la cotización; aquí no se envía */
                 const sinDoc = f.tipo === 'BOLETA' && !f.doc;
+                const tipoDocEnvio = sinDoc ? 'SIN_DOC' : (f.tipoDoc || (f.tipo === 'FACTURA' ? 'RUC' : 'DNI'));
                 const comp = await apiFetch('/comprobantes', { method: 'POST', body: JSON.stringify({
                     ordenTrabajoId: otId,
                     tipo: f.tipo,
-                    tipoDoc: f.tipo === 'FACTURA' ? 'RUC' : (sinDoc ? 'SIN_DOC' : 'DNI'),
+                    tipoDoc: tipoDocEnvio,
                     numDoc: sinDoc ? '-' : (f.doc || undefined),
                     nombre: f.nombre || undefined,
                     direccion: f.direccion || undefined,
@@ -553,7 +687,7 @@
             const titulo = isFac ? 'FACTURA ELECTRÓNICA' : 'BOLETA DE VENTA ELECTRÓNICA';
             const anulado = comp.estado === 'ANULADO';
             const lineas = (comp.detalle || []).map(d => `
-                        <tr><td>${d.cantidad} ${d.unidadMedida} · ${d.descripcion}</td><td>${formatCurrency(d.importeTotal)}</td></tr>`).join('');
+                        <tr><td>${esc(d.cantidad)} ${esc(d.unidadMedida)} · ${esc(d.descripcion)}</td><td>${formatCurrency(d.importeTotal)}</td></tr>`).join('');
             return `<div class="ag-ticket">
                 <div class="ag-ticket-top">
                     <div class="ag-ticket-brand">
@@ -568,13 +702,13 @@
                 </div>
                 <div class="ag-ticket-body">
                     <p class="ag-text-center ag-fw-700" style="margin:0 0 0.5rem;">${titulo}</p>
-                    ${anulado ? `<p class="ag-text-center"><span class="ag-badge ag-badge-danger">ANULADO: ${comp.motivoAnulacion || ''}</span></p>` : ''}
+                    ${anulado ? `<p class="ag-text-center"><span class="ag-badge ag-badge-danger">ANULADO: ${esc(comp.motivoAnulacion || '')}</span></p>` : ''}
                     <div class="ag-ticket-client">
-                        <div class="row"><span>Señor(es)</span><b>${comp.clienteNombre}</b></div>
-                        <div class="row"><span>${comp.clienteTipoDoc}</span><b>${comp.clienteNumDoc}</b></div>
-                        ${comp.clienteDireccion ? `<div class="row"><span>Direccion</span><b>${comp.clienteDireccion}</b></div>` : ''}
-                        <div class="row"><span>Moneda</span><b>${comp.moneda} · ${comp.formaPago} · ${comp.metodoPago}</b></div>
-                        ${comp.observacion ? `<div class="row"><span>Observación</span><b>${comp.observacion}</b></div>` : ''}
+                        <div class="row"><span>Señor(es)</span><b>${esc(comp.clienteNombre)}</b></div>
+                        <div class="row"><span>${esc(comp.clienteTipoDoc)}</span><b>${esc(comp.clienteNumDoc)}</b></div>
+                        ${comp.clienteDireccion ? `<div class="row"><span>Direccion</span><b>${esc(comp.clienteDireccion)}</b></div>` : ''}
+                        <div class="row"><span>Moneda</span><b>${esc(comp.moneda)} · ${esc(comp.formaPago)} · ${esc(comp.metodoPago)}</b></div>
+                        ${comp.observacion ? `<div class="row"><span>Observación</span><b>${esc(comp.observacion)}</b></div>` : ''}
                     </div>
                     <table class="ag-ticket-items">${lineas}</table>
                     <table class="ag-ticket-totals">

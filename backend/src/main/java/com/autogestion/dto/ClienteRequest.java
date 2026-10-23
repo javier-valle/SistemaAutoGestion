@@ -36,6 +36,9 @@ public class ClienteRequest {
     @Size(max = 150, message = "El email es muy largo")
     private String email;
 
+    /** MASCULINO, FEMENINO u OTROS (opcional; el vacío = sin especificar). */
+    private String genero;
+
     @AssertTrue(message = "Tipo de documento inválido: usa DNI, RUC, CE o PASAPORTE")
     public boolean isTipoDocumentoValido() {
         if (tipoDocumento == null || tipoDocumento.isBlank()) return true; // por defecto DNI
@@ -57,6 +60,12 @@ public class ClienteRequest {
         if (!"RUC".equalsIgnoreCase(tipo)) return true;
         return razonSocial != null && !razonSocial.isBlank()
                 && direccion != null && !direccion.isBlank();
+    }
+
+    @AssertTrue(message = "Género inválido: usa MASCULINO, FEMENINO u OTROS")
+    public boolean isGeneroValido() {
+        return genero == null || genero.isBlank()
+                || com.autogestion.entity.Genero.desde(genero) != null;
     }
 
     /** Tipo efectivo (por defecto DNI) ya normalizado. */

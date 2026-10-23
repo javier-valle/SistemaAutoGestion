@@ -113,16 +113,19 @@ public class DataInitializer implements CommandLineRunner {
                                 .nombre("Juan Pérez").telefono("951234567")
                                 .email("juan.perez@gmail.com").documento("45123698")
                                 .tipoDocumento(TipoDocumento.DNI)
+                                .genero(Genero.MASCULINO)
                                 .direccion("Jr. Los Pinos 245, San Martín de Porres, Lima").build());
                 Cliente c2 = clienteRepository.save(Cliente.builder()
                                 .nombre("María López").telefono("962345678")
                                 .email("maria.lopez@hotmail.com").documento("40258741")
                                 .tipoDocumento(TipoDocumento.DNI)
+                                .genero(Genero.FEMENINO)
                                 .direccion("Av. Las Palmeras 123, Los Olivos, Lima").build());
                 Cliente c3 = clienteRepository.save(Cliente.builder()
                                 .nombre("Carlos García").telefono("973456789")
                                 .email("carlos.garcia@yahoo.com").documento("41369852")
                                 .tipoDocumento(TipoDocumento.DNI)
+                                .genero(Genero.MASCULINO)
                                 .direccion("Av. Las Palmeras 123, Los Olivos, Lima").build());
                 // Empresas de prueba con RUC válido (ficticios)
                 Cliente c4 = clienteRepository.save(Cliente.builder()

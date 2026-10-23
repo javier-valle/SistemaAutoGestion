@@ -60,7 +60,8 @@ public class ResolutorAdquirente {
             return new AdquirenteResuelto(cliente, "RUC", numDoc, nombre, direccion);
         }
 
-        // Boleta
+        // Boleta: acepta DNI, CE, PASAPORTE y también RUC válido
+        // (negocios que piden boleta con RUC). Solo FACTURA exige RUC sí o sí.
         if ("SIN_DOC".equals(tipoDoc) || numDoc.isEmpty() || "-".equals(numDoc)) {
             if (total.compareTo(empresa.getBoletaUmbralDni()) > 0) {
                 throw new BusinessException("Boleta mayor a S/ " + empresa.getBoletaUmbralDni()
@@ -70,20 +71,19 @@ public class ResolutorAdquirente {
             return new AdquirenteResuelto(null, "SIN_DOC", "-", "CLIENTES VARIOS", null);
         }
         TipoDocumento td = TipoDocumento.desde(tipoDoc);
-        if (!DocumentoValidator.valido(td, numDoc)) {
-            /* Tipo desconocido ("BOLETA"/"FACTURA" del front, versión cacheada) o número
-               que no corresponde al tipo declarado: se deduce del dato real en vez de
-               rechazar con un mensaje que se contradice ("8 dígitos... llevas 8"). */
-            if (DocumentoValidator.rucValido(numDoc)) {
-                throw new BusinessException("Con RUC corresponde factura, no boleta.", "tipo",
-                        "Cambia el tipo a FACTURA para este cliente.");
-            }
+        if (td != null && DocumentoValidator.valido(td, numDoc)) {
+            // el tipo declarado coincide con el número: se respeta tal cual
+        } else if (DocumentoValidator.rucValido(numDoc)) {
+            // RUC válido aunque el tipo declarado sea DNI (ficha vieja o campo sin cambiar):
+            // se acepta como RUC en boleta en vez de bloquear con "corresponde factura".
+            td = TipoDocumento.RUC;
+        } else {
             TipoDocumento inferido = inferirTipoDocumento(numDoc, cliente);
-            if (DocumentoValidator.valido(inferido, numDoc)) {
+            if (inferido != null && DocumentoValidator.valido(inferido, numDoc)) {
                 td = inferido;
             }
         }
-        if (td == TipoDocumento.RUC || !DocumentoValidator.valido(td, numDoc)) {
+        if (td == null || !DocumentoValidator.valido(td, numDoc)) {
             throw new BusinessException("Documento inválido para boleta.", "numDoc",
                     DocumentoValidator.mensajeError(td == null ? TipoDocumento.DNI : td, numDoc));
         }

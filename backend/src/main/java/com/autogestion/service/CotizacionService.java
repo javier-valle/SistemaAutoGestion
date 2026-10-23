@@ -4,6 +4,7 @@ import com.autogestion.dto.CotizacionCompletaRequest;
 import com.autogestion.dto.CotizacionRequest;
 import com.autogestion.dto.CotizacionResponseDTO;
 import com.autogestion.entity.*;
+import com.autogestion.exception.BusinessException;
 import com.autogestion.repository.*;
 import com.autogestion.util.AppTime;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class CotizacionService {
     public CotizacionResponseDTO crear(CotizacionRequest request) {
         try {
             Diagnostico diagnostico = diagnosticoRepository.findById(request.getDiagnosticoId())
-                    .orElseThrow(() -> new RuntimeException("Diagnóstico no encontrado: " + request.getDiagnosticoId()));
+                    .orElseThrow(() -> new BusinessException("Diagnóstico no encontrado: " + request.getDiagnosticoId()));
 
         
         Cotizacion cotizacion = Cotizacion.builder()
@@ -48,10 +49,10 @@ public class CotizacionService {
         if (request.getServicios() != null) {
             for (CotizacionRequest.ServicioCotizacion sc : request.getServicios()) {
                 Servicio servicio = servicioRepository.findById(sc.getServicioId())
-                        .orElseThrow(() -> new RuntimeException("Servicio no encontrado: " + sc.getServicioId()));
+                        .orElseThrow(() -> new BusinessException("Servicio no encontrado: " + sc.getServicioId()));
 
                 BigDecimal precio = sc.getPrecio() != null
-                        ? BigDecimal.valueOf(sc.getPrecio())
+                        ? sc.getPrecio()
                         : servicio.getPrecioBase();
 
                 CotizacionServicio cs = CotizacionServicio.builder()
@@ -68,10 +69,10 @@ public class CotizacionService {
         if (request.getProductos() != null) {
             for (CotizacionRequest.ProductoCotizacion pc : request.getProductos()) {
                 Producto producto = productoRepository.findById(pc.getProductoId())
-                        .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + pc.getProductoId()));
+                        .orElseThrow(() -> new BusinessException("Producto no encontrado: " + pc.getProductoId()));
 
                 BigDecimal precioUnitario = pc.getPrecioUnitario() != null
-                        ? BigDecimal.valueOf(pc.getPrecioUnitario())
+                        ? pc.getPrecioUnitario()
                         : producto.getPrecioUnitario();
 
                 BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(pc.getCantidadEstimada()));
@@ -132,8 +133,11 @@ public class CotizacionService {
             .servicios(servicios)
             .productos(productos)
             .build();
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Error al crear cotización: " + e.getMessage(), e);
+            throw new BusinessException("Error al crear cotización: " + e.getMessage(),
+                    org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -141,7 +145,7 @@ public class CotizacionService {
     public CotizacionResponseDTO crearCompleta(CotizacionCompletaRequest request) {
         try {
             Diagnostico diagnostico = diagnosticoRepository.findById(request.getDiagnosticoId())
-                    .orElseThrow(() -> new RuntimeException("Diagnóstico no encontrado: " + request.getDiagnosticoId()));
+                    .orElseThrow(() -> new BusinessException("Diagnóstico no encontrado: " + request.getDiagnosticoId()));
 
         Cotizacion cotizacion = Cotizacion.builder()
                 .diagnostico(diagnostico)
@@ -156,10 +160,10 @@ public class CotizacionService {
         if (request.getServicios() != null) {
             for (CotizacionCompletaRequest.ServicioItem item : request.getServicios()) {
                 Servicio servicio = servicioRepository.findById(item.getServicioId())
-                        .orElseThrow(() -> new RuntimeException("Servicio no encontrado: " + item.getServicioId()));
+                        .orElseThrow(() -> new BusinessException("Servicio no encontrado: " + item.getServicioId()));
 
                 BigDecimal precio = item.getPrecio() != null
-                        ? BigDecimal.valueOf(item.getPrecio())
+                        ? item.getPrecio()
                         : servicio.getPrecioBase();
 
                 CotizacionServicio cs = CotizacionServicio.builder()
@@ -175,10 +179,10 @@ public class CotizacionService {
         if (request.getProductos() != null) {
             for (CotizacionCompletaRequest.ProductoItem item : request.getProductos()) {
                 Producto producto = productoRepository.findById(item.getProductoId())
-                        .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + item.getProductoId()));
+                        .orElseThrow(() -> new BusinessException("Producto no encontrado: " + item.getProductoId()));
 
                 BigDecimal precioUnitario = item.getPrecioUnitario() != null
-                        ? BigDecimal.valueOf(item.getPrecioUnitario())
+                        ? item.getPrecioUnitario()
                         : producto.getPrecioUnitario();
 
                 BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(item.getCantidadEstimada()));
@@ -238,18 +242,22 @@ public class CotizacionService {
             .servicios(servicios)
             .productos(productos)
             .build();
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Error al crear cotización completa: " + e.getMessage(), e);
+            throw new BusinessException("Error al crear cotización completa: " + e.getMessage(),
+                    org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Transactional
     public CotizacionResponseDTO aprobar(Long id) {
         Cotizacion cotizacion = cotizacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cotización no encontrada"));
+                .orElseThrow(() -> new BusinessException("Cotización no encontrada"));
 
         if (cotizacion.getEstado() != EstadoCotizacion.PENDIENTE) {
-            throw new RuntimeException("Solo se pueden aprobar cotizaciones pendientes");
+            throw new BusinessException("Solo se pueden aprobar cotizaciones pendientes.", "estado",
+                    null, org.springframework.http.HttpStatus.CONFLICT);
         }
 
         cotizacion.setEstado(EstadoCotizacion.APROBADA);
@@ -261,31 +269,32 @@ public class CotizacionService {
         recepcionRepository.save(recepcion);
 
         Cotizacion saved = cotizacionRepository.findById(cotizacion.getId())
-                .orElseThrow(() -> new RuntimeException("Error al obtener cotización aprobada"));
+                .orElseThrow(() -> new BusinessException("Error al obtener cotización aprobada"));
         return toResponseDTO(saved);
     }
 
     @Transactional
     public CotizacionResponseDTO rechazar(Long id) {
         Cotizacion cotizacion = cotizacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cotización no encontrada"));
+                .orElseThrow(() -> new BusinessException("Cotización no encontrada"));
 
         if (cotizacion.getEstado() != EstadoCotizacion.PENDIENTE) {
-            throw new RuntimeException("Solo se pueden rechazar cotizaciones pendientes");
+            throw new BusinessException("Solo se pueden rechazar cotizaciones pendientes.", "estado",
+                    null, org.springframework.http.HttpStatus.CONFLICT);
         }
 
         cotizacion.setEstado(EstadoCotizacion.RECHAZADA);
         cotizacion = cotizacionRepository.save(cotizacion);
 
         Cotizacion saved = cotizacionRepository.findById(cotizacion.getId())
-                .orElseThrow(() -> new RuntimeException("Error al obtener cotización rechazada"));
+                .orElseThrow(() -> new BusinessException("Error al obtener cotización rechazada"));
         return toResponseDTO(saved);
     }
 
     @Transactional(readOnly = true)
     public CotizacionResponseDTO obtenerPorId(Long id) {
         Cotizacion cotizacion = cotizacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cotización no encontrada"));
+                .orElseThrow(() -> new BusinessException("Cotización no encontrada"));
         return toResponseDTO(cotizacion);
     }
 

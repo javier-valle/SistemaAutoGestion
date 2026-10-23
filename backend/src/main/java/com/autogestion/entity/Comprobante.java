@@ -38,12 +38,15 @@ public class Comprobante {
     @Column(nullable = false)
     private Integer numero;
 
+    @Builder.Default
     @Column(name = "fecha_emision", nullable = false)
     private LocalDateTime fechaEmision = LocalDateTime.now();
 
+    @Builder.Default
     @Column(nullable = false, length = 3)
     private String moneda = "PEN";
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "forma_pago", nullable = false, length = 10)
     private FormaPago formaPago = FormaPago.CONTADO;
@@ -119,6 +122,7 @@ public class Comprobante {
     @Column(length = 500)
     private String observacion;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private EstadoComprobante estado = EstadoComprobante.EMITIDO;

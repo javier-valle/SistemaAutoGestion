@@ -783,7 +783,14 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                if (!response.ok) { fallo('Credenciales invalidas. Verifique su email y contrasena.'); return; }
+                if (!response.ok) {
+                    let msg = 'Credenciales invalidas. Verifique su email y contrasena.';
+                    try {
+                        const err = await response.json();
+                        if (err && (err.mensaje || err.error)) msg = err.mensaje || err.error;
+                    } catch (_) { /* mensaje genérico */ }
+                    fallo(msg); return;
+                }
                 const data = await response.json();
                 setToken(data.token);
                 setUser({ id: data.id, nombre: data.nombreCompleto || data.nombre, email: data.email, rol: data.rol });

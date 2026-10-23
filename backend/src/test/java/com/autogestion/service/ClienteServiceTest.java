@@ -85,4 +85,36 @@ class ClienteServiceTest {
         assertEquals(1, d.getComprobantes().size());
         assertEquals("B001-00000001", d.getComprobantes().get(0).getFolio());
     }
+
+    /** El género se guarda tipado y el resumen lo devuelve como texto para el front. */
+    @Test
+    void generoSeGuardaYVuelveEnElResumen() {
+        com.autogestion.dto.ClienteRequest req = new com.autogestion.dto.ClienteRequest();
+        req.setNombre("María López");
+        req.setDocumento("40258741");
+        req.setGenero("FEMENINO");
+        when(clienteRepository.existsByTipoDocumentoAndDocumento(any(), any())).thenReturn(false);
+        when(clienteRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        Cliente creado = clienteService.crear(req);
+        assertEquals(com.autogestion.entity.Genero.FEMENINO, creado.getGenero());
+
+        Cliente c = cliente();
+        c.setGenero(com.autogestion.entity.Genero.MASCULINO);
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(c));
+        when(vehiculoRepository.findByClienteId(1L)).thenReturn(List.of());
+        when(recepcionRepository.porCliente(1L)).thenReturn(List.of());
+        assertEquals("MASCULINO", clienteService.resumen(1L).getGenero());
+    }
+
+    /** Género vacío o desconocido = sin especificar (null), nunca un valor raro en BD. */
+    @Test
+    void generoVacioODesconocidoEsNull() {
+        assertNull(com.autogestion.entity.Genero.desde(null));
+        assertNull(com.autogestion.entity.Genero.desde("  "));
+        assertNull(com.autogestion.entity.Genero.desde("NO_SEI"));
+        assertEquals(com.autogestion.entity.Genero.MASCULINO, com.autogestion.entity.Genero.desde("masculino"));
+        assertEquals(com.autogestion.entity.Genero.FEMENINO, com.autogestion.entity.Genero.desde(" Femenino "));
+        assertEquals(com.autogestion.entity.Genero.OTROS, com.autogestion.entity.Genero.desde("OTROS"));
+    }
 }

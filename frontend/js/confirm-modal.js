@@ -61,11 +61,13 @@
             }
             resolvePromise = resolve;
             const titulo = opciones.titulo || 'Confirmar acción';
-            const textoConfirmar = opciones.textoConfirmar || 'Confirmar';
+            const textoConfirmar = opciones.textoConfirmar || opciones.okLabel || 'Confirmar';
+            const textoCancelar = opciones.cancelLabel || 'Cancelar';
             const tipo = opciones.tipo || 'primary'; 
             document.getElementById('confirmTitle').textContent = titulo;
             document.getElementById('confirmMessage').textContent = mensaje;
             document.getElementById('confirmActionBtn').textContent = textoConfirmar;
+            document.getElementById('confirmCancelBtn').textContent = textoCancelar;
             const actionBtn = document.getElementById('confirmActionBtn');
             actionBtn.className = 'ag-btn ag-btn-sm';
             if (tipo === 'danger') {

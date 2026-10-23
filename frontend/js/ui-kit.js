@@ -27,7 +27,11 @@
     }
     const t = document.createElement('div');
     t.className = `ag-toast t-${type}`;
-    t.innerHTML = `${TOAST_ICONS[type] || TOAST_ICONS.info}<span>${message}</span>`;
+    const icon = document.createElement('span');
+    icon.innerHTML = TOAST_ICONS[type] || TOAST_ICONS.info;
+    const txt = document.createElement('span');
+    txt.textContent = message;
+    t.append(icon, txt);
     stack.appendChild(t);
     setTimeout(() => {
       t.classList.add('ag-toast-out');
@@ -382,7 +386,11 @@
       );
       selected = 0;
       if (!results.length) {
-        list.innerHTML = '<div class="ag-palette-empty">Sin resultados para "' + q + '"</div>';
+        list.textContent = '';
+        const empty = document.createElement('div');
+        empty.className = 'ag-palette-empty';
+        empty.textContent = `Sin resultados para "${q}"`;
+        list.appendChild(empty);
         return;
       }
       list.innerHTML = results.map((e, i) => `

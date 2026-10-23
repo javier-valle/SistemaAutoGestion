@@ -1,6 +1,22 @@
-const API_BASE = new URLSearchParams(window.location.search).get('apiBase')
-    || localStorage.getItem('apiBase')
-    || 'http://localhost:8080/api';
+const API_BASE = (() => {
+    // Solo localStorage y mismo-origen: ?apiBase= en la URL permitía a un
+    // enlace malicioso redirigir la API y robar el token (phishing).
+    const saved = localStorage.getItem('apiBase');
+    if (saved) {
+        try {
+            const u = new URL(saved);
+            if (u.protocol === 'http:' || u.protocol === 'https:') return saved.replace(/\/$/, '');
+        } catch (_) { /* valor inválido: se ignora */ }
+    }
+    return 'http://localhost:8080/api';
+})();
+/* Escape HTML: todo dato del backend/usuario que se interpole en innerHTML
+   debe pasar por aquí. Cubre & < > " ' ` =. */
+function esc(s) {
+    return String(s ?? '').replace(/[&<>"'`=]/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;', '=': '&#61;'
+    }[c]));
+}
 function getToken() { return localStorage.getItem('token'); }
 function setToken(token) { localStorage.setItem('token', token); }
 function clearToken() { localStorage.removeItem('token'); localStorage.removeItem('user'); }
@@ -160,7 +176,7 @@ function showAlert(containerId, message, type = 'danger') {
     container.innerHTML = `
         <div class="ag-alert ag-alert-${type}">
             ${svgMap[type] || svgMap.info}
-            <span>${message}</span>
+            <span>${esc(message)}</span>
             <button class="ag-alert-close" onclick="this.parentElement.remove()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>

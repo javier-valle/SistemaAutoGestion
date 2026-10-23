@@ -51,9 +51,12 @@
             <div class="ag-section">
                 <div class="ag-section-header">
                     <h3>Catálogo de productos</h3>
+                    <div class="ag-d-flex ag-gap-3 ag-align-center ag-flex-wrap">
                     <div class="ag-search-box" style="width:220px;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         <input type="text" id="searchProducto" placeholder="Buscar producto..." oninput="filtrarProductos()">
+                    </div>
+                    <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="exportarStockCSV()">Exportar CSV</button>
                     </div>
                 </div>
                 <div class="ag-section-body">
@@ -79,6 +82,7 @@
                         </select>
                         <input class="ag-form-control" id="movDesde" type="date" onchange="movBuscar()" style="width:auto;" title="Desde">
                         <input class="ag-form-control" id="movHasta" type="date" onchange="movBuscar()" style="width:auto;" title="Hasta">
+                        <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="exportarMovCSV()">Exportar CSV</button>
                     </div>
                 </div>
                 <div class="ag-section-body">
@@ -555,9 +559,41 @@
             } catch (e) { toast('Error: ' + e.message, 'danger'); }
         });
 
-        /* ---------- ALERTAS ---------- */
-        async function loadAlertas() {
+        /* ---------- EXPORTS CSV ---------- */
+        function descargarFilasCSV(nombre, filas) {
+            const csv = filas.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' }));
+            a.download = nombre;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+        }
+        window.exportarStockCSV = function() {
+            if (!productosCache.length) { toast('Sin productos para exportar', 'warning'); return; }
+            descargarFilasCSV('inventario-stock.csv', [
+                ['id', 'nombre', 'tipo', 'precio', 'costo', 'margen', 'stock', 'minimo', 'valorizado'],
+                ...productosCache.map(p => [p.id, p.nombre, p.tipo, p.precioUnitario, p.costoUnitario || 0, (p.precioUnitario || 0) - (p.costoUnitario || 0), p.stockActual, p.stockMinimo, (p.stockActual || 0) * (p.costoUnitario || 0)])
+            ]);
+            toast('Stock exportado', 'success');
+        };
+        window.exportarMovCSV = async function() {
             try {
+                const tipo = document.getElementById('movTipo').value;
+                const desde = document.getElementById('movDesde').value;
+                const hasta = document.getElementById('movHasta').value;
+                let url = `/inventario/movimientos?tipo=${tipo}&page=0&size=1000&sort=fecha,desc`;
+                if (desde) url += `&desde=${desde}T00:00:00`;
+                if (hasta) url += `&hasta=${hasta}T23:59:59`;
+                const p = await apiFetch(url);
+                const rows = (p.content || []).map(m => [m.fecha, m.productoNombre, m.tipo, m.cantidad, m.costoUnitario, m.documentoRef || '', m.proveedorNombre || '', m.usuarioNombre || '', m.stockAntes, m.stockDespues]);
+                descargarFilasCSV('inventario-movimientos.csv', [['fecha', 'producto', 'tipo', 'cantidad', 'costo', 'documento', 'proveedor', 'usuario', 'antes', 'despues'], ...rows]);
+                toast('Movimientos exportados', 'success');
+            } catch (e) { toast('No se pudo exportar: ' + e.message, 'danger'); }
+        };
+
+        /* ---------- ALERTAS ---------- */
+        async function loadAlertas() {            try {
                 const alertas = await apiFetch('/inventario/alertas');
                 const c = document.getElementById('alertasContainer');
                 if (!alertas.length) {

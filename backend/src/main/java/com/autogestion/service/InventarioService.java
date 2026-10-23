@@ -41,6 +41,7 @@ public class InventarioService {
     private final OrdenTrabajoRepository ordenTrabajoRepository;
     private final UsuarioRepository usuarioRepository;
 
+    @Transactional(readOnly = true)
     public List<Producto> listar() {
         return productoRepository.findAll();
     }
@@ -225,10 +226,12 @@ public class InventarioService {
                 .filtrar(productoId, tipo, usuarioId, desde, hasta, pageable).map(this::toDTO);
     }
 
+    @Transactional(readOnly = true)
     public List<Producto> alertasStock() {
         return productoRepository.findConStockBajo();
     }
 
+    @Transactional(readOnly = true)
     public List<InventarioMovimiento> listarMovimientos(Long productoId) {
         if (productoId != null) {
             return inventarioMovimientoRepository.findByProductoId(productoId);

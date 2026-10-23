@@ -5,10 +5,12 @@ import com.autogestion.dto.PagoRequest;
 import com.autogestion.entity.EstadoRecepcion;
 import com.autogestion.entity.OrdenTrabajo;
 import com.autogestion.entity.PagoEntrega;
+import com.autogestion.exception.BusinessException;
 import com.autogestion.repository.OrdenTrabajoRepository;
 import com.autogestion.repository.PagoEntregaRepository;
 import com.autogestion.util.AppTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,17 +27,22 @@ public class PagoEntregaService {
 
     @Transactional
     public PagoEntregaResponseDTO registrarPago(PagoRequest request) {
+        if (request.getMonto() == null || request.getMonto().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("El monto debe ser mayor a 0.", "monto", null);
+        }
         OrdenTrabajo ot = ordenTrabajoRepository.findById(request.getOrdenTrabajoId())
-                .orElseThrow(() -> new RuntimeException("Orden de trabajo no encontrada"));
+                .orElseThrow(() -> new BusinessException("Orden de trabajo no encontrada.", "ordenTrabajoId",
+                        null, HttpStatus.NOT_FOUND));
 
         Optional<PagoEntrega> existente = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId());
         if (existente.isPresent()) {
-            throw new RuntimeException("Ya existe un registro de pago para esta OT");
+            throw new BusinessException("Ya existe un registro de pago para esta OT.", "ordenTrabajoId",
+                    null, HttpStatus.CONFLICT);
         }
 
         PagoEntrega pago = PagoEntrega.builder()
                 .ordenTrabajo(ot)
-                .monto(BigDecimal.valueOf(request.getMonto()))
+                .monto(request.getMonto())
                 .fechaPago(AppTime.ahora())
                 .build();
         pago = pagoEntregaRepository.save(pago);
@@ -45,13 +52,16 @@ public class PagoEntregaService {
     @Transactional
     public PagoEntregaResponseDTO registrarEntrega(Long ordenTrabajoId) {
         OrdenTrabajo ot = ordenTrabajoRepository.findById(ordenTrabajoId)
-                .orElseThrow(() -> new RuntimeException("Orden de trabajo no encontrada"));
+                .orElseThrow(() -> new BusinessException("Orden de trabajo no encontrada.", "ordenTrabajoId",
+                        null, HttpStatus.NOT_FOUND));
 
         PagoEntrega pago = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId())
-                .orElseThrow(() -> new RuntimeException("Debe registrar pago antes de entrega"));
+                .orElseThrow(() -> new BusinessException("Debe registrar pago antes de entrega.", "ordenTrabajoId",
+                        "Cobra la OT primero.", HttpStatus.CONFLICT));
 
         if (pago.getFechaEntrega() != null) {
-            throw new RuntimeException("Esta OT ya fue entregada");
+            throw new BusinessException("Esta OT ya fue entregada.", "ordenTrabajoId",
+                    null, HttpStatus.CONFLICT);
         }
 
         pago.setFechaEntrega(AppTime.ahora());
@@ -66,7 +76,8 @@ public class PagoEntregaService {
     @Transactional(readOnly = true)
     public BigDecimal obtenerMonto(Long ordenTrabajoId) {
         OrdenTrabajo ot = ordenTrabajoRepository.findById(ordenTrabajoId)
-                .orElseThrow(() -> new RuntimeException("Orden de trabajo no encontrada"));
+                .orElseThrow(() -> new BusinessException("Orden de trabajo no encontrada.", "ordenTrabajoId",
+                        null, HttpStatus.NOT_FOUND));
         return ot.getCotizacion().getTotal();
     }
 
@@ -76,6 +87,7 @@ public class PagoEntregaService {
                 .map(this::toResponseDTO);
     }
 
+    @Transactional(readOnly = true)
     public PagoEntregaResponseDTO toResponseDTO(PagoEntrega pago) {
         return PagoEntregaResponseDTO.builder()
                 .id(pago.getId())

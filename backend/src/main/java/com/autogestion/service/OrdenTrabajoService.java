@@ -77,19 +77,31 @@ public class OrdenTrabajoService {
         return ordenTrabajoRepository.save(ot);
     }
 
-    /** Solo una cotización APROBADA puede convertirse en OT. */
+    /** Solo una cotización APROBADA puede convertirse en OT (fila bloqueada: anti doble OT). */
     private Cotizacion cotizacionAprobada(Long cotizacionId) {
-        Cotizacion cotizacion = cotizacionRepository.findById(cotizacionId)
-                .orElseThrow(() -> new RuntimeException("Cotización no encontrada"));
+        Cotizacion cotizacion = cotizacionRepository.bloquearPorId(cotizacionId)
+                .orElseThrow(() -> new BusinessException("Cotización no encontrada.", "cotizacionId",
+                        null, HttpStatus.NOT_FOUND));
         if (cotizacion.getEstado() != EstadoCotizacion.APROBADA) {
-            throw new RuntimeException("Solo se puede crear OT con cotización aprobada");
+            throw new BusinessException("Solo se puede crear OT con cotización aprobada.", "cotizacionId",
+                    "La cotización debe estar APROBADA; ya fue convertida o rechazada.", HttpStatus.CONFLICT);
         }
         return cotizacion;
     }
 
     private Usuario mecanico(Long mecanicoId) {
-        return usuarioRepository.findById(mecanicoId)
-                .orElseThrow(() -> new RuntimeException("Mecánico no encontrado"));
+        Usuario m = usuarioRepository.findById(mecanicoId)
+                .orElseThrow(() -> new BusinessException("Mecánico no encontrado.", "mecanicoId",
+                        null, HttpStatus.NOT_FOUND));
+        if (!"MECANICO".equals(m.getRol())) {
+            throw new BusinessException("El usuario elegido no es mecánico.", "mecanicoId",
+                    "Elige un usuario con rol MECANICO.", HttpStatus.BAD_REQUEST);
+        }
+        if (!Boolean.TRUE.equals(m.getActivo())) {
+            throw new BusinessException("El mecánico está desactivado.", "mecanicoId",
+                    "Actívalo en Equipo o elige otro.", HttpStatus.CONFLICT);
+        }
+        return m;
     }
 
     /** Abre la OT en PENDIENTE y pone la recepción EN_TRABAJO. Único punto de apertura. */
@@ -131,16 +143,17 @@ public class OrdenTrabajoService {
         consumirProducto(ot, productoId, cantidad, null);
     }
 
-    private void registrarPagoInterno(OrdenTrabajo ot, Double monto) {
+    private void registrarPagoInterno(OrdenTrabajo ot, BigDecimal monto) {
         PagoEntrega pago = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId()).orElse(null);
         if (pago == null) {
             pago = PagoEntrega.builder()
                     .ordenTrabajo(ot)
                     .build();
         } else if (pago.getFechaPago() != null) {
-            throw new RuntimeException("Esta OT ya tiene un pago registrado el " + pago.getFechaPago());
+            throw new BusinessException("Esta OT ya tiene un pago registrado el " + pago.getFechaPago() + ".",
+                    "ordenTrabajoId", null, HttpStatus.CONFLICT);
         }
-        pago.setMonto(BigDecimal.valueOf(monto));
+        pago.setMonto(monto);
         pago.setFechaPago(AppTime.ahora());
         pagoEntregaRepository.save(pago);
     }
@@ -167,7 +180,7 @@ public class OrdenTrabajoService {
     @Transactional
     public PagoEntregaResponseDTO registrarPagoEntregaCompleto(PagoEntregaCompletaRequest request) {
         OrdenTrabajo ot = ordenTrabajoRepository.findById(request.getOrdenTrabajoId())
-                .orElseThrow(() -> new RuntimeException("Orden de trabajo no encontrada"));
+                .orElseThrow(() -> new BusinessException("Orden de trabajo no encontrada"));
 
         if (request.getMonto() != null) {
             registrarPagoInterno(ot, request.getMonto());
@@ -176,7 +189,7 @@ public class OrdenTrabajoService {
             registrarEntregaInterno(ot);
         }
         PagoEntrega pago = pagoEntregaRepository.findByOrdenTrabajoId(request.getOrdenTrabajoId())
-                .orElseThrow(() -> new RuntimeException("Error al obtener pago/entrega"));
+                .orElseThrow(() -> new BusinessException("Error al obtener pago/entrega"));
         return pagoEntregaService.toResponseDTO(pago);
     }
 
@@ -210,7 +223,7 @@ public class OrdenTrabajoService {
     @Transactional
     public OrdenTrabajo cambiarEstado(Long id, String nuevoEstadoCodigo) {
         OrdenTrabajo ot = ordenTrabajoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden de trabajo no encontrada"));
+                .orElseThrow(() -> new BusinessException("Orden de trabajo no encontrada"));
 
         EstadoOT nuevo = EstadoOT.desde(nuevoEstadoCodigo);
         if (nuevo == null) {
@@ -287,7 +300,7 @@ public class OrdenTrabajoService {
     @Transactional(readOnly = true)
     public OrdenTrabajoResponseDTO obtenerPorId(Long id) {
         OrdenTrabajo ot = ordenTrabajoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden de trabajo no encontrada"));
+                .orElseThrow(() -> new BusinessException("Orden de trabajo no encontrada"));
         return toResponseDTO(ot);
     }
 

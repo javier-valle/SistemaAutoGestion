@@ -18,6 +18,16 @@ public class BusinessException extends RuntimeException {
         this(mensaje, campo, sugerencia, HttpStatus.BAD_REQUEST);
     }
 
+    /** Atajo para errores sin campo asociado (ej. credenciales, estados). */
+    public BusinessException(String mensaje, HttpStatus estado) {
+        this(mensaje, null, null, estado);
+    }
+
+    /** Legado: mismo status que el RuntimeException al que reemplaza (400). */
+    public BusinessException(String mensaje) {
+        this(mensaje, null, null, HttpStatus.BAD_REQUEST);
+    }
+
     public BusinessException(String mensaje, String campo, String sugerencia, HttpStatus estado) {
         super(mensaje);
         this.campo = campo;

@@ -6,6 +6,7 @@ import com.autogestion.dto.CotizacionResponseDTO;
 import com.autogestion.entity.Cotizacion;
 import com.autogestion.service.CotizacionService;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +22,12 @@ public class CotizacionController {
     private final CotizacionService cotizacionService;
 
     @PostMapping
-    public ResponseEntity<CotizacionResponseDTO> crear(@RequestBody CotizacionRequest request) {
+    public ResponseEntity<CotizacionResponseDTO> crear(@Valid @RequestBody CotizacionRequest request) {
         return ResponseEntity.ok(cotizacionService.crear(request));
     }
 
     @PostMapping("/completa")
-    public ResponseEntity<CotizacionResponseDTO> crearCompleta(@RequestBody CotizacionCompletaRequest request) {
+    public ResponseEntity<CotizacionResponseDTO> crearCompleta(@Valid @RequestBody CotizacionCompletaRequest request) {
         return ResponseEntity.ok(cotizacionService.crearCompleta(request));
     }
 

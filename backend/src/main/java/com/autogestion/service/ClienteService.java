@@ -3,6 +3,7 @@ package com.autogestion.service;
 import com.autogestion.dto.ClienteDetalleDTO;
 import com.autogestion.dto.ClienteRequest;
 import com.autogestion.entity.Cliente;
+import com.autogestion.entity.Genero;
 import com.autogestion.entity.TipoDocumento;
 import com.autogestion.entity.Vehiculo;
 import com.autogestion.exception.BusinessException;
@@ -45,6 +46,7 @@ public class ClienteService {
                 .documento(doc)
                 .razonSocial(nuloSiVacio(request.getRazonSocial()))
                 .direccion(nuloSiVacio(request.getDireccion()))
+                .genero(Genero.desde(request.getGenero()))
                 .build();
         return clienteRepository.save(cliente);
     }
@@ -66,6 +68,7 @@ public class ClienteService {
         cliente.setDocumento(doc);
         cliente.setRazonSocial(nuloSiVacio(request.getRazonSocial()));
         cliente.setDireccion(nuloSiVacio(request.getDireccion()));
+        cliente.setGenero(Genero.desde(request.getGenero()));
         return clienteRepository.save(cliente);
     }
 
@@ -103,6 +106,7 @@ public class ClienteService {
                 .telefono(c.getTelefono())
                 .email(c.getEmail())
                 .direccion(c.getDireccion())
+                .genero(c.getGenero() != null ? c.getGenero().name() : null)
                 .activo(c.getActivo())
                 .visitas((long) recepciones.size())
                 .ultimaVisita(recepciones.stream().findFirst()
@@ -127,10 +131,12 @@ public class ClienteService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public List<Cliente> listar() {
         return clienteRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Cliente obtenerPorId(Long id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Cliente no encontrado.", null,

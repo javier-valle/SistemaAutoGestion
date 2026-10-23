@@ -6,6 +6,7 @@ import com.autogestion.entity.Diagnostico;
 import com.autogestion.entity.EstadoRecepcion;
 import com.autogestion.entity.Recepcion;
 import com.autogestion.entity.Usuario;
+import com.autogestion.exception.BusinessException;
 import com.autogestion.util.AppTime;
 import com.autogestion.repository.DiagnosticoRepository;
 import com.autogestion.repository.RecepcionRepository;
@@ -28,10 +29,20 @@ public class DiagnosticoService {
     @Transactional
     public DiagnosticoResponseDTO crear(DiagnosticoRequest request) {
         Recepcion recepcion = recepcionRepository.findById(request.getRecepcionId())
-                .orElseThrow(() -> new RuntimeException("Recepción no encontrada"));
+                .orElseThrow(() -> new BusinessException("Recepción no encontrada.", "recepcionId",
+                        null, org.springframework.http.HttpStatus.NOT_FOUND));
 
         Usuario mecanico = usuarioRepository.findById(request.getMecanicoId())
-                .orElseThrow(() -> new RuntimeException("Mecánico no encontrado"));
+                .orElseThrow(() -> new BusinessException("Mecánico no encontrado.", "mecanicoId",
+                        null, org.springframework.http.HttpStatus.NOT_FOUND));
+        if (!"MECANICO".equals(mecanico.getRol())) {
+            throw new BusinessException("El usuario elegido no es mecánico.", "mecanicoId",
+                    "Elige un usuario con rol MECANICO.", org.springframework.http.HttpStatus.BAD_REQUEST);
+        }
+        if (!Boolean.TRUE.equals(mecanico.getActivo())) {
+            throw new BusinessException("El mecánico está desactivado.", "mecanicoId",
+                    "Actívalo en Equipo o elige otro.", org.springframework.http.HttpStatus.CONFLICT);
+        }
 
         
         recepcion.setEstado(EstadoRecepcion.EN_DIAGNOSTICO);

@@ -130,7 +130,7 @@ class ComprobanteListadoTest {
 
         CotizacionCompletaRequest cot = new CotizacionCompletaRequest();
         cot.setDiagnosticoId(d.getId());
-        cot.setServicios(List.of(new CotizacionCompletaRequest.ServicioItem(1L, 80.0)));
+        cot.setServicios(List.of(new CotizacionCompletaRequest.ServicioItem(1L, new java.math.BigDecimal("80.00"))));
         var c = cotizacionService.crearCompleta(cot);
         cotizacionService.aprobar(c.getId());
 

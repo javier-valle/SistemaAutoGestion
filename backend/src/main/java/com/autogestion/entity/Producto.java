@@ -23,21 +23,21 @@ public class Producto {
     private BigDecimal precioUnitario;
 
     @Column(name = "stock_actual", nullable = false)
-    private Integer stockActual = 0;
+    @Builder.Default`r`nprivate Integer stockActual = 0;
 
     @Column(name = "stock_minimo", nullable = false)
-    private Integer stockMinimo = 0;
+    @Builder.Default`r`nprivate Integer stockMinimo = 0;
 
     /** Último costo de compra: con esto existe margen (precio − costo) y valor del inventario. */
     @Builder.Default
     @Column(name = "costo_unitario", nullable = false, precision = 10, scale = 2)
-    private BigDecimal costoUnitario = BigDecimal.ZERO;
+    @Builder.Default`r`nprivate BigDecimal costoUnitario = BigDecimal.ZERO;
 
     @Builder.Default
     @Column(name = "unidad_medida", nullable = false, length = 4)
-    private String unidadMedida = "NIU"; // NIU bienes, ZZ servicios
+    @Builder.Default`r`nprivate String unidadMedida = "NIU"; // NIU bienes, ZZ servicios
 
     @Builder.Default
     @Column(nullable = false)
-    private Boolean activo = true;
+    @Builder.Default`r`nprivate Boolean activo = true;
 }

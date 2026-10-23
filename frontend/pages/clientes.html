@@ -51,6 +51,7 @@
                     <select class="ag-form-control" id="cliFEstado" onchange="cliBuscar()" style="width:auto;">
                         <option value="">Activos e inactivos</option><option value="true">Activos</option><option value="false">Inactivos</option>
                     </select>
+                    <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="exportarClientesCSV()">Exportar CSV</button>
                 </div>
             </div>
             <div class="ag-section-body">
@@ -108,6 +109,14 @@
                     <div class="ag-form-group"><label class="ag-form-label">Celular</label><input class="ag-form-control" id="cfTelefono" maxlength="9" inputmode="numeric"></div>
                     <div class="ag-form-group"><label class="ag-form-label">Email</label><input class="ag-form-control" id="cfEmail" type="email"></div>
                 </div>
+                <div class="ag-form-group"><label class="ag-form-label">Género</label>
+                    <select class="ag-form-control" id="cfGenero">
+                        <option value="">— No especificado —</option>
+                        <option value="MASCULINO">Masculino</option>
+                        <option value="FEMENINO">Femenino</option>
+                        <option value="OTROS">Otros</option>
+                    </select>
+                    <p class="ag-field-hint">Personaliza la vista del cliente (opcional).</p></div>
                 <p class="ag-field-error" id="cfError" hidden></p>
             </div>
             <div class="ag-modal-footer">
@@ -122,6 +131,8 @@
     <script src="../js/animations.js?v=20261005"></script>
     <script src="../js/ui-kit.js?v=20261005"></script>
     <script src="../js/confirm-modal.js?v=20261005"></script>
+    <script src="../js/vehiculos.js?v=20261003b"></script>
+    <script src="../js/vehiculo3d.js?v=20261003b"></script>
     <script>
         if (!guardPage('clientes')) throw new Error('Acceso denegado');
         document.getElementById('navbar').innerHTML = renderNavbar('clientes');
@@ -144,9 +155,9 @@
                 if (est !== '') items = items.filter(c => String(!!c.activo) === est);
                 document.getElementById('cliBody').innerHTML = items.map(c => `
                     <tr>
-                        <td><b>${c.razonSocial && c.tipoDocumento === 'RUC' ? c.razonSocial : c.nombre}</b><br>
-                            <span class="ag-text-muted ag-text-sm">${c.tipoDocumento || 'DNI'} ${c.documento || '—'}</span></td>
-                        <td class="ag-text-sm">${c.telefono || '—'}<br><span class="ag-text-muted">${c.email || ''}</span></td>
+                        <td><b>${esc(c.razonSocial && c.tipoDocumento === 'RUC' ? c.razonSocial : c.nombre)}</b><br>
+                            <span class="ag-text-muted ag-text-sm">${esc(c.tipoDocumento || 'DNI')} ${esc(c.documento || '—')}</span></td>
+                        <td class="ag-text-sm">${esc(c.telefono || '—')}<br><span class="ag-text-muted">${esc(c.email || '')}</span></td>
                         <td>${c.activo ? '<span class="ag-badge ag-badge-success">ACTIVO</span>' : '<span class="ag-badge ag-badge-danger">INACTIVO</span>'}</td>
                         <td style="white-space:nowrap;">
                             <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="verDetalle(${c.id})">Ver</button>
@@ -163,6 +174,21 @@
         }
         function cliGo(d) { cliPage = Math.max(0, cliPage + d); loadClientes(); }
         function cliBuscar() { cliPage = 0; loadClientes(); }
+        async function exportarClientesCSV() {
+            try {
+                const lista = await apiFetch('/clientes');
+                const filas = [['tipo_doc', 'documento', 'nombre', 'razon_social', 'telefono', 'email', 'activo'],
+                    ...(lista || []).map(c => [c.tipoDocumento, c.documento, c.nombre, c.razonSocial || '', c.telefono || '', c.email || '', c.activo])];
+                const csv = filas.map(r => r.map(x => `"${String(x ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' }));
+                a.download = 'clientes.csv';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+                toast('Clientes exportados', 'success');
+            } catch (e) { toast('No se pudo exportar: ' + e.message, 'danger'); }
+        }
         document.getElementById('cliFQ').addEventListener('input', debounce(cliBuscar, 300));
 
         async function verDetalle(id) {
@@ -173,11 +199,11 @@
                     <div class="ag-grid ag-grid-2 ag-mb-2">
                         <div><span class="ag-text-muted ag-text-sm">${d.tipoDocumento} ${d.documento || '—'}</span><br>
                             <b>${d.razonSocial || ''}</b><br>
-                            <span class="ag-text-sm">${d.telefono || '—'} · ${d.email || '—'}<br>${d.direccion || ''}</span><br>
+                            <span class="ag-text-sm">${d.telefono || '—'} · ${d.email || '—'}<br>${d.direccion || ''}${d.genero ? '<br>' + ({ MASCULINO: 'Masculino', FEMENINO: 'Femenino', OTROS: 'Otros' }[d.genero] || d.genero) : ''}</span><br>
                             ${d.activo ? '<span class="ag-badge ag-badge-success">ACTIVO</span>' : '<span class="ag-badge ag-badge-danger">INACTIVO</span>'}
                             <span class="ag-badge ag-badge-info">${d.visitas} visitas</span></div>
                         <div><div class="ag-section-title">Vehículos (${(d.vehiculos || []).length})</div>
-                            ${(d.vehiculos || []).map(v => `<div class="sc-meta"><b>${v.placa}</b> · ${[v.marca, v.modelo, v.anio].filter(Boolean).join(' ')}</div>`).join('') || '<p class="ag-text-muted ag-text-sm">Sin vehículos</p>'}</div>
+                            ${(d.vehiculos || []).map(v => (typeof vehMiniHTML === 'function' ? vehMiniHTML(Object.assign({}, v, { genero: d.genero || '' })) : `<div class="sc-meta"><b>${v.placa}</b> · ${[v.marca, v.modelo, v.anio].filter(Boolean).join(' ')}</div>`)).join('') || '<p class="ag-text-muted ag-text-sm">Sin vehículos</p>'}</div>
                     </div>
                     <div class="ag-section-title">Historial de recepciones</div>
                     ${(d.recepciones || []).map(r => `<div class="ag-d-flex ag-justify-between ag-align-center" style="padding:0.3rem 0; border-bottom:1px solid var(--ag-border);">
@@ -198,6 +224,7 @@
             document.getElementById('cliFormTitle').textContent = id ? 'Editar cliente' : 'Nuevo cliente';
             ['cfDoc', 'cfNombre', 'cfRazon', 'cfDireccion', 'cfTelefono', 'cfEmail'].forEach(x => document.getElementById(x).value = '');
             document.getElementById('cfTipo').value = 'DNI';
+            document.getElementById('cfGenero').value = '';
             document.getElementById('cfRucExtra').hidden = true;
             document.getElementById('cfError').hidden = true;
             if (id) {
@@ -209,6 +236,7 @@
                     document.getElementById('cfDireccion').value = c.direccion || '';
                     document.getElementById('cfTelefono').value = c.telefono || '';
                     document.getElementById('cfEmail').value = c.email || '';
+                    document.getElementById('cfGenero').value = c.genero || '';
                     document.getElementById('cfRucExtra').hidden = (c.tipoDocumento || 'DNI') !== 'RUC';
                 });
             }
@@ -245,7 +273,8 @@
                 razonSocial: document.getElementById('cfRazon').value.trim(),
                 direccion: document.getElementById('cfDireccion').value.trim(),
                 telefono: document.getElementById('cfTelefono').value.trim(),
-                email: document.getElementById('cfEmail').value.trim()
+                email: document.getElementById('cfEmail').value.trim(),
+                genero: document.getElementById('cfGenero').value
             };
             if (body.nombre.length < 2) { cfError('El nombre es obligatorio (mínimo 2 letras).'); return; }
             if (!body.documento) { cfError('El documento es obligatorio en el panel de clientes.'); return; }

@@ -3,6 +3,7 @@ package com.autogestion.service;
 import com.autogestion.dto.LoginRequest;
 import com.autogestion.dto.LoginResponse;
 import com.autogestion.entity.Usuario;
+import com.autogestion.exception.BusinessException;
 import com.autogestion.repository.UsuarioRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -28,16 +30,21 @@ public class AuthService {
     @Value("${app.jwt.expiration-ms}")
     private long jwtExpirationMs;
 
+    @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
+        // Mensaje único en los tres casos: no revelar si el email existe.
         Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
+                .orElseThrow(() -> new BusinessException("Credenciales inválidas",
+                        org.springframework.http.HttpStatus.UNAUTHORIZED));
 
         if (!passwordEncoder.matches(request.getPassword(), usuario.getPasswordHash())) {
-            throw new RuntimeException("Credenciales inválidas");
+            throw new BusinessException("Credenciales inválidas",
+                    org.springframework.http.HttpStatus.UNAUTHORIZED);
         }
 
         if (!usuario.getActivo()) {
-            throw new RuntimeException("Usuario desactivado");
+            throw new BusinessException("Credenciales inválidas",
+                    org.springframework.http.HttpStatus.UNAUTHORIZED);
         }
 
         String token = generateToken(usuario);

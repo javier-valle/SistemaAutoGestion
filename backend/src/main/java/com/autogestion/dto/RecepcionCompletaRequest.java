@@ -37,6 +37,9 @@ public class RecepcionCompletaRequest {
 
     private String clienteDireccion;
 
+    /** Género del cliente nuevo: MASCULINO, FEMENINO u OTROS (opcional). */
+    private String clienteGenero;
+
     /**
      * Solo obligatoria cuando NO viene vehiculoId. Se valida en el servicio.
      */

@@ -16,6 +16,7 @@ public class Gasto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Builder.Default
     @Column(nullable = false)
     private LocalDate fecha = LocalDate.now();
 

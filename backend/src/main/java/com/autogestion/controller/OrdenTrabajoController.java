@@ -33,14 +33,14 @@ public class OrdenTrabajoController {
 
     @RolesAllowed({"ADMIN", "RECEPCIONISTA"})
     @PostMapping
-    public ResponseEntity<OrdenTrabajoResponseDTO> crear(@RequestBody OrdenTrabajoRequest request) {
+    public ResponseEntity<OrdenTrabajoResponseDTO> crear(@Valid @RequestBody OrdenTrabajoRequest request) {
         OrdenTrabajo ot = ordenTrabajoService.crear(request);
         return ResponseEntity.ok(mapToDTO(ot));
     }
 
     @RolesAllowed({"ADMIN", "RECEPCIONISTA"})
     @PostMapping("/completa")
-    public ResponseEntity<OrdenTrabajoResponseDTO> crearCompleta(@RequestBody OrdenTrabajoCompletaRequest request) {
+    public ResponseEntity<OrdenTrabajoResponseDTO> crearCompleta(@Valid @RequestBody OrdenTrabajoCompletaRequest request) {
         OrdenTrabajo ot = ordenTrabajoService.crearCompleta(request);
         return ResponseEntity.ok(mapToDTO(ot));
     }

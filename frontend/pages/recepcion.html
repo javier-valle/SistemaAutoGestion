@@ -78,6 +78,15 @@
                                         <div class="ag-form-group"><label class="ag-form-label">Celular</label><input class="ag-form-control" id="cliTelefono" placeholder="9XXXXXXXX" maxlength="9" inputmode="numeric"></div>
                                         <div class="ag-form-group"><label class="ag-form-label">Email</label><input class="ag-form-control" id="cliEmail" type="email" placeholder="correo@ejemplo.com"></div>
                                     </div>
+                                    <div class="ag-grid ag-grid-2">
+                                        <div class="ag-form-group"><label class="ag-form-label">Género</label>
+                                            <select class="ag-form-control" id="cliGenero">
+                                                <option value="">— No especificado —</option>
+                                                <option value="MASCULINO">Masculino</option>
+                                                <option value="FEMENINO">Femenino</option>
+                                                <option value="OTROS">Otros</option>
+                                            </select></div>
+                                    </div>
                                 </div>
                                 <p class="ag-field-error" id="cliError" hidden></p>
                             </div>
@@ -90,9 +99,12 @@
                                             <input class="ag-form-control" id="vehPlaca" placeholder="ABC-123" style="text-transform:uppercase;" maxlength="7"></div>
                                         <div class="ag-form-group"><label class="ag-form-label">Año</label>
                                             <input class="ag-form-control" id="vehAnio" type="number" placeholder="2020" min="1950" max="2100"></div>
-                                        <div class="ag-form-group"><label class="ag-form-label">Marca</label><input class="ag-form-control" id="vehMarca" placeholder="Toyota"></div>
-                                        <div class="ag-form-group"><label class="ag-form-label">Modelo</label><input class="ag-form-control" id="vehModelo" placeholder="Corolla"></div>
+                                        <div class="ag-form-group"><label class="ag-form-label">Marca</label>
+                                            <select class="ag-form-control" id="vehMarcaSel"></select>
+                                            <input class="ag-form-control ag-mt-1" id="vehMarca" placeholder="Escribe la marca" hidden maxlength="50"></div>
+                                        <div class="ag-form-group"><label class="ag-form-label">Modelo (manual)</label><input class="ag-form-control" id="vehModelo" placeholder="Ej. Corolla, Hilux, Rio…" maxlength="50"></div>
                                     </div>
+                                    <div id="vehPreview" class="ag-mt-1" aria-live="polite"></div>
                                 </div>
                                 <p class="ag-field-error" id="vehError" hidden></p>
                             </div>
@@ -165,6 +177,8 @@
     <script src="../js/animations.js?v=20261005"></script>
     <script src="../js/ui-kit.js?v=20261005"></script>
     <script src="../js/confirm-modal.js?v=20261005"></script>
+    <script src="../js/vehiculos.js?v=20261003b"></script>
+    <script src="../js/vehiculo3d.js?v=20261003b"></script>
     <script>
         (function() {
             if (!guardPage('recepcion')) return;
@@ -336,7 +350,7 @@
                 let html = W.vehiculos.map(v => `
                     <label class="ag-doc-card"><input type="radio" name="vehSel" value="${v.id}" ${W.vehiculoId === v.id ? 'checked' : ''} onchange="elegirVehiculo(${v.id})">
                     <span class="ag-doc-card-inner">
-                        <span class="ag-doc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" opacity=".28"/><circle cx="12" cy="12" r="2.4"/><path d="M12 9.6V4"/><path d="M9.9 13.2L4.9 16.1"/><path d="M14.1 13.2L19.1 16.1"/></svg></span>
+                        <span class="ag-doc-ico">${typeof vehEmblema === 'function' ? vehEmblema(v.marca) : ''}</span>
                         <span><b>${v.placa}</b><small>${[v.marca, v.modelo, v.anio].filter(Boolean).join(' · ') || 'Sin datos'}</small></span>
                         <span class="ag-doc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                     </span></label>`).join('');
@@ -349,6 +363,7 @@
                     </span></label>`;
                 box.innerHTML = html;
                 form.hidden = !W.isNewVehicle;
+                pintarVehPreview();
                 updateResumen();
             }
             window.elegirVehiculo = function(v) {
@@ -401,10 +416,50 @@
                 const p = document.getElementById('probDesc').value.trim();
                 document.getElementById('rsProblema').textContent = p ? (p.length > 40 ? p.slice(0, 40) + '…' : p) : '—';
             }
+            /* ---------- Preview del vehículo: dropdown + logo + render en vivo ---------- */
+            function vehMarcaValor() {
+                const sel = document.getElementById('vehMarcaSel');
+                if (sel && sel.value === '__otra') return document.getElementById('vehMarca').value.trim();
+                return sel ? sel.value : '';
+            }
+            function vehActual() {
+                if (!W.isNewVehicle && W.vehiculoId) {
+                    const v = W.vehiculos.find(x => x.id === W.vehiculoId);
+                    if (v) return { placa: v.placa, marca: v.marca, modelo: v.modelo, anio: v.anio,
+                                      genero: (W.cliente && W.cliente.genero) || '' };
+                }
+                return {
+                    placa: document.getElementById('vehPlaca').value.trim(),
+                    marca: vehMarcaValor(),
+                    modelo: document.getElementById('vehModelo').value.trim(),
+                    anio: document.getElementById('vehAnio').value.trim(),
+                    genero: (W.cliente && W.cliente.genero) || document.getElementById('cliGenero').value || ''
+                };
+            }
+            function pintarVehPreview() {
+                const box = document.getElementById('vehPreview');
+                if (!box || typeof vehPreviewHTML !== 'function') return;
+                if (!W.isNewVehicle) { box.innerHTML = ''; return; }
+                box.innerHTML = vehPreviewHTML(vehActual());
+            }
+            function initMarcaSel() {
+                const sel = document.getElementById('vehMarcaSel');
+                if (!sel || typeof vehPoblarMarcas !== 'function') return;
+                vehPoblarMarcas(sel, '');
+                sel.addEventListener('change', () => {
+                    document.getElementById('vehMarca').hidden = sel.value !== '__otra';
+                    if (sel.value !== '__otra') document.getElementById('vehMarca').value = '';
+                    pintarVehPreview();
+                });
+                ['vehPlaca', 'vehMarca', 'vehModelo', 'vehAnio'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', pintarVehPreview);
+                });
+            }
             function renderConfirm() {
                 const box = document.getElementById('recConfirmBox');
                 box.innerHTML = `
-                    <div class="ag-mini-ticket" style="position:static;">
+                    ${typeof vehPreviewHTML === 'function' ? vehPreviewHTML(vehActual()) : ''}
+                    <div class="ag-mini-ticket ag-mt-1" style="position:static;">
                         <h4>Revisa antes de registrar</h4>
                         <div class="row"><span>Cliente</span><b>${nombreClientePaso1()}</b></div>
                         <div class="row"><span>Vehículo</span><b>${vehiculoPaso2()}</b></div>
@@ -437,12 +492,13 @@
                             clienteTelefono: document.getElementById('cliTelefono').value.trim(),
                             clienteEmail: document.getElementById('cliEmail').value.trim(),
                             clienteRazonSocial: document.getElementById('cliRazon').value.trim(),
-                            clienteDireccion: document.getElementById('cliDireccion').value.trim()
+                            clienteDireccion: document.getElementById('cliDireccion').value.trim(),
+                            clienteGenero: document.getElementById('cliGenero').value
                         };
                     if (!W.isNewVehicle && W.vehiculoId) body.vehiculoId = W.vehiculoId;
                     else {
                         body.vehiculoPlaca = document.getElementById('vehPlaca').value.trim().toUpperCase();
-                        body.vehiculoMarca = document.getElementById('vehMarca').value.trim();
+                        body.vehiculoMarca = vehMarcaValor();
                         body.vehiculoModelo = document.getElementById('vehModelo').value.trim();
                         const anio = parseInt(document.getElementById('vehAnio').value);
                         if (!isNaN(anio)) body.vehiculoAnio = anio;
@@ -471,7 +527,10 @@
                  'vehPlaca', 'vehMarca', 'vehModelo', 'vehAnio', 'probDesc', 'probKm', 'probDanos', 'probAccesorios'
                 ].forEach(id => { document.getElementById(id).value = ''; });
                 document.getElementById('probCombustible').value = '';
+                document.getElementById('cliGenero').value = '';
                 document.getElementById('cliResults').innerHTML = '';
+                const msel = document.getElementById('vehMarcaSel');
+                if (msel) { msel.value = ''; document.getElementById('vehMarca').hidden = true; }
                 pintarCliente(); pintarVehiculos();
                 setStep(1);
             }
@@ -522,6 +581,7 @@
 
             /* Precarga desde clientes.html (?clienteId=) */
             setStep(1);
+            initMarcaSel();
             pintarCliente();
             pintarVehiculos();
             const pre = new URLSearchParams(window.location.search).get('clienteId');

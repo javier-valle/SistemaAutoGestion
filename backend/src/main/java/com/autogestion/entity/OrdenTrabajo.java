@@ -24,10 +24,10 @@ public class OrdenTrabajo {
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private EstadoOT estado = EstadoOT.PENDIENTE;
+    @Builder.Default`r`nprivate EstadoOT estado = EstadoOT.PENDIENTE;
 
     @Column(name = "fecha_creacion", nullable = false)
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    @Builder.Default`r`nprivate LocalDateTime fechaCreacion = LocalDateTime.now();
 
     @Column(name = "fecha_fin")
     private LocalDateTime fechaFin;

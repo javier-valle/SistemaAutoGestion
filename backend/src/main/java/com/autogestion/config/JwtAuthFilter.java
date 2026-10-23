@@ -1,5 +1,6 @@
 package com.autogestion.config;
 
+import com.autogestion.repository.UsuarioRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -29,6 +30,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
+    private final UsuarioRepository usuarioRepository;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -53,8 +56,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .getPayload();
 
                 String userId = claims.getSubject();
-                String rol = claims.get("rol", String.class);
-                String nombre = claims.get("nombre", String.class);
+                final Long id;
+                try {
+                    id = Long.valueOf(userId);
+                } catch (NumberFormatException | NullPointerException e) {
+                    log.warn("JWT con subject no numérico: {}", userId);
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                // El rol y la vigencia salen de la BD, no del claim: un usuario
+                // desactivado o con rol cambiado pierde acceso de inmediato.
+                var usuario = usuarioRepository.findById(id).orElse(null);
+                if (usuario == null || !Boolean.TRUE.equals(usuario.getActivo()) || usuario.getRol() == null) {
+                    log.warn("JWT de usuario inexistente/inactivo: {}", id);
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                String rol = usuario.getRol();
 
                 List<SimpleGrantedAuthority> authorities = List.of(
                         new SimpleGrantedAuthority("ROLE_" + rol)
@@ -64,14 +84,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
-                log.info("JWT OK -> userId={} rol={} authorities={}", userId, rol, authorities);
             } catch (Exception e) {
                 log.error("JWT FALLO en {} {}: {} - {}", request.getMethod(), request.getRequestURI(),
                         e.getClass().getSimpleName(), e.getMessage());
                 SecurityContextHolder.clearContext();
             }
-        } else {
-            log.warn("Sin header Authorization valido en {} {} (header={})", request.getMethod(), request.getRequestURI(), header);
         }
 
         filterChain.doFilter(request, response);

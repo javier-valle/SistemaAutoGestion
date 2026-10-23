@@ -34,6 +34,10 @@
             <div class="ag-wz-line"></div>
             <div class="ag-wz-step" data-s="3"><span class="ag-wz-dot">3</span>Aprobar</div>
         </div>
+        <div id="draftBar" class="ag-leer" hidden style="max-width:640px; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <span>📝 <b>Borrador en curso:</b> <span id="draftInfo">tienes cambios sin terminar</span>. Si cambias de ventana se te avisará para no perder nada.</span>
+            <button type="button" class="ag-btn ag-btn-outline ag-btn-sm" onclick="descartarBorrador()">Descartar borrador</button>
+        </div>
         <div class="ag-layout-wide">
             <div class="ag-layout-stack">
                 <div class="ag-section">
@@ -139,6 +143,105 @@
         initTheme();
         let itemsSeleccionados = [];
         let cotStep = 1;
+        /* ---- Borrador + bloqueo de navegación (no perder la cotización a medias) ---- */
+        const DRAFT_KEY = 'ag-cot-draft-v1';
+        function leerCamposBorrador() {
+            return {
+                recepcionId: document.getElementById('recepcionSelect').value || '',
+                mecanicoId: document.getElementById('mecanicoSelect').value || '',
+                diagnosticoDesc: document.getElementById('diagnosticoDesc').value || '',
+                diagnosticoId: document.getElementById('diagnosticoId').value || '',
+                servicioNombre: document.getElementById('servicioNombre').value || '',
+                servicioPrecio: document.getElementById('servicioPrecio').value || '',
+                items: itemsSeleccionados,
+                step: cotStep,
+                ts: Date.now()
+            };
+        }
+        function hayOperacionEnCurso() {
+            const d = leerCamposBorrador();
+            return (d.items && d.items.length > 0)
+                || (d.diagnosticoDesc && d.diagnosticoDesc.trim().length > 0)
+                || (d.diagnosticoId && String(d.diagnosticoId).trim() !== '')
+                || (d.servicioNombre && d.servicioNombre.trim().length > 0);
+        }
+        function pintarDraftBar() {
+            const bar = document.getElementById('draftBar');
+            if (!bar) return;
+            const enCurso = hayOperacionEnCurso();
+            bar.hidden = !enCurso;
+            if (enCurso) {
+                const n = itemsSeleccionados.length;
+                document.getElementById('draftInfo').textContent =
+                    n > 0 ? `${n} item(s) + diagnóstico en curso (autoguardado)` : 'diagnóstico/cotización en curso (autoguardado)';
+            }
+        }
+        function guardarBorrador() {
+            try {
+                if (hayOperacionEnCurso()) localStorage.setItem(DRAFT_KEY, JSON.stringify(leerCamposBorrador()));
+                else localStorage.removeItem(DRAFT_KEY);
+            } catch (_) { /* noop */ }
+            pintarDraftBar();
+        }
+        function restaurarBorrador() {
+            let d = null;
+            try { d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (_) { d = null; }
+            if (!d) return;
+            try {
+                if (d.diagnosticoDesc) document.getElementById('diagnosticoDesc').value = d.diagnosticoDesc;
+                if (d.diagnosticoId) document.getElementById('diagnosticoId').value = d.diagnosticoId;
+                if (d.servicioNombre) document.getElementById('servicioNombre').value = d.servicioNombre;
+                if (d.servicioPrecio) document.getElementById('servicioPrecio').value = d.servicioPrecio;
+                if (Array.isArray(d.items) && d.items.length) { itemsSeleccionados = d.items; actualizarItems(); }
+                // recepcion/mecanico se restauran cuando los selects ya cargaron (ver loadData)
+                window._draftRecep = d.recepcionId || '';
+                window._draftMec = d.mecanicoId || '';
+                if (d.step) setCotStep(d.step);
+                if (hayOperacionEnCurso()) toast('Borrador recuperado: sigue donde lo dejaste.', 'info');
+            } catch (_) { /* noop */ }
+            pintarDraftBar();
+        }
+        window.descartarBorrador = async function() {
+            if (!(await confirmarAccion('¿Descartar el borrador de cotización? Se borra el diagnóstico sin guardar y los items.', { tipo: 'danger' }))) return;
+            itemsSeleccionados = []; actualizarItems();
+            document.getElementById('diagnosticoDesc').value = '';
+            document.getElementById('diagnosticoId').value = '';
+            document.getElementById('servicioNombre').value = '';
+            document.getElementById('servicioPrecio').value = '';
+            try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+            setCotStep(1);
+            pintarDraftBar();
+            toast('Borrador descartado', 'success');
+        };
+        function limpiarBorradorAlTerminar() {
+            itemsSeleccionados = []; actualizarItems();
+            document.getElementById('servicioNombre').value = '';
+            document.getElementById('servicioPrecio').value = '';
+            // se conserva el diagnosticoId por si quiere generar otra cotización del mismo diagnóstico,
+            // pero si ya aprobó, el flujo terminó: limpiar todo
+            try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+            pintarDraftBar();
+        }
+        // Avisar al cerrar/recargar con operación a medias
+        window.addEventListener('beforeunload', (e) => {
+            if (hayOperacionEnCurso()) { e.preventDefault(); e.returnValue = ''; }
+        });
+        // Interceptar clicks del menú/buscador mientras haya operación en curso
+        document.addEventListener('click', async (e) => {
+            const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+            if (!a) return;
+            const href = a.getAttribute('href') || '';
+            if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+            if (!hayOperacionEnCurso()) return;
+            // mismo documento: dejar pasar modales internos
+            if (a.target === '_blank') return;
+            e.preventDefault();
+            e.stopPropagation();
+            const ok = await confirmarAccion(
+                'Tienes una cotización a medias (diagnóstico/items sin terminar). Si sales ahora, el borrador queda autoguardado y podrás retomarlo aquí. ¿Salir de todas formas?',
+                { tipo: 'primary', okLabel: 'Salir igual', cancelLabel: 'Seguir aquí' });
+            if (ok) { guardarBorrador(); window.location.href = a.href; }
+        }, true);
         function setCotStep(n) {
             cotStep = Math.min(3, Math.max(1, n));
             document.querySelectorAll('#cotWizard .ag-wz-step').forEach(s => {
@@ -159,9 +262,16 @@
                 const sel = document.getElementById('recepcionSelect');
                 recepciones.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = `#${r.id} - ${r.vehiculo?.placa || r.vehiculoPlaca || '?'}`; sel.appendChild(o); });
                 const productos = await apiFetch('/productos');
-                document.getElementById('productosSelector').innerHTML = `<div class="ag-table-wrap"><table class="ag-table"><thead><tr><th>Producto</th><th style="width:70px;">Cant.</th><th style="width:100px;">Precio</th><th style="width:50px;"></th></tr></thead><tbody>${productos.map(p => `<tr><td>${p.nombre} <span class="ag-text-muted ag-text-sm">${p.tipo}</span></td><td>${agStepper(`cant_${p.id}`, { value: 1, min: 1, size: 'sm' })}</td><td><input type="number" class="ag-form-control" id="prec_${p.id}" value="${p.precioUnitario}" step="0.01" style="padding:0.3rem 0.5rem; font-size:0.8rem;"></td><td><button type="button" class="ag-btn ag-btn-outline ag-btn-sm" onclick="agregarProducto(${p.id},'${p.nombre.replace(/'/g,"\\'")}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></td></tr>`).join('')}</tbody></table></div>`;
+                window._cotProds = Object.fromEntries(productos.map(p => [p.id, p.nombre]));
+                document.getElementById('productosSelector').innerHTML = `<div class="ag-table-wrap"><table class="ag-table"><thead><tr><th>Producto</th><th style="width:70px;">Cant.</th><th style="width:100px;">Precio</th><th style="width:50px;"></th></tr></thead><tbody>${productos.map(p => `<tr><td>${esc(p.nombre)} <span class="ag-text-muted ag-text-sm">${esc(p.tipo)}</span></td><td>${agStepper(`cant_${p.id}`, { value: 1, min: 1, size: 'sm' })}</td><td><input type="number" class="ag-form-control" id="prec_${p.id}" value="${p.precioUnitario}" step="0.01" style="padding:0.3rem 0.5rem; font-size:0.8rem;"></td><td><button type="button" class="ag-btn ag-btn-outline ag-btn-sm" onclick="agregarProductoById(${p.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></td></tr>`).join('')}</tbody></table></div>`;
                 cargarMecanicos();
                 loadCotizaciones();
+                // restaurar selects del borrador una vez cargados
+                try {
+                    if (window._draftRecep) { const s = document.getElementById('recepcionSelect'); if ([...s.options].some(o => o.value === String(window._draftRecep))) s.value = String(window._draftRecep); }
+                    if (window._draftMec) { const m = document.getElementById('mecanicoSelect'); if ([...m.options].some(o => o.value === String(window._draftMec))) m.value = String(window._draftMec); }
+                } catch (_) {}
+                pintarDraftBar();
             } catch (e) { console.error('loadData error:', e); showError('alertContainer', 'Error al cargar datos: ' + e.message); }
         }
         /* Mecánicos desde la API, ordenados por menor carga (el primero es el sugerido) */
@@ -177,6 +287,7 @@
                     sel.appendChild(o);
                 });
                 if (!mecs.length) sel.innerHTML = '<option value="">Sin mecánicos activos</option>';
+                try { if (window._draftMec && [...sel.options].some(o => o.value === String(window._draftMec))) sel.value = String(window._draftMec); } catch (_) {}
             } catch (e) { sel.innerHTML = '<option value="">No se pudo cargar</option>'; }
         }
         window.agregarServicio = function() {
@@ -188,6 +299,10 @@
             document.getElementById('servicioNombre').value = '';
             document.getElementById('servicioPrecio').value = '';
         }
+        window.agregarProductoById = function(id) {
+            const nombre = (window._cotProds && window._cotProds[id]) || '';
+            agregarProducto(id, nombre);
+        };
         window.agregarProducto = function(id, nombre) {
             const c = parseInt(document.getElementById(`cant_${id}`).value);
             const p = parseFloat(document.getElementById(`prec_${id}`).value);
@@ -210,10 +325,10 @@
             let total = 0;
             tbody.innerHTML = itemsSeleccionados.map((it, i) => {
                 const sub = it.precio * it.cantidad; total += sub;
-                return `<tr><td><span class="ag-badge ag-badge-${it.tipo==='SERVICIO'?'info':'repuesto'}">${it.tipo}</span></td><td>${it.descripcion}</td><td class="col-num">${it.cantidad}</td><td class="col-num">${formatCurrency(it.precio)}</td><td class="col-num ag-fw-600">${formatCurrency(sub)}</td><td><button class="ag-btn ag-btn-outline ag-btn-sm" onclick="eliminarItem(${i})" title="Quitar item" style="padding:0.2rem 0.4rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td></tr>`;
+                return `<tr><td><span class="ag-badge ag-badge-${it.tipo==='SERVICIO'?'info':'repuesto'}">${it.tipo}</span></td><td>${esc(it.descripcion)}</td><td class="col-num">${it.cantidad}</td><td class="col-num">${formatCurrency(it.precio)}</td><td class="col-num ag-fw-600">${formatCurrency(sub)}</td><td><button class="ag-btn ag-btn-outline ag-btn-sm" onclick="eliminarItem(${i})" title="Quitar item" style="padding:0.2rem 0.4rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td></tr>`;
             }).join('');
             chips.innerHTML = itemsSeleccionados.map((it, i) => `
-                <span class="ag-chip" style="cursor:default; padding:0.25rem 0.7rem;">${it.descripcion.length > 26 ? it.descripcion.slice(0, 26) + '…' : it.descripcion} <b style="color:var(--ag-oil);">${formatCurrency(it.precio * it.cantidad)}</b>
+                <span class="ag-chip" style="cursor:default; padding:0.25rem 0.7rem;">${esc(it.descripcion.length > 26 ? it.descripcion.slice(0, 26) + '…' : it.descripcion)} <b style="color:var(--ag-oil);">${formatCurrency(it.precio * it.cantidad)}</b>
                     <button type="button" onclick="eliminarItem(${i})" title="Quitar" style="background:none; border:none; color:var(--ag-signal-stop); cursor:pointer; font-weight:700; padding:0 0.15rem;">×</button>
                 </span>`).join('');
             const nServ = itemsSeleccionados.filter(i => i.tipo === 'SERVICIO').length;
@@ -224,6 +339,7 @@
             totalEl.style.transform = 'scale(1.12)';
             setTimeout(() => totalEl.style.transform = 'scale(1)', 180);
             totalEl.style.transition = 'transform 0.18s ease';
+            guardarBorrador();
         }
         document.getElementById('diagnosticoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -231,6 +347,7 @@
                 const d = await apiFetch('/diagnosticos', { method: 'POST', body: JSON.stringify({ recepcionId: parseInt(document.getElementById('recepcionSelect').value), mecanicoId: parseInt(document.getElementById('mecanicoSelect').value), descripcion: document.getElementById('diagnosticoDesc').value }) });
                 document.getElementById('diagnosticoId').value = d.id;
                 setCotStep(2);
+                guardarBorrador();
                 toast(`Diagnóstico #${d.id} listo. Siguiente: agrega servicios y productos.`, 'success');
                 document.getElementById('cotizacionSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 const sel = document.getElementById('recepcionSelect');
@@ -253,7 +370,7 @@
                 const c = await apiFetch('/cotizaciones/completa', { method: 'POST', body: JSON.stringify({ diagnosticoId: parseInt(document.getElementById('diagnosticoId').value), servicios, productos }) });
                 setCotStep(3);
                 toast(`Cotización #${c.id} creada (${formatCurrency(c.total)}). Último paso: apruébala abajo.`, 'success');
-                itemsSeleccionados = []; actualizarItems(); loadCotizaciones();
+                limpiarBorradorAlTerminar(); loadCotizaciones();
                 document.getElementById('cotizacionesContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
             } catch (error) { showError('alertContainer', 'Error: ' + error.message); }
         });
@@ -294,6 +411,11 @@
         document.getElementById('servicioPrecio').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); agregarServicio(); }
         });
+        ['recepcionSelect', 'mecanicoSelect', 'diagnosticoDesc', 'diagnosticoId', 'servicioNombre', 'servicioPrecio'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.addEventListener('input', guardarBorrador); el.addEventListener('change', guardarBorrador); }
+        });
+        restaurarBorrador();
         loadData();
         setCotStep(1);
         })();

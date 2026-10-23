@@ -32,6 +32,11 @@ public class Cliente {
     @Column(name = "razon_social", length = 200)
     private String razonSocial;
 
+    /** Género opcional (MASCULINO/FEMENINO/OTROS): personaliza la vista. */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private Genero genero;
+
     @Column(length = 250)
     private String direccion;
 

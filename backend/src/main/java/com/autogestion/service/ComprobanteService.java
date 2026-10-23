@@ -66,7 +66,7 @@ public class ComprobanteService {
             throw new BusinessException("Elige boleta o factura.", "tipo",
                     "Boleta es para consumidor final; factura para empresas con RUC.");
         }
-        OrdenTrabajo ot = ordenTrabajoRepository.findById(req.getOrdenTrabajoId())
+        OrdenTrabajo ot = ordenTrabajoRepository.bloquearPorId(req.getOrdenTrabajoId())
                 .orElseThrow(() -> new BusinessException("La orden de trabajo no existe.", "ordenTrabajoId",
                         "Vuelve a OT finalizadas y elige una.", HttpStatus.NOT_FOUND));
         if (ot.getEstado() != EstadoOT.FINALIZADA) {

@@ -5,6 +5,7 @@ import com.autogestion.dto.RecepcionRequest;
 import com.autogestion.dto.RecepcionResponseDTO;
 import com.autogestion.entity.Cliente;
 import com.autogestion.entity.EstadoRecepcion;
+import com.autogestion.entity.Genero;
 import com.autogestion.entity.Recepcion;
 import com.autogestion.entity.TipoDocumento;
 import com.autogestion.entity.Vehiculo;
@@ -144,6 +145,7 @@ public class RecepcionService {
                 .documento(doc.isEmpty() ? null : doc)
                 .razonSocial(vacioANulo(request.getClienteRazonSocial()))
                 .direccion(vacioANulo(request.getClienteDireccion()))
+                .genero(Genero.desde(request.getClienteGenero()))
                 .build();
         return clienteRepository.save(cliente);
     }
