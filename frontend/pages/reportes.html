@@ -24,6 +24,11 @@
         .ag-leer { background:var(--ag-oil-surface); border:1px solid var(--ag-oil-border); border-radius:var(--ag-radius); padding:0.7rem 0.9rem; font-size:0.8rem; color:var(--ag-text-mid); margin-bottom:1rem; }
         .ag-leer b { color:var(--ag-oil-text); }
         .ag-formula { font-family:var(--ag-font-mono, monospace); background:var(--ag-ground); border:1px dashed var(--ag-border); border-radius:8px; padding:0.7rem 1rem; font-size:0.82rem; margin-bottom:1rem; }
+        @media print {
+            body > *:not(#printAreaRep) { display:none !important; }
+            #printAreaRep { display:block !important; }
+        }
+        #printAreaRep { display:none; }
     </style>
 </head>
 <body>
@@ -51,11 +56,44 @@
                     <input class="ag-form-control" id="fDesde" type="date" style="width:auto;" onchange="cargarTabActiva()">
                     <input class="ag-form-control" id="fHasta" type="date" style="width:auto;" onchange="cargarTabActiva()">
                     <span class="ag-text-muted ag-text-sm">Zona America/Lima</span>
+                    <span style="flex:1"></span>
+                    <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="openExportModal()" title="Generar PDF o Excel con los reportes que elijas">Exportar consolidado</button>
+                    <button class="ag-btn ag-btn-primary ag-btn-sm" onclick="exportarPDF()" title="Documento plano listo para imprimir / guardar como PDF">PDF / Imprimir</button>
                 </div>
             </div>
         </div>
         <div class="ag-tabs" role="tablist" id="repTabs"></div>
         <div id="repBody"></div>
+        <div id="printAreaRep"></div>
+
+        <!-- Modal exportación consolidada -->
+        <div id="exportModal" style="display:none;position:fixed;inset:0;background:rgba(6,17,30,0.55);z-index:200;align-items:center;justify-content:center;" onclick="if(event.target===this)closeExportModal()">
+            <div style="background:var(--ag-oil-surface);border:1px solid var(--ag-oil-border);border-radius:16px;padding:2rem;width:520px;max-width:92vw;box-shadow:0 24px 64px rgba(0,0,0,0.35);max-height:88vh;overflow:auto;">
+                <div class="ag-d-flex ag-justify-between ag-align-center ag-mb-3">
+                    <h2 style="font-size:1.1rem;margin:0;">Exportar reporte consolidado</h2>
+                    <button onclick="closeExportModal()" style="background:none;border:none;font-size:1.2rem;color:var(--ag-text-muted);cursor:pointer;">×</button>
+                </div>
+                <p class="ag-text-sm ag-text-muted ag-mb-3">Selecciona los reportes que deseas incluir y el formato de salida.</p>
+                <div id="exportChecks" class="ag-mb-3" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.5rem;"></div>
+                <div class="ag-mb-3">
+                    <label class="ag-form-label" style="font-size:0.8rem;margin-bottom:0.3rem;display:block;">Formato</label>
+                    <div class="ag-d-flex ag-gap-2">
+                        <label style="flex:1;"><input type="radio" name="fmtExp" value="pdf" checked> PDF</label>
+                        <label style="flex:1;"><input type="radio" name="fmtExp" value="excel"> Excel</label>
+                    </div>
+                </div>
+                <div class="ag-form-group ag-mb-3">
+                    <label class="ag-form-label">Vista previa</label>
+                    <div id="exportPreview" style="background:var(--ag-ground);border:1px dashed var(--ag-border);border-radius:8px;padding:0.7rem;font-size:0.82rem;color:var(--ag-text-mid);min-height:48px;">
+                        Selecciona los reportes y un formato para ver el resumen.
+                    </div>
+                </div>
+                <div class="ag-d-flex ag-justify-end ag-gap-2">
+                    <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="closeExportModal()">Cancelar</button>
+                    <button class="ag-btn ag-btn-primary ag-btn-sm" onclick="ejecutarExportacion()">Generar y descargar</button>
+                </div>
+            </div>
+        </div>
     </div>
     <div id="themeToggleWrap"></div>
     <script src="../js/api.js?v=20261006"></script>
@@ -86,14 +124,14 @@
         }
         function rangoRapido(cual) {
             const hoy = new Date();
-            const iso = x => x.toISOString().slice(0, 10);
+            const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             let d, h;
             if (cual === 'hoy') { d = h = hoy; }
             else if (cual === 'semana') { d = new Date(hoy); d.setDate(d.getDate() - 6); h = hoy; }
             else if (cual === 'mesAnt') { d = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1); h = new Date(hoy.getFullYear(), hoy.getMonth(), 0); }
             else { d = new Date(hoy.getFullYear(), hoy.getMonth(), 1); h = hoy; }
-            document.getElementById('fDesde').value = iso(d);
-            document.getElementById('fHasta').value = iso(h);
+            document.getElementById('fDesde').value = fmt(d);
+            document.getElementById('fHasta').value = fmt(h);
             cargarTabActiva();
         }
         function pintarTabs() {
@@ -134,7 +172,7 @@
                 const x = pad + ((W - pad * 2) / n) * i + ((W - pad * 2) / n - bw) / 2;
                 const y = H - pad - h;
                 s += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="4" fill="${color}"><title>${labels[i]}: ${v}</title></rect>`;
-                if (n <= 14) s += `<text x="${(x + bw / 2).toFixed(1)}" y="${(H - 10).toFixed(1)}" text-anchor="middle">${String(labels[i]).slice(5)}</text>`;
+                if (n <= 14) s += `<text x="${(x + bw / 2).toFixed(1)}" y="${(H - 10).toFixed(1)}" text-anchor="middle" font-size="7">${esc(String(labels[i] || '').slice(0, 14))}</text>`;
             });
             document.getElementById(el).innerHTML = s + '</svg>';
         }
@@ -144,17 +182,63 @@
             window[id] = csv;
             return `<div class="ag-table-wrap"><table class="ag-table"><thead><tr>${heads.map(h => `<th>${h}</th>`).join('')}</tr></thead>
                 <tbody>${rows || '<tr><td colspan="9" class="ag-text-center ag-text-muted">Sin datos en este rango</td></tr>'}</tbody></table></div>
-                ${csv ? `<button class="ag-btn ag-btn-outline ag-btn-sm ag-mt-2" onclick="descargarCSV('${id}')">Exportar CSV</button>` : ''}`;
+                ${csv ? `<div class="ag-d-flex ag-gap-3 ag-mt-2"><button class="ag-btn ag-btn-outline ag-btn-sm" onclick="descargarCSV('${id}')">Exportar CSV</button><button class="ag-btn ag-btn-outline ag-btn-sm" onclick="imprimirTabla('${id}')">PDF</button></div>` : ''}`;
         }
-        window.descargarCSV = function(id) {
-            const { nombre, filas } = window[id];
-            const csv = filas.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n');
+        function csvDescargar(nombre, filas) {
+            const csv = filas.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' }));
             a.download = nombre;
             document.body.appendChild(a);
             a.click();
             setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+        }
+        window.descargarCSV = function(id) {
+            const { nombre, filas } = window[id];
+            csvDescargar(nombre, filas);
+            toast('CSV descargado', 'success');
+        };
+        /* PDF plano listo para impresión: documento blanco, tablas simples, sin colores del tema.
+           Cada tabla ya trae CSV + PDF; esto imprime UNA tabla. */
+        window.imprimirTabla = function(id) {
+            const data = window[id];
+            if (!data) return;
+            const { nombre, filas } = data;
+            const [head, ...body] = filas;
+            const tabLabel = (TABS.find(t => t.id === tabActiva) || {}).label || tabActiva;
+            const desde = document.getElementById('fDesde').value || '—';
+            const hasta = document.getElementById('fHasta').value || '—';
+            const w = window.open('', '_blank', 'width=900,height=700');
+            if (!w) { toast('Permite ventanas emergentes para generar el PDF', 'warning'); return; }
+            w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${nombre}</title>
+                <style>body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px;}h1{font-size:18px;margin:0;}p.meta{font-size:12px;color:#444;margin:4px 0 16px;}table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border:1px solid #999;padding:6px 8px;text-align:left;}th{background:#eee;}tr:nth-child(even) td{background:#f7f7f7;}tfoot td{font-weight:bold;}</style>
+                </head><body><h1>AutoGestion · ${tabLabel}</h1>
+                <p class="meta">Rango ${desde} al ${hasta} · Zona América/Lima · Generado ${new Date().toLocaleString('es-PE')}</p>
+                <table><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+                <tbody>${body.map(r => `<tr>${r.map(c => `<td>${String(c ?? '')}</td>`).join('')}</tr>`).join('') || '<tr><td>Sin datos</td></tr>'}</tbody></table>
+                <script>window.onload=function(){window.print();}<\/script></body></html>`);
+            w.document.close();
+        };
+        /* PDF general: toda la pestaña activa en un documento plano (KPIs + tablas). */
+        window.exportarPDF = function() {
+            const tabLabel = (TABS.find(t => t.id === tabActiva) || {}).label || tabActiva;
+            const desde = document.getElementById('fDesde').value || '—';
+            const hasta = document.getElementById('fHasta').value || '—';
+            const host = document.getElementById('repBody');
+            if (!host || !host.innerHTML.trim()) { toast('Nada que imprimir todavía', 'warning'); return; }
+            // Clonar y limpiar: sin botones, sin gráficos SVG, sin hints interactivos
+            const clon = host.cloneNode(true);
+            clon.querySelectorAll('button, .ag-chart, svg').forEach(n => n.remove());
+            const w = window.open('', '_blank', 'width=1000,height=800');
+            if (!w) { toast('Permite ventanas emergentes para generar el PDF', 'warning'); return; }
+            w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Reporte ${tabLabel}</title>
+                <style>body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px;}h1{font-size:20px;margin:0;}h3{font-size:14px;margin:18px 0 8px;border-bottom:2px solid #111;padding-bottom:4px;}p.meta{font-size:12px;color:#444;margin:4px 0 12px;}.kpi{display:inline-block;border:1px solid #999;border-radius:8px;padding:8px 14px;margin:0 8px 8px 0;font-size:12px;}table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;}th,td{border:1px solid #999;padding:6px 8px;text-align:left;}th{background:#eee;}tr:nth-child(even) td{background:#f7f7f7;}.ag-leer,.ag-formula{border:1px solid #999;border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:12px;}</style>
+                </head><body><h1>AutoGestion · Reporte de ${tabLabel}</h1>
+                <p class="meta">Rango ${desde} al ${hasta} · Zona América/Lima · Generado ${new Date().toLocaleString('es-PE')} · Rol ${ROL}</p>
+                ${clon.innerHTML}
+                <script>window.onload=function(){window.print();}<\/script></body></html>`);
+            w.document.close();
+            toast('Abriendo vista de impresión (guarda como PDF)', 'success');
         };
         /* El CSV de "clientes por día" lo genera el backend con nuestra sesión:
            un <a href="/api/..."> no lleva Authorization y /api tampoco existe
@@ -165,29 +249,112 @@
                 toast('CSV descargado', 'success');
             } catch (e) { toast('No se pudo exportar: ' + e.message, 'danger'); }
         };
+        /* CSV GENERAL: una sola descarga con todo lo de la pestaña activa (evita el 1x1).
+           Secciones separadas por líneas [SECCION] para abrirse directo en Excel. */
+        window.exportarGeneralCSV = async function() {
+            const qs = rangoQS();
+            const desde = document.getElementById('fDesde').value || '';
+            const hasta = document.getElementById('fHasta').value || '';
+            const sec = (t) => [[`[${t}]`]];
+            try {
+                toast('Armando CSV general...', 'info', 2000);
+                if (tabActiva === 'resumen') {
+                    const [ind, cli, comp, inv, res] = await Promise.all([
+                        apiFetch('/reportes/indicadores'),
+                        apiFetch(`/reportes/clientes-por-dia?${qs}`),
+                        apiFetch(`/reportes/comprobantes-resumen?${qs}`),
+                        apiFetch(`/reportes/inventario/resumen?${qs}`),
+                        apiFetch(`/reportes/resultado?${qs}`)]);
+                    csvDescargar(`resumen-general_${desde}_${hasta}.csv`, [
+                        ['reporte', 'resumen'], ['rango_desde', desde], ['rango_hasta', hasta],
+                        ...sec('INDICADORES'), ['ot_completadas_mes', ind.otCompletadasMes], ['ingresos_mes', ind.ingresosMes], ['bajo_stock', ind.productosBajoStock],
+                        ...sec('CLIENTES_POR_DIA'), ['dia', 'atendidos', 'recepciones', 'entregas'], ...cli.map(d => [d.dia, d.clientesAtendidos, d.recepciones, d.entregas]),
+                        ...sec('COMPROBANTES'), ['tipo', 'cantidad', 'gravado', 'igv', 'total'], ...comp.map(c => [c.tipo, c.cantidad, c.gravado, c.igv, c.total]),
+                        ...sec('RESULTADO'), ['ingresos', res.ingresos], ['sin_igv', res.ingresosSinIgv], ['compras', res.compras], ['consumido', res.costoConsumido], ['gastos', res.gastosOperativos], ['utilidad', res.utilidadEstimada]]);
+                } else if (tabActiva === 'clientes') {
+                    const [dias, estados, recepciones, clientes] = await Promise.all([
+                        apiFetch(`/reportes/clientes-por-dia?${qs}`),
+                        apiFetch('/reportes/recepciones-por-estado'),
+                        apiFetch('/recepciones').catch(() => []),
+                        apiFetch('/clientes').catch(() => [])]);
+                    const carros = (recepciones || []).filter(r => (!desde || String(r.fechaIngreso || '').slice(0, 10) >= desde) && (!hasta || String(r.fechaIngreso || '').slice(0, 10) <= hasta));
+                    csvDescargar(`clientes-general_${desde}_${hasta}.csv`, [
+                        ['reporte', 'clientes'], ['rango_desde', desde], ['rango_hasta', hasta],
+                        ...sec('CLIENTES_POR_DIA'), ['dia', 'atendidos', 'recepciones', 'entregas'], ...dias.map(d => [d.dia, d.clientesAtendidos, d.recepciones, d.entregas]),
+                        ...sec('RECEPCIONES_POR_ESTADO'), ['estado', 'cantidad'], ...estados.map(e => [e.estado, e.cantidad]),
+                        ...sec('CARROS_ATENDIDOS'), ['fecha', 'placa', 'cliente', 'estado', 'problema'], ...carros.map(r => [r.fechaIngreso, r.vehiculoPlaca, r.clienteNombre, r.estado, (r.problemaReportado || '').replace(/\n/g, ' ')]),
+                        ...sec('CLIENTES'), ['tipo_doc', 'documento', 'nombre', 'razon_social', 'telefono', 'email'], ...(clientes || []).map(c => [c.tipoDocumento, c.documento, c.nombre, c.razonSocial || '', c.telefono || '', c.email || ''])]);
+                } else if (tabActiva === 'ingresos') {
+                    const [pts, comp, serv] = await Promise.all([
+                        apiFetch(`/reportes/ingresos?${qs}&agrupar=${ingAgrupar}`),
+                        apiFetch(`/reportes/comprobantes-resumen?${qs}`),
+                        apiFetch(`/reportes/servicios-mas-pedidos?${qs}&top=50`)]);
+                    csvDescargar(`ingresos-general_${desde}_${hasta}.csv`, [
+                        ['reporte', 'ingresos'], ['rango_desde', desde], ['rango_hasta', hasta], ['agrupado_por', ingAgrupar],
+                        ...sec('INGRESOS_POR_PERIODO'), ['periodo', 'total'], ...pts.map(p => [p.periodo, p.total]),
+                        ...sec('COMPROBANTES'), ['tipo', 'cantidad', 'gravado', 'igv', 'total'], ...comp.map(c => [c.tipo, c.cantidad, c.gravado, c.igv, c.total]),
+                        ...sec('SERVICIOS_MAS_PEDIDOS'), ['servicio', 'veces', 'total'], ...serv.map(s => [s.nombre, s.veces, s.total])]);
+                } else if (tabActiva === 'inventario') {
+                    const [resumen, cons, usados, margen, prods] = await Promise.all([
+                        apiFetch(`/reportes/inventario/resumen?${qs}`),
+                        apiFetch(`/reportes/inventario/consumo?${qs}&agrupar=${invAgrupar}&top=50`),
+                        apiFetch(`/reportes/productos-mas-usados?${qs}&top=50`),
+                        apiFetch('/reportes/margen-por-producto'),
+                        apiFetch('/productos').catch(() => [])]);
+                    csvDescargar(`inventario-general_${desde}_${hasta}.csv`, [
+                        ['reporte', 'inventario'], ['rango_desde', desde], ['rango_hasta', hasta],
+                        ...sec('RESUMEN'), ['comprado', resumen.totalComprado], ['consumido', resumen.totalConsumidoAlCosto], ['mermas', resumen.totalMermas], ['valor_actual', resumen.valorInventarioActual], ['bajo_stock', resumen.productosBajoStock],
+                        ...sec('CONSUMO_' + invAgrupar.toUpperCase()), ['clave', 'cantidad', 'costo'], ...cons.map(c => [c.clave, c.cantidad, c.costo]),
+                        ...sec('MAS_USADOS'), ['producto', 'cantidad', 'costo'], ...usados.map(u => [u.nombre, u.cantidad, u.costo]),
+                        ...sec('MARGEN'), ['producto', 'precio', 'costo', 'margen'], ...margen.map(m => [m.nombre, m.precio, m.costo, m.margen]),
+                        ...sec('STOCK'), ['producto', 'tipo', 'stock', 'costo', 'valorizado'], ...(prods || []).map(p => [p.nombre, p.tipo, p.stockActual, p.costoUnitario, (p.stockActual || 0) * (p.costoUnitario || 0)])]);
+                } else if (tabActiva === 'gastos') {
+                    const [grupos, lista] = await Promise.all([
+                        apiFetch(`/reportes/gastos?${qs}`),
+                        apiFetch(`/gastos?${qs}&page=0&size=100&sort=fecha,desc`)]);
+                    csvDescargar(`gastos-general_${desde}_${hasta}.csv`, [
+                        ['reporte', 'gastos'], ['rango_desde', desde], ['rango_hasta', hasta],
+                        ...sec('POR_CATEGORIA'), ['categoria', 'veces', 'total'], ...grupos.map(g => [g.categoria, g.cantidad, g.total]),
+                        ...sec('DETALLE'), ['fecha', 'categoria', 'descripcion', 'monto'], ...((lista.content || []).map(g => [g.fecha, g.categoria, g.descripcion, g.monto]))]);
+                } else if (tabActiva === 'resultado') {
+                    const r = await apiFetch(`/reportes/resultado?${qs}`);
+                    csvDescargar(`resultado_${desde}_${hasta}.csv`, [
+                        ['reporte', 'resultado'], ['rango_desde', desde], ['rango_hasta', hasta],
+                        ['ingresos', r.ingresos], ['sin_igv', r.ingresosSinIgv], ['compras', r.compras], ['consumido', r.costoConsumido], ['gastos', r.gastosOperativos], ['utilidad', r.utilidadEstimada]]);
+                } else if (tabActiva === 'mecanicos') {
+                    const filas = await apiFetch(`/reportes/rendimiento-mecanicos?${qs}`);
+                    csvDescargar(`mecanicos-general_${desde}_${hasta}.csv`, [
+                        ['reporte', 'mecanicos'], ['rango_desde', desde], ['rango_hasta', hasta],
+                        ['mecanico', 'asignadas', 'en_proceso', 'finalizadas', 'horas_prom', 'consumo', 'ingresos'],
+                        ...filas.map(m => [m.nombre, m.asignadas, m.enProceso, m.finalizadas, m.horasPromedio, m.consumoCosto, m.ingresos])]);
+                }
+                toast('CSV general descargado', 'success');
+            } catch (e) { toast('No se pudo armar el general: ' + e.message, 'danger'); }
+        };
         const B = document.getElementById('repBody');
 
         /* ---------- RESUMEN ---------- */
         async function tabResumen() {
             B.innerHTML = '<p class="ag-text-muted">Cargando...</p>';
             try {
-                const [ind, cli, comp, inv, res] = await Promise.all([
-                    apiFetch('/reportes/indicadores'),
+                const [cli, comp, inv, res] = await Promise.all([
                     apiFetch(`/reportes/clientes-por-dia?${rangoQS()}`),
                     apiFetch(`/reportes/comprobantes-resumen?${rangoQS()}`),
                     apiFetch(`/reportes/inventario/resumen?${rangoQS()}`),
                     apiFetch(`/reportes/resultado?${rangoQS()}`)
                 ]);
                 const totCli = cli.reduce((a, d) => a + d.clientesAtendidos, 0);
+                const totRec = cli.reduce((a, d) => a + d.recepciones, 0);
+                const totIng = comp.reduce((a, c) => a + c.total, 0);
                 const nBol = (comp.find(c => c.tipo === 'BOLETA') || {}).cantidad || 0;
                 const nFac = (comp.find(c => c.tipo === 'FACTURA') || {}).cantidad || 0;
                 B.innerHTML = `
                     ${leer('Mes actual de un vistazo: clientes atendidos, OT cerradas, lo cobrado, comprobantes y plata quieta en el estante.')}
                     <div class="ag-grid ag-grid-4 ag-mb-3">
                         ${kpi('ic-blue', totCli, 'Clientes atendidos (rango)')}
-                        ${kpi('ic-amber', ind.otCompletadasMes, 'OT completadas (mes)')}
-                        ${kpi('ic-green', formatCurrency(ind.ingresosMes), 'Ingresos del mes (cobrado)')}
-                        ${kpi('ic-red', ind.productosBajoStock, 'Productos bajo stock')}
+                        ${kpi('ic-amber', totRec, 'Recepciones (rango)')}
+                        ${kpi('ic-green', formatCurrency(totIng), 'Ingresos del rango (cobrado)')}
+                        ${kpi('ic-red', inv.productosBajoStock || 0, 'Productos bajo stock')}
                     </div>
                     <div class="ag-grid ag-grid-2">
                         <div class="ag-section"><div class="ag-section-header"><h3>Comprobantes</h3></div><div class="ag-section-body">
@@ -204,16 +371,26 @@
         }
 
         /* ---------- CLIENTES ---------- */
+        function enRango(fechaIso, desde, hasta) {
+            if (!fechaIso) return false;
+            const f = String(fechaIso).slice(0, 10);
+            return (!desde || f >= desde) && (!hasta || f <= hasta);
+        }
         async function tabClientes() {
             B.innerHTML = '<p class="ag-text-muted">Cargando...</p>';
             try {
-                const [dias, estados] = await Promise.all([
+                const desde = document.getElementById('fDesde').value;
+                const hasta = document.getElementById('fHasta').value;
+                const [dias, estados, recepciones, clientes] = await Promise.all([
                     apiFetch(`/reportes/clientes-por-dia?${rangoQS()}`),
-                    apiFetch('/reportes/recepciones-por-estado')
+                    apiFetch('/reportes/recepciones-por-estado'),
+                    apiFetch('/recepciones').catch(() => []),
+                    apiFetch('/clientes').catch(() => [])
                 ]);
                 const totCli = dias.reduce((a, d) => a + d.clientesAtendidos, 0);
                 const totRec = dias.reduce((a, d) => a + d.recepciones, 0);
                 const totEnt = dias.reduce((a, d) => a + d.entregas, 0);
+                const carros = (recepciones || []).filter(r => enRango(r.fechaIngreso, desde, hasta));
                 B.innerHTML = `
                     ${leer('<b>Cliente atendido</b> = con recepción registrada ese día. <b>Entregado</b> = con fecha de entrega. Si atiendes y entregas el mismo día, cuenta en ambos.')}
                     <div class="ag-grid ag-grid-3 ag-mb-3">
@@ -224,10 +401,28 @@
                     <div class="ag-section ag-mb-3"><div class="ag-section-header"><h3>Clientes por día</h3>
                         <button type="button" class="ag-btn ag-btn-outline ag-btn-sm" onclick="exportarClientesPorDia()">Exportar CSV</button></div>
                         <div class="ag-section-body"><div id="chCli"></div></div></div>
-                    <div class="ag-section"><div class="ag-section-header"><h3>Recepciones por estado</h3></div>
-                        <div class="ag-section-body"><div class="ag-d-flex ag-gap-3 ag-flex-wrap">
+                    <div class="ag-section ag-mb-3"><div class="ag-section-header"><h3>Recepciones por estado</h3></div>
+                        <div class="ag-section-body"><div class="ag-d-flex ag-gap-3 ag-flex-wrap ag-mb-2">
                             ${estados.map(e => `<span class="ag-badge ag-badge-info">${e.estado}: <b>${e.cantidad}</b></span>`).join('')}
-                        </div></div></div>`;
+                        </div>
+                        ${tabla(['Estado', 'Cantidad'],
+                            estados.map(e => `<tr><td><b>${e.estado}</b></td><td class="col-num">${e.cantidad}</td></tr>`).join(''),
+                            { nombre: 'recepciones-por-estado.csv', filas: [['estado', 'cantidad'], ...estados.map(e => [e.estado, e.cantidad])] })}
+                        </div></div>
+                    <div class="ag-section ag-mb-3"><div class="ag-section-header"><h3>Carros atendidos (${carros.length})</h3></div>
+                        <div class="ag-section-body">
+                        ${tabla(['Fecha', 'Placa', 'Cliente', 'Estado', 'Problema'],
+                            carros.slice(0, 100).map(r => `<tr><td class="ag-text-sm">${formatDate(r.fechaIngreso)}</td><td class="ag-fw-600">${esc(r.vehiculoPlaca || '—')}</td><td>${esc(r.clienteNombre || '—')}</td><td>${esc(r.estado || '')}</td><td class="ag-text-sm">${esc((r.problemaReportado || '').slice(0, 60))}</td></tr>`).join('') || '',
+                            { nombre: 'carros-atendidos.csv', filas: [['fecha', 'placa', 'cliente', 'estado', 'problema'], ...carros.map(r => [r.fechaIngreso, r.vehiculoPlaca, r.clienteNombre, r.estado, (r.problemaReportado || '').replace(/\n/g, ' ')])] })}
+                        ${carros.length > 100 ? '<p class="ag-field-hint">Mostrando 100 de ' + carros.length + ' — el CSV trae todos.</p>' : ''}
+                        </div></div>
+                    <div class="ag-section"><div class="ag-section-header"><h3>Listado de clientes (${(clientes || []).length})</h3></div>
+                        <div class="ag-section-body">
+                        ${tabla(['Documento', 'Nombre', 'Teléfono', 'Email'],
+                            (clientes || []).slice(0, 100).map(c => `<tr><td class="ag-text-sm">${esc(c.tipoDocumento || '')} ${esc(c.documento || '')}</td><td class="ag-fw-600">${esc(c.razonSocial || c.nombre || '')}</td><td class="ag-text-sm">${esc(c.telefono || '—')}</td><td class="ag-text-sm">${esc(c.email || '—')}</td></tr>`).join('') || '',
+                            { nombre: 'clientes.csv', filas: [['tipo_doc', 'documento', 'nombre', 'razon_social', 'telefono', 'email'], ...(clientes || []).map(c => [c.tipoDocumento, c.documento, c.nombre, c.razonSocial || '', c.telefono || '', c.email || ''])] })}
+                        ${(clientes || []).length > 100 ? '<p class="ag-field-hint">Mostrando 100 — el CSV trae todos.</p>' : ''}
+                        </div></div>`;
                 svgBars('chCli', dias.map(d => d.dia), dias.map(d => d.clientesAtendidos), '#d97706');
                 cache._cli = dias;
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
@@ -255,7 +450,11 @@
                             <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="ingAgrupar='dia';tabIngresos()">Por día</button>
                             <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="ingAgrupar='mes';tabIngresos()">Por mes</button>
                         </div></div>
-                        <div class="ag-section-body"><div id="chIng"></div></div></div>
+                        <div class="ag-section-body"><div id="chIng"></div>
+                        ${tabla(['Periodo', 'Total'],
+                            pts.map(p => `<tr><td><b>${p.periodo}</b></td><td class="col-num">${formatCurrency(p.total)}</td></tr>`).join(''),
+                            { nombre: 'ingresos.csv', filas: [['periodo', 'total'], ...pts.map(p => [p.periodo, p.total])] })}
+                        </div></div>
                     <div class="ag-grid ag-grid-2">
                         <div class="ag-section"><div class="ag-section-header"><h3>Boletas vs facturas</h3></div><div class="ag-section-body">
                             ${tabla(['Tipo', 'Cant.', 'Gravado', 'IGV', 'Total'],
@@ -303,13 +502,17 @@
                     <div class="ag-grid ag-grid-2">
                         <div class="ag-section"><div class="ag-section-header"><h3>Más usados</h3></div><div class="ag-section-body">
                             ${tabla(['Producto', 'Cant.', 'Costo'],
-                                usados.map(u => `<tr><td>${u.nombre}</td><td class="col-num">${u.cantidad}</td><td class="col-num">${formatCurrency(u.costo)}</td></tr>`).join(''), null)}
+                                usados.map(u => `<tr><td>${u.nombre}</td><td class="col-num">${u.cantidad}</td><td class="col-num">${formatCurrency(u.costo)}</td></tr>`).join(''),
+                                { nombre: 'productos-mas-usados.csv', filas: [['producto', 'cantidad', 'costo'], ...usados.map(u => [u.nombre, u.cantidad, u.costo])] })}
                         </div></div>
                         <div class="ag-section"><div class="ag-section-header"><h3>Precio vs costo</h3></div><div class="ag-section-body">
                             ${tabla(['Producto', 'Precio', 'Costo', 'Margen'],
-                                margen.slice(0, 12).map(m => `<tr><td>${m.nombre}</td><td class="col-num">${formatCurrency(m.precio)}</td><td class="col-num">${formatCurrency(m.costo)}</td><td class="col-num" style="color:${m.margen >= 0 ? 'var(--ag-signal-go)' : 'var(--ag-signal-stop)'};">${formatCurrency(m.margen)}</td></tr>`).join(''), null)}
+                                margen.slice(0, 12).map(m => `<tr><td>${m.nombre}</td><td class="col-num">${formatCurrency(m.precio)}</td><td class="col-num">${formatCurrency(m.costo)}</td><td class="col-num" style="color:${m.margen >= 0 ? 'var(--ag-signal-go)' : 'var(--ag-signal-stop)'};">${formatCurrency(m.margen)}</td></tr>`).join(''),
+                                { nombre: 'margen-por-producto.csv', filas: [['producto', 'precio', 'costo', 'margen'], ...margen.map(m => [m.nombre, m.precio, m.costo, m.margen])] })}
                         </div></div>
                     </div>
+                    <div class="ag-section ag-mt-3"><div class="ag-section-header"><h3>Stock valorizado</h3></div>
+                        <div class="ag-section-body" id="stockValBody"><p class="ag-text-muted">Cargando stock...</p></div></div>
                     <div class="ag-section ag-mt-3"><div class="ag-section-header"><h3>Kardex por producto</h3>
                         <div class="ag-d-flex ag-gap-3"><select class="ag-form-control" id="kardexSel" style="width:220px;" onchange="cargarKardex()"><option value="">-- Elige producto --</option></select></div></div>
                         <div class="ag-section-body" id="kardexBody"><p class="ag-text-muted">Elige un producto para ver saldo inicial, movimientos y saldo final.</p></div></div>`;
@@ -318,6 +521,14 @@
                     const prods = await apiFetch('/productos');
                     document.getElementById('kardexSel').innerHTML = '<option value="">-- Elige producto --</option>' +
                         prods.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                    const sb = document.getElementById('stockValBody');
+                    if (sb) sb.innerHTML = tabla(['Producto', 'Tipo', 'Stock', 'Costo', 'Valorizado'],
+                        prods.slice(0, 100).map(p => {
+                            const val = (p.stockActual || 0) * (p.costoUnitario || 0);
+                            return `<tr><td class="ag-fw-600">${p.nombre}</td><td>${p.tipo || ''}</td><td class="col-num">${p.stockActual}</td><td class="col-num">${formatCurrency(p.costoUnitario || 0)}</td><td class="col-num ag-fw-700">${formatCurrency(val)}</td></tr>`;
+                        }).join(''),
+                        { nombre: 'inventario-stock.csv', filas: [['producto', 'tipo', 'stock', 'costo', 'valorizado'], ...prods.map(p => [p.nombre, p.tipo, p.stockActual, p.costoUnitario, (p.stockActual || 0) * (p.costoUnitario || 0)])] })
+                        + (prods.length > 100 ? '<p class="ag-field-hint">Mostrando 100 — el CSV trae todo el catálogo.</p>' : '');
                 } catch (_) { /* noop */ }
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
         }
@@ -431,6 +642,52 @@
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
         }
 
+        /* ---------- EXPORTACIÓN CONSOLIDADA ---------- */
+        const REP_NAMES = {
+            resumen: 'Resumen', clientes: 'Clientes', ingresos: 'Ingresos',
+            inventario: 'Inventario', gastos: 'Gastos', resultado: 'Resultado', mecanicos: 'Mecánicos'
+        };
+        function openExportModal() {
+            const box = document.getElementById('exportChecks');
+            box.innerHTML = Object.entries(REP_NAMES).map(([k, v]) =>
+                `<label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;">
+                    <input type="checkbox" name="exp_rpt" value="${k}" checked> <span>${v}</span>
+                 </label>`).join('');
+            document.getElementById('exportModal').style.display = 'flex';
+            actualizarPreview();
+        }
+        function closeExportModal() { document.getElementById('exportModal').style.display = 'none'; }
+        document.querySelectorAll('input[name="fmtExp"]').forEach(el => el.addEventListener('change', actualizarPreview));
+        document.getElementById('exportChecks').addEventListener('change', actualizarPreview);
+        function actualizarPreview() {
+            const seleccionados = Array.from(document.querySelectorAll('input[name="exp_rpt"]:checked')).map(c => c.value);
+            const fmt = document.querySelector('input[name="fmtExp"]:checked')?.value || 'pdf';
+            const preview = document.getElementById('exportPreview');
+            if (seleccionados.length === 0) {
+                preview.innerHTML = '<span style="color:var(--ag-signal-stop);">Selecciona al menos un reporte.</span>';
+                return;
+            }
+            const desde = document.getElementById('fDesde').value || '—';
+            const hasta = document.getElementById('fHasta').value || '—';
+            preview.innerHTML = `<b>Reportes:</b> ${seleccionados.map(s => REP_NAMES[s] || s).join(', ')}<br>` +
+                `<b>Formato:</b> ${fmt.toUpperCase()}<br>` +
+                `<b>Rango:</b> ${desde} al ${hasta}<br>` +
+                `<span style="font-size:0.75rem;color:var(--ag-text-muted);">El archivo incluirá portada, encabezados profesionales, tablas y numeración de páginas.</span>`;
+        }
+        async function ejecutarExportacion() {
+            const seleccionados = Array.from(document.querySelectorAll('input[name="exp_rpt"]:checked')).map(c => c.value);
+            const fmt = document.querySelector('input[name="fmtExp"]:checked')?.value || 'pdf';
+            const desde = document.getElementById('fDesde').value;
+            const hasta = document.getElementById('fHasta').value;
+            if (seleccionados.length === 0) { toast('Selecciona al menos un reporte', 'warning'); return; }
+            const qs = `reportes=${seleccionados.join(',')}&formato=${fmt}${desde ? `&desde=${desde}` : ''}${hasta ? `&hasta=${hasta}` : ''}`;
+            try {
+                toast('Generando reporte consolidado...', 'info', 3000);
+                await apiDescargar(`/reportes/export/consolidado?${qs}`, `reporte-consolidado.${fmt === 'excel' ? 'xlsx' : fmt === 'ambos' ? 'pdf' : fmt}`);
+                toast('Reporte descargado', 'success');
+                closeExportModal();
+            } catch (e) { toast('Error: ' + e.message, 'danger'); }
+        }
         /* init */
         pintarTabs();
         rangoRapido('mes');

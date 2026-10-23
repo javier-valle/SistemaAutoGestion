@@ -3,6 +3,7 @@ package com.autogestion.controller;
 import com.autogestion.dto.IndicadoresResponse;
 import com.autogestion.dto.ReporteDTOs;
 import com.autogestion.service.ReporteService;
+import com.autogestion.service.ReporteExportService;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,7 +14,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * Roles: ADMIN ve todo; RECEPCIONISTA solo clientes y estados;
@@ -27,6 +30,7 @@ import java.util.List;
 public class ReporteController {
 
     private final ReporteService reporteService;
+    private final ReporteExportService reporteExportService;
 
     private LocalDate[] rango(LocalDate desde, LocalDate hasta) {
         LocalDate h = hasta != null ? hasta.plusDays(1) : LocalDate.now(ReporteService.ZONA).plusMonths(1).withDayOfMonth(1);
@@ -120,6 +124,7 @@ public class ReporteController {
         return ResponseEntity.ok(reporteService.stockBajo());
     }
 
+    @RolesAllowed({"ADMIN", "ALMACENERO"})
     @GetMapping("/inventario/resumen")
     public ResponseEntity<ReporteDTOs.InventarioResumen> inventarioResumen(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
@@ -128,6 +133,7 @@ public class ReporteController {
         return ResponseEntity.ok(reporteService.inventarioResumen(r[0], r[1]));
     }
 
+    @RolesAllowed({"ADMIN", "ALMACENERO"})
     @GetMapping("/inventario/consumo")
     public ResponseEntity<List<ReporteDTOs.ConsumoGrupo>> consumo(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
@@ -138,6 +144,7 @@ public class ReporteController {
         return ResponseEntity.ok(reporteService.consumo(r[0], r[1], agrupar, Math.min(50, Math.max(1, top))));
     }
 
+    @RolesAllowed({"ADMIN", "ALMACENERO"})
     @GetMapping("/inventario/kardex/{productoId}")
     public ResponseEntity<ReporteDTOs.KardexDTO> kardex(
             @PathVariable Long productoId,
@@ -147,6 +154,7 @@ public class ReporteController {
         return ResponseEntity.ok(reporteService.kardex(productoId, r[0], r[1]));
     }
 
+    @RolesAllowed({"ADMIN", "ALMACENERO"})
     @GetMapping("/inventario/entradas")
     public ResponseEntity<?> entradas(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
@@ -175,6 +183,7 @@ public class ReporteController {
         return ResponseEntity.ok(reporteService.resultado(r[0], r[1]));
     }
 
+    @RolesAllowed({"ADMIN", "ALMACENERO"})
     @GetMapping("/productos-mas-usados")
     public ResponseEntity<List<ReporteDTOs.ProductoUso>> productosMasUsados(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
@@ -184,8 +193,47 @@ public class ReporteController {
         return ResponseEntity.ok(reporteService.productosMasUsados(r[0], r[1], Math.min(50, Math.max(1, top))));
     }
 
+    @RolesAllowed({"ADMIN", "ALMACENERO"})
     @GetMapping("/margen-por-producto")
     public ResponseEntity<List<ReporteDTOs.MargenDTO>> margenPorProducto() {
         return ResponseEntity.ok(reporteService.margenPorProducto());
+    }
+
+    /* ---------- Exportación consolidada ---------- */
+
+    @RolesAllowed({"ADMIN", "RECEPCIONISTA", "ALMACENERO"})
+    @GetMapping("/export/disponibles")
+    public ResponseEntity<List<String>> reportesDisponibles() {
+        return ResponseEntity.ok(List.of(
+                "resumen", "clientes", "ingresos", "inventario",
+                "gastos", "resultado", "mecanicos"));
+    }
+
+    @RolesAllowed("ADMIN")
+    @GetMapping("/export/consolidado")
+    public ResponseEntity<byte[]> exportarConsolidado(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(defaultValue = "resumen,clientes,ingresos,inventario,gastos,resultado,mecanicos") String reportes,
+            @RequestParam(defaultValue = "pdf") String formato) {
+        if (!formato.equalsIgnoreCase("pdf") && !formato.equalsIgnoreCase("excel")) {
+            return ResponseEntity.badRequest().body(("Formato no válido: " + formato).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+        List<String> seleccionados = Arrays.stream(reportes.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+        if (seleccionados.isEmpty()) {
+            return ResponseEntity.badRequest().body("No se seleccionó ningún reporte.".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+        LocalDate[] r = rango(desde, hasta);
+        byte[] archivo = reporteExportService.exportarConsolidado(seleccionados, formato, r[0], r[1],
+                SecurityContextHolder.getContext().getAuthentication() != null ? SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().findFirst().map(Object::toString).orElse("ADMIN") : "ADMIN");
+        String ext = formato.equalsIgnoreCase("pdf") ? "pdf" : "xlsx";
+        String mime = formato.equalsIgnoreCase("pdf") ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reporte-consolidado." + ext)
+                .contentType(MediaType.parseMediaType(mime))
+                .body(archivo);
     }
 }

@@ -168,39 +168,43 @@ public class ReporteService {
         Map<Long, Agg> agg = new LinkedHashMap<>();
         Map<Long, String> nombres = new LinkedHashMap<>();
         for (Object[] r : ordenTrabajoRepository.asignadasPorMecanico(d, h)) {
-            agg.computeIfAbsent(((Number) r[0]).longValue(), k -> new Agg()).asignadas = ((Number) r[1]).longValue();
+            Long id = ((Number) r[0]).longValue();
+            nombres.put(id, (String) r[1]);
+            agg.computeIfAbsent(id, k -> new Agg()).asignadas = ((Number) r[2]).longValue();
         }
         for (Object[] r : ordenTrabajoRepository.enProcesoPorMecanico(java.util.List.of(EstadoOT.FINALIZADA, EstadoOT.CANCELADA))) {
-            agg.computeIfAbsent(((Number) r[0]).longValue(), k -> new Agg()).enProceso = ((Number) r[1]).longValue();
+            Long id = ((Number) r[0]).longValue();
+            nombres.put(id, (String) r[1]);
+            agg.computeIfAbsent(id, k -> new Agg()).enProceso = ((Number) r[2]).longValue();
         }
-        Map<Long, List<Long>> horas = new LinkedHashMap<>();
+        Map<Long, List<Long>> minutos = new LinkedHashMap<>();
         for (OrdenTrabajo ot : ordenTrabajoRepository.finalizadasEntre(EstadoOT.FINALIZADA, d, h)) {
             Long id = ot.getMecanico().getId();
             nombres.putIfAbsent(id, ot.getMecanico().getNombreCompleto());
             agg.computeIfAbsent(id, k -> new Agg()).finalizadas++;
-            if (ot.getFechaFin() != null) {
-                horas.computeIfAbsent(id, k -> new ArrayList<>())
-                        .add(Duration.between(ot.getFechaCreacion(), ot.getFechaFin()).toHours());
+            if (ot.getFechaFin() != null && ot.getFechaCreacion() != null) {
+                minutos.computeIfAbsent(id, k -> new ArrayList<>())
+                        .add(Duration.between(ot.getFechaCreacion(), ot.getFechaFin()).toMinutes());
             }
         }
-        Map<String, BigDecimal[]> consumo = new LinkedHashMap<>();
+        Map<Long, BigDecimal[]> consumo = new LinkedHashMap<>();
         for (Object[] r : movimientoRepository.consumoPorMecanico(TipoMovimiento.CONSUMO, d, h)) {
-            consumo.put((String) r[0], new BigDecimal[]{(BigDecimal) r[2]});
+            consumo.put(((Number) r[0]).longValue(), new BigDecimal[]{(BigDecimal) r[3]});
         }
-        Map<String, BigDecimal> ingr = new LinkedHashMap<>();
+        Map<Long, BigDecimal> ingr = new LinkedHashMap<>();
         for (Object[] r : comprobanteRepository.ingresosPorMecanico(EstadoComprobante.EMITIDO, d, h)) {
-            ingr.put((String) r[0], (BigDecimal) r[1]);
+            ingr.put(((Number) r[0]).longValue(), (BigDecimal) r[2]);
         }
         List<ReporteDTOs.MecanicoRendimiento> out = new ArrayList<>();
         for (var e : agg.entrySet()) {
             Long id = e.getKey();
             Agg a = e.getValue();
             String nombre = nombres.getOrDefault(id, "Mecánico " + id);
-            List<Long> hs = horas.getOrDefault(id, List.of());
-            Double prom = hs.isEmpty() ? null : Math.round(hs.stream().mapToLong(Long::longValue).average().orElse(0) * 10.0) / 10.0;
+            List<Long> mins = minutos.getOrDefault(id, List.of());
+            Double prom = mins.isEmpty() ? null : Math.round((mins.stream().mapToLong(Long::longValue).average().orElse(0) / 60.0) * 10.0) / 10.0;
             out.add(new ReporteDTOs.MecanicoRendimiento(id, nombre, a.asignadas, a.enProceso, a.finalizadas, prom,
-                    consumo.getOrDefault(nombre, new BigDecimal[]{BigDecimal.ZERO})[0],
-                    ingr.getOrDefault(nombre, BigDecimal.ZERO)));
+                    consumo.getOrDefault(id, new BigDecimal[]{BigDecimal.ZERO})[0],
+                    ingr.getOrDefault(id, BigDecimal.ZERO)));
         }
         return out;
     }
@@ -253,7 +257,8 @@ public class ReporteService {
                 .map(r -> {
                     BigDecimal precio = (BigDecimal) r[1];
                     BigDecimal costo = (BigDecimal) r[2];
-                    return new ReporteDTOs.MargenDTO((String) r[0], precio, costo, precio.subtract(costo));
+                    BigDecimal margen = (precio != null && costo != null) ? precio.subtract(costo) : BigDecimal.ZERO;
+                    return new ReporteDTOs.MargenDTO((String) r[0], precio, costo, margen);
                 }).toList();
     }
 
@@ -306,8 +311,12 @@ public class ReporteService {
         BigDecimal compras = movimientoRepository.sumaCostoPorTipo(TipoMovimiento.ENTRADA, d, h);
         BigDecimal consumido = movimientoRepository.sumaCostoPorTipo(TipoMovimiento.CONSUMO, d, h);
         BigDecimal gastos = gastoRepository.totalEntre(desde, hastaExcluido.minusDays(1));
+        BigDecimal mermas = movimientoRepository.sumaCostoPorTipo(TipoMovimiento.MERMA, d, h)
+                .add(movimientoRepository.sumaCostoPorTipo(TipoMovimiento.AJUSTE_NEGATIVO, d, h));
+        BigDecimal utilidadAntesMermas = sinIgv.subtract(consumido).subtract(gastos);
+        BigDecimal utilidadEstimada = utilidadAntesMermas.subtract(mermas);
         return new ReporteDTOs.ResultadoDTO(ingresos, sinIgv, compras, consumido, gastos,
-                sinIgv.subtract(consumido).subtract(gastos));
+                mermas, utilidadAntesMermas, utilidadEstimada);
     }
 
     @Transactional(readOnly = true)

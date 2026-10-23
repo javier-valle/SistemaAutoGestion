@@ -53,10 +53,10 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long> 
     List<Object[]> ingresosPorMes(EstadoComprobante estado, LocalDateTime desde, LocalDateTime hasta);
 
     @Query("""
-        SELECT m.nombre, COALESCE(SUM(c.total), 0) FROM Comprobante c
+        SELECT m.id, m.nombre, COALESCE(SUM(c.total), 0) FROM Comprobante c
         JOIN c.ordenTrabajo ot JOIN ot.mecanico m
         WHERE c.estado = :estado AND c.fechaEmision >= :desde AND c.fechaEmision < :hasta
-        GROUP BY m.nombre
+        GROUP BY m.id, m.nombre
         """)
     List<Object[]> ingresosPorMecanico(EstadoComprobante estado, LocalDateTime desde, LocalDateTime hasta);
 

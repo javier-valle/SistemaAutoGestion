@@ -46,6 +46,7 @@ public final class ReporteDTOs {
      */
     public record ResultadoDTO(BigDecimal ingresos, BigDecimal ingresosSinIgv, BigDecimal compras,
                                BigDecimal costoConsumido, BigDecimal gastosOperativos,
+                               BigDecimal totalMermas, BigDecimal utilidadAntesMermas,
                                BigDecimal utilidadEstimada) { }
 
     public record ProductoUso(String nombre, long cantidad, BigDecimal costo) { }

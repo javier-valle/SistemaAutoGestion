@@ -57,10 +57,10 @@ public interface InventarioMovimientoRepository extends JpaRepository<Inventario
     List<Object[]> consumoPorOT(TipoMovimiento tipo, LocalDateTime desde, LocalDateTime hasta, org.springframework.data.domain.Pageable pageable);
 
     @Query("""
-        SELECT u.nombre, COALESCE(SUM(m.cantidad), 0), COALESCE(SUM(m.cantidad * m.costoUnitario), 0)
+        SELECT u.id, u.nombre, COALESCE(SUM(m.cantidad), 0), COALESCE(SUM(m.cantidad * m.costoUnitario), 0)
         FROM InventarioMovimiento m JOIN m.ordenTrabajo ot JOIN ot.mecanico u
         WHERE m.tipo = :tipo AND m.fecha >= :desde AND m.fecha < :hasta
-        GROUP BY u.nombre ORDER BY SUM(m.cantidad * m.costoUnitario) DESC
+        GROUP BY u.id, u.nombre ORDER BY SUM(m.cantidad * m.costoUnitario) DESC
         """)
     List<Object[]> consumoPorMecanico(TipoMovimiento tipo, LocalDateTime desde, LocalDateTime hasta);
 
