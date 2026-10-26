@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS otp_codigo (
     expira_en TIMESTAMP NOT NULL,
     intentos INTEGER DEFAULT 0,
     usado BOOLEAN DEFAULT FALSE,
-    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unq_otp_activo UNIQUE (documento, tipo_documento) WHERE (usado = FALSE AND expira_en > CURRENT_TIMESTAMP)
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_otp_activo ON otp_codigo(documento, tipo_documento) WHERE (usado = FALSE);
 CREATE INDEX IF NOT EXISTS idx_otp_doc ON otp_codigo(documento, tipo_documento);
 
 CREATE TABLE IF NOT EXISTS cita (

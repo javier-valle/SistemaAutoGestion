@@ -3,19 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estado — Portal del Cliente</title>
-<link rel="stylesheet" href="../css/styles.css?v=1">
+<title>Estado de mi vehículo — Portal del Cliente</title>
+<meta name="description" content="Estado actual de tu vehículo y orden de trabajo.">
+<link rel="stylesheet" href="../css/styles.css?v=2">
+<link rel="stylesheet" href="../css/redesign.css?v=2">
 <style>
-:root{--bg:#000;--card:#111;--text:#fff;--text-2:#aaa;--border:rgba(255,255,255,.15);}
-body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;padding:2rem;}
-h1{font-size:1.6rem;font-weight:700;margin-bottom:1rem;}
-.card{background:linear-gradient(135deg,#1a1a1a 0%,#000 100%);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:1.5rem;margin-bottom:1rem;}
-.card h3{font-size:.9rem;text-transform:uppercase;color:var(--text-2);letter-spacing:.04em;margin-bottom:.5rem;}
+:root{--bg:#000;--card:#111;--text:#fff;--text-2:#a0a0a0;--border:rgba(255,255,255,.15);--border-strong:rgba(255,255,255,.50);--danger:#ff3b3b;--grad-surface:linear-gradient(135deg,#1a1a1a 0%,#000 100%);--r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:24px;--shadow-xl:0 20px 40px rgba(0,0,0,.6);--font-display:'Space Grotesk',sans-serif;--font-body:'Space Grotesk',sans-serif;--font-mono:'DM Mono',ui-monospace,monospace;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;padding:var(--sp-5);margin:0;line-height:1.45;}
+.ag-wrap{max-width:960px;margin:0 auto;}
+h1{font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.4rem);font-weight:700;margin-bottom:.25rem;letter-spacing:-.02em;line-height:1.15;}
+.sub{color:var(--text-2);font-size:clamp(.85rem,2vw,1rem);margin-bottom:var(--sp-5);}
+.card{background:var(--grad-surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-5);margin-bottom:var(--sp-3);box-shadow:var(--shadow-xl);}
+.card h2{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:var(--sp-3);letter-spacing:-.01em;}
+.status-badge{display:inline-block;padding:.3rem .7rem;border-radius:var(--r-pill);border:1px solid var(--border);font-family:var(--font-mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin-bottom:var(--sp-3);}
+.timeline{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:var(--sp-3);}
+.timeline .step{flex:1 1 120px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--sp-3);font-size:.85rem;color:var(--text-2);}
+.timeline .step.active{border-color:var(--border-strong);color:var(--text);}
+.links{margin-top:var(--sp-6);font-size:.85rem;color:var(--text-muted);display:flex;gap:var(--sp-4);flex-wrap:wrap;}
+.links a{color:var(--text-2);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s ease;}
+.links a:hover{border-bottom-color:var(--text-2);}
 </style>
 </head>
 <body>
-<h1>Estado de tu vehículo</h1>
-<div class="card"><h3>Última actualización</h3><p>Estado pendiente. Datos protegidos.</p></div>
-<div class="card"><h3>Historial</h3><p>Sin registros disponibles para este rango.</p></div>
+<div class="ag-wrap">
+  <h1>Estado de tu vehículo</h1>
+  <p class="sub">Datos protegidos. Solo información autorizada.</p>
+
+  <div class="card" aria-label="Estado de la orden de trabajo">
+    <h2>Orden de trabajo</h2>
+    <span class="status-badge">Estado pendiente</span>
+    <p style="margin-top:.5rem;color:var(--text-2);font-size:.9rem;">No hay orden activa vinculada a esta consulta.</p>
+  </div>
+
+  <div class="card" aria-label="Estado del vehículo">
+    <h2>Vehículo</h2>
+    <p>Placa: <span style="font-family:var(--font-mono);color:var(--text);">ABC-123</span></p>
+    <p style="color:var(--text-muted);">Último servicio registrado: sin datos.</p>
+  </div>
+
+  <div class="card">
+    <h2>Flujo de estados</h2>
+    <div class="timeline" aria-label="Flujo de estados de la orden de trabajo">
+      <div class="step" aria-label="Pendiente">PENDIENTE</div>
+      <div class="step" aria-label="En proceso">EN PROCESO</div>
+      <div class="step" aria-label="En prueba">EN PRUEBA</div>
+      <div class="step active" aria-label="Finalizada">FINALIZADA</div>
+      <div class="step" aria-label="Cancelada">CANCELADA</div>
+    </div>
+  </div>
+
+  <div class="links">
+    <a href="index.html">Volver a consultar</a>
+    <a href="cotizacion.html">Ver cotización</a>
+    <a href="comprobantes.html">Comprobantes</a>
+  </div>
+</div>
 </body>
 </html>

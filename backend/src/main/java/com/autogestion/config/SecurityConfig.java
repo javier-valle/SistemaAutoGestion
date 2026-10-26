@@ -77,7 +77,7 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers("/api/auth/**").permitAll();
+                auth.requestMatchers("/api/auth/**", "/api/public/**").permitAll();
                 if (h2Console) {
                     auth.requestMatchers("/h2-console/**").permitAll();
                 }

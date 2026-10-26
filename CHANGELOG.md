@@ -20,6 +20,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 | Version | Fecha | Lo destacado |
 | :-- | :-- | :-- |
+| [2.10.0](#-210---2026-10-23) | 2026-10-23 | 🚀 Portal cliente (seguridad + identificación modo A/B + OTP) · Nuevas ventanas (agenda, garantías, caja, checklist, compras, auditoría, cuentas, notificaciones, productividad, TV) · Políticas y cumplimiento (borradores) · Rediseño Bl4z3 base · Java 21 · Migración V5 |
 | [2.9.0](#-290---2026-10-22) | 2026-10-22 | 🔧 Módulo Reportes refactorizado: 13 bugs críticos corregidos, PDFBox, Excel con freeze/autofilter, rango RangoFechas, seguridad por rol, XSS escapado, mecanismo por id |
 | [2.8.0](#-280---2026-10-03) | 2026-10-03 | 🙋 Género del cliente + placas y persona de escala en el visor 3D |
 | [2.7.0](#-270---2026-10-03) | 2026-10-03 | 🏎️ Renders de vehículos rediseñados (alta fidelidad) + visor 3D interactivo |

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotización — Portal del Cliente</title>
+<meta name="description" content="Aprobación o rechazo de cotización del taller.">
+<link rel="stylesheet" href="../css/styles.css?v=2">
+<link rel="stylesheet" href="../css/redesign.css?v=2">
+<style>
+:root{--bg:#000;--text:#fff;--text-2:#a0a0a0;--border:rgba(255,255,255,.15);--border-strong:rgba(255,255,255,.50);--danger:#ff3b3b;--grad-surface:linear-gradient(135deg,#1a1a1a 0%,#000 100%);--r-md:10px;--r-lg:16px;--shadow-xl:0 20px 40px rgba(0,0,0,.6);--font-display:'Space Grotesk',sans-serif;--font-body:'Space Grotesk',sans-serif;--font-mono:'DM Mono',ui-monospace,monospace;--sp-1:.5rem;--sp-2:.75rem;--sp-3:1rem;--sp-4:1.5rem;--sp-5:2rem;--sp-6:3rem;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;padding:var(--sp-5);margin:0;}
+.ag-wrap{max-width:900px;margin:0 auto;}
+h1{font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.2rem);font-weight:700;margin-bottom:var(--sp-3);letter-spacing:-.02em;}
+.card{background:var(--grad-surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-5);margin-bottom:var(--sp-4);box-shadow:var(--shadow-xl);}
+.card h2{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:var(--sp-3);}
+.table{width:100%;border-collapse:collapse;font-size:.9rem;}
+.table th,.table td{padding:.6rem .5rem;text-align:left;border-bottom:1px solid var(--border);font-family:var(--font-mono);}
+.table th{color:var(--text-2);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:.75rem 1.25rem;background:linear-gradient(135deg,#fff 0%,#d0d0d0 100%);color:#000;border:none;border-radius:999px;font-weight:700;font-size:.9rem;cursor:pointer;margin-right:.5rem;margin-top:var(--sp-3);}
+.btn-danger{background:var(--danger);color:#fff;}
+.sub{color:var(--text-2);font-size:.9rem;margin-bottom:var(--sp-5);}
+</style>
+</head>
+<body>
+<div class="ag-wrap">
+  <h1>Cotización</h1>
+  <p class="sub">Aprueba o rechaza la propuesta. Cada acción se registra con fecha y versión de política aceptada.</p>
+  <div class="card">
+    <h2>Cotización pendiente</h2>
+    <table class="table" aria-label="Detalle de cotización">
+      <thead><tr><th>Servicio</th><th>Cantidad</th><th>Subtotal</th></tr></thead>
+      <tbody>
+        <tr><td>Diagnóstico inicial</td><td>1</td><td>S/ 50.00</td></tr>
+        <tr><td>Repuestos (referencia)</td><td>1</td><td>S/ 120.00</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:var(--sp-3);font-size:.9rem;color:var(--text-2);">Vigencia: 7 días. Aprobación requiere modo B (OTP).</p>
+    <button class="btn" onclick="alert('Aprobación pendiente de implementación')">Aprobar</button>
+    <button class="btn btn-danger" onclick="alert('Rechazo pendiente de implementación')">Rechazar</button>
+  </div>
+  <div class="links" style="margin-top:var(--sp-4);font-size:.85rem;color:var(--text-muted);display:flex;gap:var(--sp-4);flex-wrap:wrap;">
+    <a href="index.html">Inicio</a>
+    <a href="estado.html">Estado</a>
+  </div>
+</div>
+</body>
+</html>

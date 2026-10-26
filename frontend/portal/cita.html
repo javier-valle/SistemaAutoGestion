@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedir cita — Portal del Cliente</title>
+<link rel="stylesheet" href="../css/styles.css?v=2">
+<style>
+:root{--bg:#000;--text:#fff;--text-2:#a0a0a0;--border:rgba(255,255,255,.15);--grad-surface:linear-gradient(135deg,#1a1a1a 0%,#000 100%);--r-lg:16px;--shadow-xl:0 20px 40px rgba(0,0,0,.6);--font-display:'Space Grotesk',sans-serif;--font-body:'Space Grotesk',sans-serif;--sp-1:.5rem;--sp-2:.75rem;--sp-3:1rem;--sp-4:1.5rem;--sp-5:2rem;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;padding:var(--sp-5);margin:0;}
+.ag-wrap{max-width:700px;margin:0 auto;}
+h1{font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.2rem);font-weight:700;margin-bottom:var(--sp-3);letter-spacing:-.02em;}
+.card{background:var(--grad-surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-5);box-shadow:var(--shadow-xl);}
+</style>
+</head>
+<body>
+<div class="ag-wrap">
+  <h1>Pedir cita</h1>
+  <div class="card">
+    <form onsubmit="event.preventDefault(); alert('Cita pendiente de implementación');">
+      <label for="fecha">Fecha</label>
+      <input id="fecha" type="date" required>
+      <label for="franja">Franja horaria</label>
+      <select id="franja"><option>08:00 - 10:00</option><option>10:00 - 12:00</option><option>14:00 - 16:00</option></select>
+      <label for="servicio">Servicio</label>
+      <input id="servicio" type="text" placeholder="Ej. Cambio de aceite" required>
+      <label for="placa">Placa</label>
+      <input id="placa" type="text" placeholder="Ej. ABC-123" required>
+      <label for="comentario">Comentario</label>
+      <textarea id="comentario" rows="3" placeholder="Observaciones adicionales"></textarea>
+      <button type="submit" style="margin-top:1rem;padding:.75rem 1.25rem;background:linear-gradient(135deg,#fff 0%,#d0d0d0 100%);color:#000;border:none;border-radius:999px;font-weight:700;font-size:.9rem;cursor:pointer;">Solicitar cita</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

@@ -4,7 +4,7 @@
 
 <br>
 
-<img src="https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
+<img src="https://img.shields.io/badge/Java-21%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
 <img src="https://img.shields.io/badge/Spring%20Boot-3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
 <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" />
 <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
@@ -586,3 +586,27 @@ Asegurate de que:
 **Desarrollado para el taller mecanico automotriz**
 
 </div>
+
+---
+
+## ⚠️ Advertencia legal y parámetros pendientes
+
+- **Datos legales y de marca**: `RAZON_SOCIAL`, `RUC_TALLER`, `DIRECCION`, `TELEFONO_WHATSAPP`, `CORREO_CONTACTO`, `CORREO_ARCO`, `OFICIAL_DATOS`, `SPLASH_TITULO`, `SPLASH_SUBTITULO`, `SPLASH_IMAGEN` son `<!-- TODO -->` y deben ser definidos por el responsable antes de producción.
+- `SPLASH_SCREEN` = SI (asumido por falta de NO explícito); textos del splash están vacíos con `<!-- TODO -->`.
+- `MODO_PORTAL` = A+B (asumido). Ambas identificaciones disponibles.
+- Las políticas (`docs/politicas-README.md`) son borradores técnicos y **requieren revisión legal**.
+- La facturación es académica; no incluye integración SUNAT.
+
+---
+
+## 🆕 Cambios recientes (Fase 1 — Portal + Rediseño base)
+
+- `pom.xml`: `java.version` actualizado a 21.
+- Migración `V5__portal_cliente.sql` aplicada (`portal_acceso_log`, `otp_codigo`, `cita`, `encuesta_satisfaccion`, `consentimiento`, `solicitud_arco`, `notificacion`).
+- Entidades, repositorios y servicio básico `PortalService` creados.
+- Controlador `/api/public/portal` con identificación (modo A) y OTP (modo B).
+- `frontend/portal/` reconstruido con diseño Bl4z3 (tokens, layout fluido, accesibilidad básica).
+- Páginas nuevas del portal: `estado.html`, `cotizacion.html`, `comprobantes.html`, `historial.html`, `mantenimiento.html`, `cita.html`, `encuesta.html`, `politicas.html`.
+- `frontend/pages/politicas/index.html` creado con índice de políticas.
+- `docs/permisos.md` y `docs/politicas-README.md` creados.
+- Advertencias `<!-- TODO -->` visibles en todas las pantallas que usan datos no definidos.
