@@ -82,13 +82,15 @@ class ComprobanteListadoTest {
     }
 
     @Test
-    void boletaConRucDiceQueCorrespondeFactura() {
+    void boletaConRucValidoSeEmiteComoRuc() {
         Long adminId = usuarioRepository.findByEmail("admin@sanmartin.pe").orElseThrow().getId();
         Long otId = flujoHastaFinalizar(adminId, "LIST-003");
 
-        var e = assertThrows(com.autogestion.exception.BusinessException.class,
-                () -> emitir(otId, "BOLETA", "20123456786"));
-        assertTrue(e.getMessage().contains("factura"), e.getMessage());
+        // Regla vigente: la boleta acepta RUC (negocios que la piden así);
+        // solo la factura lo exige. Antes se rechazaba con "corresponde factura".
+        var comp = emitir(otId, "BOLETA", "20123456786");
+        assertEquals("RUC", comp.clienteTipoDoc());
+        assertEquals("20123456786", comp.clienteNumDoc());
     }
 
     /* ---------------- helpers ---------------- */
