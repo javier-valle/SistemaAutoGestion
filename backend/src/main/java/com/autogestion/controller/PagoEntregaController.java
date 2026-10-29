@@ -17,7 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@RolesAllowed("ADMIN")
+// Caja: el administrador cobra y también la recepción, que es quien atiende
+// al cliente en el mostrador (el menú ya le muestra la página de Pago y Entrega).
+@RolesAllowed({"ADMIN", "RECEPCIONISTA"})
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor

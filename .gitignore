@@ -104,3 +104,9 @@ logs/
 
 # Archivos temporales de Word (~$doc.docx)
 ~$*
+
+# La evidencia del informe SI se versiona (capturas, diagramas y salidas de
+# pruebas). Estas reglas dejan constancia para que ningun patron futuro la
+# excluya por accidente.
+!docs/evidencia/
+!docs/evidencia/**
