@@ -22,9 +22,14 @@ class ReporteExcelGeneratorTest {
             assertTrue(wb.getNumberOfSheets() > 0, "Debe tener al menos una hoja");
             Sheet sh = wb.getSheet("Test");
             assertNotNull(sh, "Debe tener hoja 'Test'");
-            Row row = sh.getRow(1); // primera fila de datos
-            assertNotNull(row);
-            assertTrue(row.getCell(1) instanceof Cell);
+            // Fila 0 = título de la sección, fila 1 = separación, fila 2 = encabezados, fila 3 = datos.
+            Row encabezados = sh.getRow(2);
+            assertNotNull(encabezados, "Debe existir la fila de encabezados");
+            assertEquals("A", encabezados.getCell(0).getStringCellValue());
+            Row row = sh.getRow(3); // primera fila de datos
+            assertNotNull(row, "Debe existir la primera fila de datos");
+            assertEquals("Hola", row.getCell(0).getStringCellValue());
+            assertEquals(42, (int) row.getCell(1).getNumericCellValue());
         }
     }
 }
