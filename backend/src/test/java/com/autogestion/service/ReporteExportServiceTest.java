@@ -57,6 +57,18 @@ class ReporteExportServiceTest {
     }
 
     @Test
+    void elEncabezadoCierraEnElDiaPedidoSinCorrerElRango() throws Exception {
+        byte[] archivo = exportService.exportarTabla(tabla(), "excel",
+                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 29), "ADMIN");
+
+        try (XSSFWorkbook wb = new XSSFWorkbook(new ByteArrayInputStream(archivo))) {
+            String subtitulo = wb.getSheetAt(0).getRow(1).getCell(0).getStringCellValue();
+            assertTrue(subtitulo.startsWith("Del 01/10/2026 al 29/10/2026"),
+                    "El rango no debe expandirse dos veces: " + subtitulo);
+        }
+    }
+
+    @Test
     void pdfSaleEnA4ConLosDatos() {
         byte[] archivo = exportService.exportarTabla(tabla(), "pdf",
                 LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 29), "ADMIN");
