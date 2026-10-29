@@ -223,9 +223,8 @@ public class ReporteController {
             return ResponseEntity.badRequest()
                     .body(("Formato no válido: " + formato).getBytes(StandardCharsets.UTF_8));
         }
-        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         byte[] archivo = reporteExportService.exportarTabla(request, pdf ? "pdf" : "excel",
-                r[0], r[1], rolActual());
+                desde, hasta, rolActual());
         String nombre = archivo(request.getTitulo(), pdf ? "pdf" : "xlsx");
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombre + "\"")
@@ -252,8 +251,7 @@ public class ReporteController {
         if (seleccionados.isEmpty()) {
             return ResponseEntity.badRequest().body("No se seleccionó ningún reporte.".getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
-        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
-        byte[] archivo = reporteExportService.exportarConsolidado(seleccionados, formato, r[0], r[1],
+        byte[] archivo = reporteExportService.exportarConsolidado(seleccionados, formato, desde, hasta,
                 rolActual());
         String ext = formato.equalsIgnoreCase("pdf") ? "pdf" : "xlsx";
         String mime = formato.equalsIgnoreCase("pdf") ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";

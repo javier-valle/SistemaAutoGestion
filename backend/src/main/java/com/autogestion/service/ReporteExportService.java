@@ -23,30 +23,37 @@ public class ReporteExportService {
 
     private final ReporteService reporteService;
 
+    /**
+     * Rango de los archivos exportados: las fechas llegan como las escribe el
+     * usuario (ambas inclusivas) y se normalizan aquí, una sola vez.
+     */
     public byte[] exportarConsolidado(List<String> reportesSeleccionados,
                                        String formato,
                                        LocalDate desde, LocalDate hasta,
                                        String rol) {
         List<ReportePdfGenerator.Seccion> seccionesPdf = new ArrayList<>();
         List<ReporteExcelGenerator.Seccion> seccionesXlsx = new ArrayList<>();
+        LocalDate[] rango = Rangos.rangoReporte(desde, hasta);
+        LocalDate ini = rango[0];
+        LocalDate fin = rango[1];
 
         for (String r : reportesSeleccionados) {
             switch (r) {
-                case "resumen" -> agregarResumen(seccionesPdf, seccionesXlsx, desde, hasta);
-                case "clientes" -> agregarClientes(seccionesPdf, seccionesXlsx, desde, hasta);
-                case "ingresos" -> agregarIngresos(seccionesPdf, seccionesXlsx, desde, hasta);
-                case "inventario" -> agregarInventario(seccionesPdf, seccionesXlsx, desde, hasta);
-                case "gastos" -> agregarGastos(seccionesPdf, seccionesXlsx, desde, hasta);
-                case "resultado" -> agregarResultado(seccionesPdf, seccionesXlsx, desde, hasta);
-                case "mecanicos" -> agregarMecanicos(seccionesPdf, seccionesXlsx, desde, hasta);
+                case "resumen" -> agregarResumen(seccionesPdf, seccionesXlsx, ini, fin);
+                case "clientes" -> agregarClientes(seccionesPdf, seccionesXlsx, ini, fin);
+                case "ingresos" -> agregarIngresos(seccionesPdf, seccionesXlsx, ini, fin);
+                case "inventario" -> agregarInventario(seccionesPdf, seccionesXlsx, ini, fin);
+                case "gastos" -> agregarGastos(seccionesPdf, seccionesXlsx, ini, fin);
+                case "resultado" -> agregarResultado(seccionesPdf, seccionesXlsx, ini, fin);
+                case "mecanicos" -> agregarMecanicos(seccionesPdf, seccionesXlsx, ini, fin);
             }
         }
 
         String titulo = "Reporte consolidado de AutoGestión";
         if (formato.equalsIgnoreCase("pdf")) {
-            return ReportePdfGenerator.generar(seccionesPdf, titulo, desde, hasta, rol);
+            return ReportePdfGenerator.generar(seccionesPdf, titulo, ini, fin.minusDays(1), rol);
         } else {
-            return ReporteExcelGenerator.generar(seccionesXlsx, titulo, desde, hasta, rol);
+            return ReporteExcelGenerator.generar(seccionesXlsx, titulo, ini, fin.minusDays(1), rol);
         }
     }
 
@@ -58,6 +65,8 @@ public class ReporteExportService {
     public byte[] exportarTabla(ReporteTablaRequest request, String formato,
                                 LocalDate desde, LocalDate hasta, String rol) {
         LocalDate[] rango = Rangos.rangoReporte(desde, hasta);
+        LocalDate ini = rango[0];
+        LocalDate fin = rango[1].minusDays(1);
         String titulo = recortar(request.getTitulo(), 120);
         String nota = recortar(request.getNota(), 300);
 
@@ -88,12 +97,12 @@ public class ReporteExportService {
                     .toArray(String[]::new);
             return ReportePdfGenerator.generar(
                     List.of(new ReportePdfGenerator.Seccion(titulo, filasPdf, encabezados, nota)),
-                    titulo, rango[0], rango[1], rol);
+                    titulo, ini, fin, rol);
         }
 
         return ReporteExcelGenerator.generarTabla(
                 new ReporteExcelGenerator.Seccion(titulo, columnas, filasExcel, nota),
-                titulo, rango[0], rango[1], rol);
+                titulo, ini, fin, rol);
     }
 
     private static ReporteExcelGenerator.Tipo tipoDe(String tipo) {
@@ -155,11 +164,10 @@ public class ReporteExportService {
     private void agregarResumen(List<ReportePdfGenerator.Seccion> pdf,
                                  List<ReporteExcelGenerator.Seccion> xlsx,
                                  LocalDate desde, LocalDate hasta) {
-        var rango = Rangos.rangoReporte(desde, hasta);
         var ind = reporteService.obtenerIndicadores();
-        var cli = reporteService.clientesPorDia(rango[0], rango[1]);
-        var comp = reporteService.comprobantesResumen(rango[0], rango[1]);
-        var res = reporteService.resultado(rango[0], rango[1]);
+        var cli = reporteService.clientesPorDia(desde, hasta);
+        var comp = reporteService.comprobantesResumen(desde, hasta);
+        var res = reporteService.resultado(desde, hasta);
 
         String[] enc = {"Indicador", "Valor"};
         List<String[]> datos = new ArrayList<>();
@@ -182,8 +190,7 @@ public class ReporteExportService {
     private void agregarClientes(List<ReportePdfGenerator.Seccion> pdf,
                                   List<ReporteExcelGenerator.Seccion> xlsx,
                                   LocalDate desde, LocalDate hasta) {
-        var rango = Rangos.rangoReporte(desde, hasta);
-        var dias = reporteService.clientesPorDia(rango[0], rango[1]);
+        var dias = reporteService.clientesPorDia(desde, hasta);
         var estados = reporteService.recepcionesPorEstado();
 
         String[] enc = {"Día", "Atendidos", "Recepciones", "Entregas"};
@@ -206,8 +213,7 @@ public class ReporteExportService {
     private void agregarIngresos(List<ReportePdfGenerator.Seccion> pdf,
                                   List<ReporteExcelGenerator.Seccion> xlsx,
                                   LocalDate desde, LocalDate hasta) {
-        var rango = Rangos.rangoReporte(desde, hasta);
-        var pts = reporteService.ingresos(rango[0], rango[1], "dia");
+        var pts = reporteService.ingresos(desde, hasta, "dia");
         String[] enc = {"Periodo", "Total (S/)"};
         List<String[]> datos = new ArrayList<>();
         List<Object[]> datosX = new ArrayList<>();
@@ -224,8 +230,7 @@ public class ReporteExportService {
     private void agregarInventario(List<ReportePdfGenerator.Seccion> pdf,
                                     List<ReporteExcelGenerator.Seccion> xlsx,
                                     LocalDate desde, LocalDate hasta) {
-        var rango = Rangos.rangoReporte(desde, hasta);
-        var resumen = reporteService.inventarioResumen(rango[0], rango[1]);
+        var resumen = reporteService.inventarioResumen(desde, hasta);
         String[] enc = {"Concepto", "Valor"};
         List<String[]> datos = new ArrayList<>();
         datos.add(new String[]{"Total comprado", money(resumen.totalComprado())});
@@ -249,9 +254,7 @@ public class ReporteExportService {
     private void agregarGastos(List<ReportePdfGenerator.Seccion> pdf,
                                 List<ReporteExcelGenerator.Seccion> xlsx,
                                 LocalDate desde, LocalDate hasta) {
-        var rango = Rangos.rangoReporte(desde, hasta);
-
-        var grupos = reporteService.gastosPorCategoria(rango[0], rango[1].minusDays(1));
+        var grupos = reporteService.gastosPorCategoria(desde, hasta.minusDays(1));
         String[] enc = {"Categoría", "Etiqueta", "Veces", "Total (S/)"};
         List<String[]> datos = new ArrayList<>();
         List<Object[]> datosX = new ArrayList<>();
@@ -269,8 +272,7 @@ public class ReporteExportService {
     private void agregarResultado(List<ReportePdfGenerator.Seccion> pdf,
                                    List<ReporteExcelGenerator.Seccion> xlsx,
                                    LocalDate desde, LocalDate hasta) {
-        var rango = Rangos.rangoReporte(desde, hasta);
-        var r = reporteService.resultado(rango[0], rango[1]);
+        var r = reporteService.resultado(desde, hasta);
         String[] enc = {"Concepto", "Monto (S/)"};
         List<String[]> datos = new ArrayList<>();
         datos.add(new String[]{"Ingresos (con IGV)", money(r.ingresos())});
@@ -296,8 +298,7 @@ public class ReporteExportService {
     private void agregarMecanicos(List<ReportePdfGenerator.Seccion> pdf,
                                    List<ReporteExcelGenerator.Seccion> xlsx,
                                    LocalDate desde, LocalDate hasta) {
-        var rango = Rangos.rangoReporte(desde, hasta);
-        var filas = reporteService.rendimientoMecanicos(rango[0], rango[1]);
+        var filas = reporteService.rendimientoMecanicos(desde, hasta);
         String[] enc = {"Mecánico", "Asignadas", "En proceso", "Finalizadas", "Horas prom", "Consumo (S/)", "Ingresos (S/)"};
         List<String[]> datos = new ArrayList<>();
         List<Object[]> datosX = new ArrayList<>();
