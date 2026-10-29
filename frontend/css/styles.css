@@ -7,6 +7,7 @@
   --ag-steel-light: #94a3b8;
   --ag-ground: #f1f5f9;
   --ag-surface: #ffffff;
+  --ag-surface-nested: #f8fafc;
   --ag-border: #e2e8f0;
   --ag-border-subtle: #f1f5f9;
   --ag-text: #0f172a;
@@ -674,8 +675,12 @@ html.login-page, html.login-page body {
   gap: 0.65rem;
   padding: 0.65rem 0.9rem;
   color: var(--ag-text-mid);
+  background: transparent;
+  font-family: inherit;
   font-size: 0.85rem;
   font-weight: 500;
+  text-align: left;
+  cursor: pointer;
   border: 1px solid var(--ag-border);
   border-radius: var(--ag-radius);
   text-decoration: none;
