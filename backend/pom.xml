@@ -171,6 +171,10 @@
                 <configuration>
                     <doclint>none</doclint>
                     <encoding>UTF-8</encoding>
+                    <!-- Javadoc 3.x escribe por defecto en target/reports/apidocs;
+                         se fija target/site para que el plugin agregue /apidocs y
+                         quede en target/site/apidocs, la ruta documentada. -->
+                    <outputDirectory>${project.build.directory}/site</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>
