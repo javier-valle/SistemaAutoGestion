@@ -204,7 +204,8 @@
         }
         function tabla(heads, rows, cfg) {
             const id = 'tbl' + Math.random().toString(36).slice(2, 8);
-            const datos = cfg && cfg.filas ? datosTabla(heads, cfg.filas) : null;
+            const crudo = cfg && cfg.filas && cfg.filas.length ? datosTabla(heads, cfg.filas) : null;
+            const datos = crudo && crudo.filas.length ? crudo : null;
             if (datos) window[id] = { titulo: cfg.titulo || 'Reporte', columnas: datos.columnas, filas: datos.filas };
             return `<div class="ag-table-wrap"><table class="ag-table"><thead><tr>${heads.map(h => `<th>${h}</th>`).join('')}</tr></thead>
                 <tbody>${rows || '<tr><td colspan="9" class="ag-text-center ag-text-muted">Sin datos en este rango</td></tr>'}</tbody></table></div>
