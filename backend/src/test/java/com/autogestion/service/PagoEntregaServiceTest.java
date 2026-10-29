@@ -2,6 +2,7 @@ package com.autogestion.service;
 
 import com.autogestion.dto.PagoRequest;
 import com.autogestion.entity.Cliente;
+import com.autogestion.entity.Comprobante;
 import com.autogestion.entity.Cotizacion;
 import com.autogestion.entity.Diagnostico;
 import com.autogestion.entity.EstadoOT;
@@ -116,6 +117,36 @@ class PagoEntregaServiceTest {
         assertEquals(HttpStatus.CONFLICT, ex.getEstado());
         assertEquals(EstadoRecepcion.EN_TRABAJO,
                 ot.getCotizacion().getDiagnostico().getRecepcion().getEstado());
+    }
+
+    @Test
+    void desvincularComprobanteDejaElPagoSinDocumentoAnulado() {
+        OrdenTrabajo ot = ot(EstadoOT.FINALIZADA);
+        Comprobante comp = Comprobante.builder().id(9L).ordenTrabajo(ot).build();
+        PagoEntrega pago = pago(ot, LocalDateTime.now());
+        pago.setComprobante(comp);
+        when(pagoEntregaRepository.findByOrdenTrabajoId(7L)).thenReturn(Optional.of(pago));
+        when(pagoEntregaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        pagoEntregaService.desvincularComprobante(comp);
+
+        assertNull(pago.getComprobante());
+        verify(pagoEntregaRepository).save(pago);
+    }
+
+    @Test
+    void desvincularNoTocaElPagoDeOtroComprobante() {
+        OrdenTrabajo ot = ot(EstadoOT.FINALIZADA);
+        Comprobante actual = Comprobante.builder().id(20L).ordenTrabajo(ot).build();
+        Comprobante anulado = Comprobante.builder().id(21L).ordenTrabajo(ot).build();
+        PagoEntrega pago = pago(ot, LocalDateTime.now());
+        pago.setComprobante(actual);
+        when(pagoEntregaRepository.findByOrdenTrabajoId(7L)).thenReturn(Optional.of(pago));
+
+        pagoEntregaService.desvincularComprobante(anulado);
+
+        assertEquals(20L, pago.getComprobante().getId());
+        verify(pagoEntregaRepository, never()).save(any());
     }
 
     @Test

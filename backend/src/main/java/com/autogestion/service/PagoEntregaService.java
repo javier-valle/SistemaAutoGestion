@@ -106,6 +106,22 @@ public class PagoEntregaService {
         return pagoEntregaRepository.save(pago);
     }
 
+    /**
+     * Al anular, el pago deja de apuntar al documento sin validez. El comprobante
+     * anulado sigue existiendo como historial y la OT puede emitir otro.
+     */
+    @Transactional
+    public void desvincularComprobante(Comprobante comprobante) {
+        if (comprobante == null || comprobante.getOrdenTrabajo() == null) return;
+        pagoEntregaRepository.findByOrdenTrabajoId(comprobante.getOrdenTrabajo().getId())
+                .filter(p -> p.getComprobante() != null
+                        && p.getComprobante().getId().equals(comprobante.getId()))
+                .ifPresent(p -> {
+                    p.setComprobante(null);
+                    pagoEntregaRepository.save(p);
+                });
+    }
+
     /** Entrega idempotente para el flujo de emisión: no falla si ya estaba entregada. */
     @Transactional
     public PagoEntrega asegurarEntrega(OrdenTrabajo ot) {

@@ -168,7 +168,9 @@ public class ComprobanteService {
         }
         c.setEstado(EstadoComprobante.ANULADO);
         c.setMotivoAnulacion(motivo.trim());
-        return ComprobanteMapper.toDTO(comprobanteRepository.save(c));
+        Comprobante anulado = comprobanteRepository.save(c);
+        pagoEntregaService.desvincularComprobante(anulado);
+        return ComprobanteMapper.toDTO(anulado);
     }
 
     @Transactional(readOnly = true)
