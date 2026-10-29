@@ -181,42 +181,70 @@
             document.getElementById(el).innerHTML = s + '</svg>';
         }
         function leer(t) { return `<div class="ag-leer"><b>¿Cómo leer este reporte?</b> ${t}</div>`; }
-        function tabla(heads, rows, csv) {
+        const TIPOS_MONEDA = /S\/|\(s\/\)|monto|total|ingreso|costo|gasto|precio|venta|utilidad|compra|consumo|valor/i;
+        function tipoColumna(head, valores) {
+            const nums = valores.filter(v => v !== null && v !== undefined && v !== '').map(Number);
+            if (!nums.length || nums.some(n => !Number.isFinite(n))) return 'texto';
+            if (TIPOS_MONEDA.test(head)) return 'dinero';
+            return nums.every(n => Number.isInteger(n)) ? 'entero' : 'decimal';
+        }
+        function datosTabla(heads, filas) {
+            const normal = h => String(h).toLowerCase().replace(/[^a-z0-9]/g, '');
+            const esFilaDeTitulos = f => f.length === heads.length && f.every(c =>
+                typeof c === 'string' && (/^[a-z][a-z0-9_]*$/.test(c) ||
+                    heads.some(h => normal(h) === normal(c))));
+            const cuerpo = (filas || []).filter((f, i) => i !== 0 || !esFilaDeTitulos(f));
+            return {
+                columnas: heads.map((h, j) => ({ titulo: h, tipo: tipoColumna(h, cuerpo.map(f => f[j])) })),
+                filas: cuerpo
+            };
+        }
+        function tabla(heads, rows, cfg) {
             const id = 'tbl' + Math.random().toString(36).slice(2, 8);
-            window[id] = csv;
+            const datos = cfg && cfg.filas ? datosTabla(heads, cfg.filas) : null;
+            if (datos) window[id] = { titulo: cfg.titulo || 'Reporte', columnas: datos.columnas, filas: datos.filas };
             return `<div class="ag-table-wrap"><table class="ag-table"><thead><tr>${heads.map(h => `<th>${h}</th>`).join('')}</tr></thead>
                 <tbody>${rows || '<tr><td colspan="9" class="ag-text-center ag-text-muted">Sin datos en este rango</td></tr>'}</tbody></table></div>
-                ${csv ? `<div class="ag-d-flex ag-gap-3 ag-mt-2"><button class="ag-btn ag-btn-outline ag-btn-sm" onclick="descargarCSV('${id}')">Exportar CSV</button><button class="ag-btn ag-btn-outline ag-btn-sm" onclick="imprimirTabla('${id}')">PDF</button></div>` : ''}`;
+                ${datos ? `<div class="ag-d-flex ag-gap-3 ag-mt-2 ag-flex-wrap">
+                    <button type="button" class="ag-btn ag-btn-outline ag-btn-sm" data-exp="${id}|excel" onclick="exportarTabla('${id}','excel',this)">Excel</button>
+                    <button type="button" class="ag-btn ag-btn-outline ag-btn-sm" data-exp="${id}|pdf" onclick="exportarTabla('${id}','pdf',this)">PDF</button>
+                    <span class="ag-field-hint" style="margin:0;align-self:center;">Con encabezado fijo y formato de moneda del backend.</span>
+                </div>` : ''}`;
         }
-        function tituloCsv(t) {
-            return String(t ?? '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        function nombreArchivo(titulo, ext) {
+            const base = String(titulo || 'reporte').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50) || 'reporte';
+            return 'autogestion-' + base + '.' + ext;
         }
-        function celdaCsv(v) {
-            if (v === null || v === undefined) return '';
-            if (typeof v === 'number' && Number.isFinite(v)) {
-                return Number.isInteger(v) ? String(v) : v.toFixed(2).replace('.', ',');
+        window.exportarTabla = async function(id, formato, boton) {
+            const datos = window[id];
+            if (!datos) return;
+            const texto = boton ? boton.textContent : '';
+            if (boton) { boton.disabled = true; boton.textContent = 'Generando…'; }
+            try {
+                const res = await fetch(`${API_BASE}/reportes/export/tabla?formato=${formato}&${rangoQS()}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+                    body: JSON.stringify(datos)
+                });
+                if (!res.ok) throw new Error('El servidor respondió ' + res.status);
+                const blob = await res.blob();
+                if (!blob.size) throw new Error('El archivo llegó vacío');
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = nombreArchivo(datos.titulo, formato === 'pdf' ? 'pdf' : 'xlsx');
+                a.rel = 'noopener';
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => { try { a.remove(); URL.revokeObjectURL(url); } catch (_) { } }, 1500);
+                toast(formato === 'pdf' ? 'PDF descargado' : 'Excel descargado', 'success');
+            } catch (e) {
+                toast('No se pudo exportar: ' + e.message, 'danger');
+            } finally {
+                if (boton) { boton.disabled = false; boton.textContent = texto; }
             }
-            let s = String(v).replace(/\r?\n/g, ' ').trim();
-            if (/^[a-z][a-z0-9_]*$/.test(s)) s = tituloCsv(s);
-            return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-        }
-        function csvDescargar(nombre, filas) {
-            if (!Array.isArray(filas) || !filas.length) return;
-            const csv = filas.map(r => r.map(celdaCsv).join(';')).join('\r\n');
-            const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' }));
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = nombre;
-            a.rel = 'noopener';
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => { try { a.remove(); URL.revokeObjectURL(url); } catch (_) {  } }, 1200);
-        }
-        window.descargarCSV = function(id) {
-            const { nombre, filas } = window[id];
-            csvDescargar(nombre, filas);
-            toast('CSV descargado', 'success');
         };
         
 
@@ -256,25 +284,6 @@
         function docFoot() {
             return `<div class="doc-foot"><span>AutoGestion · Documento generado automaticamente</span><span>${esc(new Date().toLocaleString('es-PE'))}</span></div>`;
         }
-        window.imprimirTabla = function(id) {
-            const data = window[id];
-            if (!data) return;
-            const { filas } = data;
-            const [head, ...body] = filas;
-            const tabLabel = (TABS.find(t => t.id === tabActiva) || {}).label || tabActiva;
-            const w = window.open('', '_blank', 'width=1000,height=760');
-            if (!w) { toast('Permite ventanas emergentes para generar el PDF', 'warning'); return; }
-            w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>AutoGestion - ${esc(tabLabel)}</title>
-                <style>${PRINT_CSS}</style></head><body>
-                ${docHead('Reporte de ' + tabLabel)}
-                <h3>Detalle</h3>
-                <table><thead><tr>${head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead>
-                <tbody>${body.map(r => `<tr>${r.map(c => `<td>${esc(c ?? '')}</td>`).join('')}</tr>`).join('') || '<tr><td>Sin datos</td></tr>'}</tbody></table>
-                ${docFoot()}
-                <script>window.onload=function(){window.print();}<\/script></body></html>`);
-            w.document.close();
-        };
-        
         window.exportarPDF = function() {
             const tabLabel = (TABS.find(t => t.id === tabActiva) || {}).label || tabActiva;
             const desde = document.getElementById('fDesde').value || '—';
@@ -298,94 +307,6 @@
         
 
 
-        window.exportarClientesPorDia = async function () {
-            try {
-                await apiDescargar(`/reportes/clientes-por-dia/export?${rangoQS()}&formato=csv`, 'clientes-por-dia.csv');
-                toast('CSV descargado', 'success');
-            } catch (e) { toast('No se pudo exportar: ' + e.message, 'danger'); }
-        };
-        
-
-        window.exportarGeneralCSV = async function() {
-            const qs = rangoQS();
-            const desde = document.getElementById('fDesde').value || '';
-            const hasta = document.getElementById('fHasta').value || '';
-            const sec = (t) => [[`[${t}]`]];
-            try {
-                toast('Armando CSV general...', 'info', 2000);
-                if (tabActiva === 'resumen') {
-                    const [ind, cli, comp, inv, res] = await Promise.all([
-                        apiFetch('/reportes/indicadores'),
-                        apiFetch(`/reportes/clientes-por-dia?${qs}`),
-                        apiFetch(`/reportes/comprobantes-resumen?${qs}`),
-                        apiFetch(`/reportes/inventario/resumen?${qs}`),
-                        apiFetch(`/reportes/resultado?${qs}`)]);
-                    csvDescargar(`resumen-general_${desde}_${hasta}.csv`, [
-                        ['reporte', 'resumen'], ['rango_desde', desde], ['rango_hasta', hasta],
-                        ...sec('INDICADORES'), ['ot_completadas_mes', ind.otCompletadasMes], ['ingresos_mes', ind.ingresosMes], ['bajo_stock', ind.productosBajoStock],
-                        ...sec('CLIENTES_POR_DIA'), ['dia', 'atendidos', 'recepciones', 'entregas'], ...cli.map(d => [d.dia, d.clientesAtendidos, d.recepciones, d.entregas]),
-                        ...sec('COMPROBANTES'), ['tipo', 'cantidad', 'gravado', 'igv', 'total'], ...comp.map(c => [c.tipo, c.cantidad, c.gravado, c.igv, c.total]),
-                        ...sec('RESULTADO'), ['ingresos', res.ingresos], ['sin_igv', res.ingresosSinIgv], ['compras', res.compras], ['consumido', res.costoConsumido], ['gastos', res.gastosOperativos], ['utilidad', res.utilidadEstimada]]);
-                } else if (tabActiva === 'clientes') {
-                    const [dias, estados, recepciones, clientes] = await Promise.all([
-                        apiFetch(`/reportes/clientes-por-dia?${qs}`),
-                        apiFetch('/reportes/recepciones-por-estado'),
-                        apiFetch('/recepciones').catch(() => []),
-                        apiFetch('/clientes').catch(() => [])]);
-                    const carros = (recepciones || []).filter(r => (!desde || String(r.fechaIngreso || '').slice(0, 10) >= desde) && (!hasta || String(r.fechaIngreso || '').slice(0, 10) <= hasta));
-                    csvDescargar(`clientes-general_${desde}_${hasta}.csv`, [
-                        ['reporte', 'clientes'], ['rango_desde', desde], ['rango_hasta', hasta],
-                        ...sec('CLIENTES_POR_DIA'), ['dia', 'atendidos', 'recepciones', 'entregas'], ...dias.map(d => [d.dia, d.clientesAtendidos, d.recepciones, d.entregas]),
-                        ...sec('RECEPCIONES_POR_ESTADO'), ['estado', 'cantidad'], ...estados.map(e => [e.estado, e.cantidad]),
-                        ...sec('CARROS_ATENDIDOS'), ['fecha', 'placa', 'cliente', 'estado', 'problema'], ...carros.map(r => [r.fechaIngreso, r.vehiculoPlaca, r.clienteNombre, r.estado, (r.problemaReportado || '').replace(/\n/g, ' ')]),
-                        ...sec('CLIENTES'), ['tipo_doc', 'documento', 'nombre', 'razon_social', 'telefono', 'email'], ...(clientes || []).map(c => [c.tipoDocumento, c.documento, c.nombre, c.razonSocial || '', c.telefono || '', c.email || ''])]);
-                } else if (tabActiva === 'ingresos') {
-                    const [pts, comp, serv] = await Promise.all([
-                        apiFetch(`/reportes/ingresos?${qs}&agrupar=${ingAgrupar}`),
-                        apiFetch(`/reportes/comprobantes-resumen?${qs}`),
-                        apiFetch(`/reportes/servicios-mas-pedidos?${qs}&top=50`)]);
-                    csvDescargar(`ingresos-general_${desde}_${hasta}.csv`, [
-                        ['reporte', 'ingresos'], ['rango_desde', desde], ['rango_hasta', hasta], ['agrupado_por', ingAgrupar],
-                        ...sec('INGRESOS_POR_PERIODO'), ['periodo', 'total'], ...pts.map(p => [p.periodo, p.total]),
-                        ...sec('COMPROBANTES'), ['tipo', 'cantidad', 'gravado', 'igv', 'total'], ...comp.map(c => [c.tipo, c.cantidad, c.gravado, c.igv, c.total]),
-                        ...sec('SERVICIOS_MAS_PEDIDOS'), ['servicio', 'veces', 'total'], ...serv.map(s => [s.nombre, s.veces, s.total])]);
-                } else if (tabActiva === 'inventario') {
-                    const [resumen, cons, usados, margen, prods] = await Promise.all([
-                        apiFetch(`/reportes/inventario/resumen?${qs}`),
-                        apiFetch(`/reportes/inventario/consumo?${qs}&agrupar=${invAgrupar}&top=50`),
-                        apiFetch(`/reportes/productos-mas-usados?${qs}&top=50`),
-                        apiFetch('/reportes/margen-por-producto'),
-                        apiFetch('/productos').catch(() => [])]);
-                    csvDescargar(`inventario-general_${desde}_${hasta}.csv`, [
-                        ['reporte', 'inventario'], ['rango_desde', desde], ['rango_hasta', hasta],
-                        ...sec('RESUMEN'), ['comprado', resumen.totalComprado], ['consumido', resumen.totalConsumidoAlCosto], ['mermas', resumen.totalMermas], ['valor_actual', resumen.valorInventarioActual], ['bajo_stock', resumen.productosBajoStock],
-                        ...sec('CONSUMO_' + invAgrupar.toUpperCase()), ['clave', 'cantidad', 'costo'], ...cons.map(c => [c.clave, c.cantidad, c.costo]),
-                        ...sec('MAS_USADOS'), ['producto', 'cantidad', 'costo'], ...usados.map(u => [u.nombre, u.cantidad, u.costo]),
-                        ...sec('MARGEN'), ['producto', 'precio', 'costo', 'margen'], ...margen.map(m => [m.nombre, m.precio, m.costo, m.margen]),
-                        ...sec('STOCK'), ['producto', 'tipo', 'stock', 'costo', 'valorizado'], ...(prods || []).map(p => [p.nombre, p.tipo, p.stockActual, p.costoUnitario, (p.stockActual || 0) * (p.costoUnitario || 0)])]);
-                } else if (tabActiva === 'gastos') {
-                    const [grupos, lista] = await Promise.all([
-                        apiFetch(`/reportes/gastos?${qs}`),
-                        apiFetch(`/gastos?${qs}&page=0&size=100&sort=fecha,desc`)]);
-                    csvDescargar(`gastos-general_${desde}_${hasta}.csv`, [
-                        ['reporte', 'gastos'], ['rango_desde', desde], ['rango_hasta', hasta],
-                        ...sec('POR_CATEGORIA'), ['categoria', 'veces', 'total'], ...grupos.map(g => [g.categoria, g.cantidad, g.total]),
-                        ...sec('DETALLE'), ['fecha', 'categoria', 'descripcion', 'monto'], ...((lista.content || []).map(g => [g.fecha, g.categoria, g.descripcion, g.monto]))]);
-                } else if (tabActiva === 'resultado') {
-                    const r = await apiFetch(`/reportes/resultado?${qs}`);
-                    csvDescargar(`resultado_${desde}_${hasta}.csv`, [
-                        ['reporte', 'resultado'], ['rango_desde', desde], ['rango_hasta', hasta],
-                        ['ingresos', r.ingresos], ['sin_igv', r.ingresosSinIgv], ['compras', r.compras], ['consumido', r.costoConsumido], ['gastos', r.gastosOperativos], ['utilidad', r.utilidadEstimada]]);
-                } else if (tabActiva === 'mecanicos') {
-                    const filas = await apiFetch(`/reportes/rendimiento-mecanicos?${qs}`);
-                    csvDescargar(`mecanicos-general_${desde}_${hasta}.csv`, [
-                        ['reporte', 'mecanicos'], ['rango_desde', desde], ['rango_hasta', hasta],
-                        ['mecanico', 'asignadas', 'en_proceso', 'finalizadas', 'horas_prom', 'consumo', 'ingresos'],
-                        ...filas.map(m => [m.nombre, m.asignadas, m.enProceso, m.finalizadas, m.horasPromedio, m.consumoCosto, m.ingresos])]);
-                }
-                toast('CSV general descargado', 'success');
-            } catch (e) { toast('No se pudo armar el general: ' + e.message, 'danger'); }
-        };
         const B = document.getElementById('repBody');
 
         
@@ -454,7 +375,7 @@
                         ${kpi('ic-green', totEnt, 'Entregas')}
                     </div>
                     <div class="ag-section ag-mb-3"><div class="ag-section-header"><h3>Clientes por día</h3>
-                        <button type="button" class="ag-btn ag-btn-outline ag-btn-sm" onclick="exportarClientesPorDia()">Exportar CSV</button></div>
+                        <span class="ag-field-hint" style="margin:0;">Exporta la tabla con los botones Excel / PDF</span></div>
                         <div class="ag-section-body"><div id="chCli"></div></div></div>
                     <div class="ag-section ag-mb-3"><div class="ag-section-header"><h3>Recepciones por estado</h3></div>
                         <div class="ag-section-body"><div class="ag-d-flex ag-gap-3 ag-flex-wrap ag-mb-2">
@@ -462,21 +383,21 @@
                         </div>
                         ${tabla(['Estado', 'Cantidad'],
                             estados.map(e => `<tr><td><b>${e.estado}</b></td><td class="col-num">${e.cantidad}</td></tr>`).join(''),
-                            { nombre: 'recepciones-por-estado.csv', filas: [['estado', 'cantidad'], ...estados.map(e => [e.estado, e.cantidad])] })}
+                            { titulo: 'Recepciones por estado', filas: [['estado', 'cantidad'], ...estados.map(e => [e.estado, e.cantidad])] })}
                         </div></div>
                     <div class="ag-section ag-mb-3"><div class="ag-section-header"><h3>Carros atendidos (${carros.length})</h3></div>
                         <div class="ag-section-body">
                         ${tabla(['Fecha', 'Placa', 'Cliente', 'Estado', 'Problema'],
                             carros.slice(0, 100).map(r => `<tr><td class="ag-text-sm">${formatDate(r.fechaIngreso)}</td><td class="ag-fw-600">${esc(r.vehiculoPlaca || '—')}</td><td>${esc(r.clienteNombre || '—')}</td><td>${esc(r.estado || '')}</td><td class="ag-text-sm">${esc((r.problemaReportado || '').slice(0, 60))}</td></tr>`).join('') || '',
-                            { nombre: 'carros-atendidos.csv', filas: [['fecha', 'placa', 'cliente', 'estado', 'problema'], ...carros.map(r => [r.fechaIngreso, r.vehiculoPlaca, r.clienteNombre, r.estado, (r.problemaReportado || '').replace(/\n/g, ' ')])] })}
-                        ${carros.length > 100 ? '<p class="ag-field-hint">Mostrando 100 de ' + carros.length + ' — el CSV trae todos.</p>' : ''}
+                            { titulo: 'Carros atendidos', filas: [['fecha', 'placa', 'cliente', 'estado', 'problema'], ...carros.map(r => [r.fechaIngreso, r.vehiculoPlaca, r.clienteNombre, r.estado, (r.problemaReportado || '').replace(/\n/g, ' ')])] })}
+                        ${carros.length > 100 ? '<p class="ag-field-hint">Mostrando 100 de ' + carros.length + ' — la exportación trae todos.</p>' : ''}
                         </div></div>
                     <div class="ag-section"><div class="ag-section-header"><h3>Listado de clientes (${(clientes || []).length})</h3></div>
                         <div class="ag-section-body">
                         ${tabla(['Documento', 'Nombre', 'Teléfono', 'Email'],
                             (clientes || []).slice(0, 100).map(c => `<tr><td class="ag-text-sm">${esc(c.tipoDocumento || '')} ${esc(c.documento || '')}</td><td class="ag-fw-600">${esc(c.razonSocial || c.nombre || '')}</td><td class="ag-text-sm">${esc(c.telefono || '—')}</td><td class="ag-text-sm">${esc(c.email || '—')}</td></tr>`).join('') || '',
-                            { nombre: 'clientes.csv', filas: [['tipo_doc', 'documento', 'nombre', 'razon_social', 'telefono', 'email'], ...(clientes || []).map(c => [c.tipoDocumento, c.documento, c.nombre, c.razonSocial || '', c.telefono || '', c.email || ''])] })}
-                        ${(clientes || []).length > 100 ? '<p class="ag-field-hint">Mostrando 100 — el CSV trae todos.</p>' : ''}
+                            { titulo: 'Clientes registrados', filas: [['tipo_doc', 'documento', 'nombre', 'razon_social', 'telefono', 'email'], ...(clientes || []).map(c => [c.tipoDocumento, c.documento, c.nombre, c.razonSocial || '', c.telefono || '', c.email || ''])] })}
+                        ${(clientes || []).length > 100 ? '<p class="ag-field-hint">Mostrando 100 — la exportación trae todos.</p>' : ''}
                         </div></div>`;
                 svgBars('chCli', dias.map(d => d.dia), dias.map(d => d.clientesAtendidos), '#d97706');
                 cache._cli = dias;
@@ -508,18 +429,18 @@
                         <div class="ag-section-body"><div id="chIng"></div>
                         ${tabla(['Periodo', 'Total'],
                             pts.map(p => `<tr><td><b>${p.periodo}</b></td><td class="col-num">${formatCurrency(p.total)}</td></tr>`).join(''),
-                            { nombre: 'ingresos.csv', filas: [['periodo', 'total'], ...pts.map(p => [p.periodo, p.total])] })}
+                            { titulo: 'Ingresos por período', filas: [['periodo', 'total'], ...pts.map(p => [p.periodo, p.total])] })}
                         </div></div>
                     <div class="ag-grid ag-grid-2">
                         <div class="ag-section"><div class="ag-section-header"><h3>Boletas vs facturas</h3></div><div class="ag-section-body">
                             ${tabla(['Tipo', 'Cant.', 'Gravado', 'IGV', 'Total'],
                                 comp.map(c => `<tr><td><b>${c.tipo}</b></td><td class="col-num">${c.cantidad}</td><td class="col-num">${formatCurrency(c.gravado)}</td><td class="col-num">${formatCurrency(c.igv)}</td><td class="col-num ag-fw-700">${formatCurrency(c.total)}</td></tr>`).join(''),
-                                { nombre: 'comprobantes.csv', filas: [['tipo', 'cantidad', 'gravado', 'igv', 'total'], ...comp.map(c => [c.tipo, c.cantidad, c.gravado, c.igv, c.total])] })}
+                                { titulo: 'Boletas vs facturas', filas: [['tipo', 'cantidad', 'gravado', 'igv', 'total'], ...comp.map(c => [c.tipo, c.cantidad, c.gravado, c.igv, c.total])] })}
                         </div></div>
                         <div class="ag-section"><div class="ag-section-header"><h3>Servicios más pedidos</h3></div><div class="ag-section-body">
                             ${tabla(['Servicio', 'Veces', 'Total'],
                                 serv.map(s => `<tr><td>${s.nombre}</td><td class="col-num">${s.veces}</td><td class="col-num">${formatCurrency(s.total)}</td></tr>`).join(''),
-                                { nombre: 'servicios.csv', filas: [['servicio', 'veces', 'total'], ...serv.map(s => [s.nombre, s.veces, s.total])] })}
+                                { titulo: 'Servicios más pedidos', filas: [['servicio', 'veces', 'total'], ...serv.map(s => [s.nombre, s.veces, s.total])] })}
                         </div></div>
                     </div>`;
                 svgBars('chIng', pts.map(p => p.periodo), pts.map(p => p.total), '#059669');
@@ -552,18 +473,18 @@
                         <div class="ag-section-body"><div id="chCons"></div>
                         ${tabla(['Clave', 'Cantidad', 'Costo'],
                             cons.map(c => `<tr><td>${c.clave}</td><td class="col-num">${c.cantidad}</td><td class="col-num">${formatCurrency(c.costo)}</td></tr>`).join(''),
-                            { nombre: 'consumo.csv', filas: [['clave', 'cantidad', 'costo'], ...cons.map(c => [c.clave, c.cantidad, c.costo])] })}
+                            { titulo: 'Consumo de repuestos', filas: [['clave', 'cantidad', 'costo'], ...cons.map(c => [c.clave, c.cantidad, c.costo])] })}
                         </div></div>
                     <div class="ag-grid ag-grid-2">
                         <div class="ag-section"><div class="ag-section-header"><h3>Más usados</h3></div><div class="ag-section-body">
                             ${tabla(['Producto', 'Cant.', 'Costo'],
                                 usados.map(u => `<tr><td>${u.nombre}</td><td class="col-num">${u.cantidad}</td><td class="col-num">${formatCurrency(u.costo)}</td></tr>`).join(''),
-                                { nombre: 'productos-mas-usados.csv', filas: [['producto', 'cantidad', 'costo'], ...usados.map(u => [u.nombre, u.cantidad, u.costo])] })}
+                                { titulo: 'Productos más usados', filas: [['producto', 'cantidad', 'costo'], ...usados.map(u => [u.nombre, u.cantidad, u.costo])] })}
                         </div></div>
                         <div class="ag-section"><div class="ag-section-header"><h3>Precio vs costo</h3></div><div class="ag-section-body">
                             ${tabla(['Producto', 'Precio', 'Costo', 'Margen'],
                                 margen.slice(0, 12).map(m => `<tr><td>${m.nombre}</td><td class="col-num">${formatCurrency(m.precio)}</td><td class="col-num">${formatCurrency(m.costo)}</td><td class="col-num" style="color:${m.margen >= 0 ? 'var(--ag-signal-go)' : 'var(--ag-signal-stop)'};">${formatCurrency(m.margen)}</td></tr>`).join(''),
-                                { nombre: 'margen-por-producto.csv', filas: [['producto', 'precio', 'costo', 'margen'], ...margen.map(m => [m.nombre, m.precio, m.costo, m.margen])] })}
+                                { titulo: 'Margen por producto', filas: [['producto', 'precio', 'costo', 'margen'], ...margen.map(m => [m.nombre, m.precio, m.costo, m.margen])] })}
                         </div></div>
                     </div>
                     <div class="ag-section ag-mt-3"><div class="ag-section-header"><h3>Stock valorizado</h3></div>
@@ -582,8 +503,8 @@
                             const val = (p.stockActual || 0) * (p.costoUnitario || 0);
                             return `<tr><td class="ag-fw-600">${p.nombre}</td><td>${p.tipo || ''}</td><td class="col-num">${p.stockActual}</td><td class="col-num">${formatCurrency(p.costoUnitario || 0)}</td><td class="col-num ag-fw-700">${formatCurrency(val)}</td></tr>`;
                         }).join(''),
-                        { nombre: 'inventario-stock.csv', filas: [['producto', 'tipo', 'stock', 'costo', 'valorizado'], ...prods.map(p => [p.nombre, p.tipo, p.stockActual, p.costoUnitario, (p.stockActual || 0) * (p.costoUnitario || 0)])] })
-                        + (prods.length > 100 ? '<p class="ag-field-hint">Mostrando 100 — el CSV trae todo el catálogo.</p>' : '');
+                        { titulo: 'Stock del inventario', filas: [['producto', 'tipo', 'stock', 'costo', 'valorizado'], ...prods.map(p => [p.nombre, p.tipo, p.stockActual, p.costoUnitario, (p.stockActual || 0) * (p.costoUnitario || 0)])] })
+                        + (prods.length > 100 ? '<p class="ag-field-hint">Mostrando 100 — la exportación trae todo el catálogo.</p>' : '');
                 } catch (_) {  }
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
         }
@@ -596,7 +517,7 @@
                     <p><b>${k.productoNombre || ''}</b> · Saldo inicial: <b>${k.saldoInicial}</b> · Saldo final: <b>${k.saldoFinal}</b></p>
                     ${tabla(['Fecha', 'Tipo', 'Cant.', 'Costo', 'Doc', 'Proveedor', 'Quién', 'Saldo'],
                         k.movimientos.map(m => `<tr><td class="ag-text-sm">${formatDate(m.fecha)}</td><td>${m.tipo}</td><td class="col-num">${m.cantidad}</td><td class="col-num">${m.costoUnitario != null ? formatCurrency(m.costoUnitario) : '—'}</td><td class="ag-text-sm">${m.documento || '—'}</td><td class="ag-text-sm">${m.proveedor || '—'}</td><td class="ag-text-sm">${m.usuario || '—'}</td><td class="col-num ag-fw-700">${m.saldo}</td></tr>`).join(''),
-                        { nombre: 'kardex.csv', filas: [['fecha', 'tipo', 'cantidad', 'costo', 'documento', 'saldo'], ...k.movimientos.map(m => [m.fecha, m.tipo, m.cantidad, m.costoUnitario, m.documento, m.saldo])] })}`;
+                        { titulo: 'Kardex del producto', filas: [['fecha', 'tipo', 'cantidad', 'costo', 'documento', 'saldo'], ...k.movimientos.map(m => [m.fecha, m.tipo, m.cantidad, m.costoUnitario, m.documento, m.saldo])] })}`;
             } catch (e) { toast('Error: ' + e.message, 'danger'); }
         }
 
@@ -633,7 +554,7 @@
                         <div class="ag-section"><div class="ag-section-header"><h3>Por categoría</h3></div><div class="ag-section-body"><div id="chGas"></div>
                             ${tabla(['Categoría', 'Veces', 'Total'],
                                 grupos.map(g => `<tr><td>${g.etiqueta}</td><td class="col-num">${g.cantidad}</td><td class="col-num">${formatCurrency(g.total)}</td></tr>`).join(''),
-                                { nombre: 'gastos.csv', filas: [['categoria', 'veces', 'total'], ...grupos.map(g => [g.categoria, g.cantidad, g.total])] })}
+                                { titulo: 'Gastos por categoría', filas: [['categoria', 'veces', 'total'], ...grupos.map(g => [g.categoria, g.cantidad, g.total])] })}
                         </div></div>
                     </div>
                     <div class="ag-section"><div class="ag-section-header"><h3>Últimos gastos</h3></div><div class="ag-section-body">
@@ -680,7 +601,7 @@
                         `<tr><td>Compras a proveedores</td><td class="col-num">${formatCurrency(r.compras)}</td></tr>
                          <tr><td>Costo de lo consumido</td><td class="col-num">${formatCurrency(r.costoConsumido)}</td></tr>
                          <tr><td>Gastos operativos</td><td class="col-num">${formatCurrency(r.gastosOperativos)}</td></tr>`,
-                        { nombre: 'resultado.csv', filas: [['concepto', 'monto'], ['ingresos', r.ingresos], ['ingresos_sin_igv', r.ingresosSinIgv], ['compras', r.compras], ['costo_consumido', r.costoConsumido], ['gastos', r.gastosOperativos], ['utilidad', r.utilidadEstimada]] })}`;
+                        { titulo: 'Resultado estimado', filas: [['concepto', 'monto'], ['ingresos', r.ingresos], ['ingresos_sin_igv', r.ingresosSinIgv], ['compras', r.compras], ['costo_consumido', r.costoConsumido], ['gastos', r.gastosOperativos], ['utilidad', r.utilidadEstimada]] })}`;
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
         }
 
@@ -693,7 +614,7 @@
                     ${leer('Asignadas = OT creadas en el rango. En proceso = abiertas hoy. Finalizadas + tiempo promedio del rango. Consumo = costo de sus repuestos. Ingresos = comprobantes de sus OT.')}
                     ${tabla(['Mecánico', 'Asignadas', 'En proceso', 'Finalizadas', 'Horas prom.', 'Consumo (S/)', 'Ingresos (S/)'],
                         filas.map(m => `<tr><td class="ag-fw-600">${m.nombre}</td><td class="col-num">${m.asignadas}</td><td class="col-num">${m.enProceso}</td><td class="col-num">${m.finalizadas}</td><td class="col-num">${m.horasPromedio ?? '—'}</td><td class="col-num">${formatCurrency(m.consumoCosto)}</td><td class="col-num">${formatCurrency(m.ingresos)}</td></tr>`).join(''),
-                        { nombre: 'mecanicos.csv', filas: [['mecanico', 'asignadas', 'en_proceso', 'finalizadas', 'horas_prom', 'consumo', 'ingresos'], ...filas.map(m => [m.nombre, m.asignadas, m.enProceso, m.finalizadas, m.horasPromedio, m.consumoCosto, m.ingresos])] })}`;
+                        { titulo: 'Rendimiento de mecánicos', filas: [['mecanico', 'asignadas', 'en_proceso', 'finalizadas', 'horas_prom', 'consumo', 'ingresos'], ...filas.map(m => [m.nombre, m.asignadas, m.enProceso, m.finalizadas, m.horasPromedio, m.consumoCosto, m.ingresos])] })}`;
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
         }
 

@@ -22,6 +22,16 @@ class ReporteControllerSecurityTest {
     }
 
     @Test
+    void exportarTablaEsSoloAdmin() throws Exception {
+        Method m = ReporteController.class.getMethod("exportarTabla",
+                com.autogestion.dto.ReporteTablaRequest.class, String.class,
+                java.time.LocalDate.class, java.time.LocalDate.class);
+        RolesAllowed ra = m.getAnnotation(RolesAllowed.class);
+        assertNotNull(ra, "exportarTabla debe declarar sus roles");
+        assertEquals(java.util.List.of("ADMIN"), java.util.Arrays.asList(ra.value()));
+    }
+
+    @Test
     void ingresosNoPermiteAlmacenero() throws Exception {
         Method m = ReporteController.class.getMethod("ingresos", java.time.LocalDate.class, java.time.LocalDate.class, String.class);
         RolesAllowed ra = m.getAnnotation(RolesAllowed.class);

@@ -62,6 +62,26 @@ public final class ReporteExcelGenerator {
         }
     }
 
+    /**
+     * Una sola tabla, sin portada: la hoja lleva su banda de título, el rango,
+     * el encabezado fijo y el formato por columna. Es lo que se descarga desde
+     * cada tabla de la pantalla de reportes.
+     */
+    public static byte[] generarTabla(Seccion seccion, String titulo,
+                                      LocalDate desde, LocalDate hasta, String rol) {
+        try (XSSFWorkbook wb = new XSSFWorkbook()) {
+            Estilos st = new Estilos(wb);
+            crearHoja(wb, st, seccion, desde, hasta, rol);
+            wb.setActiveSheet(0);
+
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            wb.write(out);
+            return out.toByteArray();
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Error generando archivo Excel: " + e.getMessage(), e);
+        }
+    }
+
     private static void crearPortada(XSSFWorkbook wb, Estilos st, List<Seccion> secciones,
                                      String tituloGeneral, LocalDate desde, LocalDate hasta, String rol) {
         XSSFSheet sh = wb.createSheet("Portada");

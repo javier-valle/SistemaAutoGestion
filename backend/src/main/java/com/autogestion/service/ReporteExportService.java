@@ -1,6 +1,7 @@
 package com.autogestion.service;
 
 import com.autogestion.dto.ReporteDTOs;
+import com.autogestion.dto.ReporteTablaRequest;
 import com.autogestion.util.Rangos;
 import com.autogestion.util.ReportePdfGenerator;
 import com.autogestion.util.ReporteExcelGenerator;
@@ -47,6 +48,108 @@ public class ReporteExportService {
         } else {
             return ReporteExcelGenerator.generar(seccionesXlsx, titulo, desde, hasta, rol);
         }
+    }
+
+    /**
+     * Exporta una tabla de la pantalla con el mismo estilo de los reportes:
+     * Excel con encabezado fijo, formato por columna y área de impresión, o PDF
+     * A4 horizontal. Los valores llegan como texto o número y aquí se normalizan.
+     */
+    public byte[] exportarTabla(ReporteTablaRequest request, String formato,
+                                LocalDate desde, LocalDate hasta, String rol) {
+        LocalDate[] rango = Rangos.rangoReporte(desde, hasta);
+        String titulo = recortar(request.getTitulo(), 120);
+        String nota = recortar(request.getNota(), 300);
+
+        List<ReporteExcelGenerator.Columna> columnas = new ArrayList<>();
+        for (ReporteTablaRequest.Columna c : request.getColumnas()) {
+            columnas.add(new ReporteExcelGenerator.Columna(
+                    recortar(c.getTitulo(), 80), tipoDe(c.getTipo()), c.isTotaliza()));
+        }
+
+        List<Object[]> filasExcel = new ArrayList<>();
+        List<String[]> filasPdf = new ArrayList<>();
+        for (List<Object> fila : request.getFilas()) {
+            Object[] paraExcel = new Object[columnas.size()];
+            String[] paraPdf = new String[columnas.size()];
+            for (int i = 0; i < columnas.size(); i++) {
+                Object valor = fila != null && i < fila.size() ? fila.get(i) : null;
+                Object normalizado = normalizar(valor, columnas.get(i).tipo());
+                paraExcel[i] = normalizado;
+                paraPdf[i] = textoPdf(normalizado, columnas.get(i).tipo());
+            }
+            filasExcel.add(paraExcel);
+            filasPdf.add(paraPdf);
+        }
+
+        if ("pdf".equalsIgnoreCase(formato)) {
+            String[] encabezados = columnas.stream()
+                    .map(ReporteExcelGenerator.Columna::titulo)
+                    .toArray(String[]::new);
+            return ReportePdfGenerator.generar(
+                    List.of(new ReportePdfGenerator.Seccion(titulo, filasPdf, encabezados, nota)),
+                    titulo, rango[0], rango[1], rol);
+        }
+
+        return ReporteExcelGenerator.generarTabla(
+                new ReporteExcelGenerator.Seccion(titulo, columnas, filasExcel, nota),
+                titulo, rango[0], rango[1], rol);
+    }
+
+    private static ReporteExcelGenerator.Tipo tipoDe(String tipo) {
+        if (tipo == null) return ReporteExcelGenerator.Tipo.TEXTO;
+        return switch (tipo.trim().toUpperCase(Locale.ROOT)) {
+            case "ENTERO" -> ReporteExcelGenerator.Tipo.ENTERO;
+            case "DINERO" -> ReporteExcelGenerator.Tipo.DINERO;
+            case "DECIMAL" -> ReporteExcelGenerator.Tipo.DECIMAL;
+            case "PROMEDIO" -> ReporteExcelGenerator.Tipo.PROMEDIO;
+            default -> ReporteExcelGenerator.Tipo.TEXTO;
+        };
+    }
+
+    /** Acepta números del JSON y también texto tipo "S/ 1,234.50" o "12,5". */
+    private static Object normalizar(Object valor, ReporteExcelGenerator.Tipo tipo) {
+        if (valor == null) return null;
+        String texto = valor.toString().trim();
+        if (texto.isEmpty() || "-".equals(texto) || "—".equals(texto)) return null;
+        if (tipo == ReporteExcelGenerator.Tipo.TEXTO) return recortar(texto, 250);
+
+        if (valor instanceof Number n) {
+            return tipo == ReporteExcelGenerator.Tipo.ENTERO ? n.longValue() : new BigDecimal(n.toString());
+        }
+
+        String limpio = texto.replace("S/", "").replace(" ", "").replace("%", "");
+        if (limpio.contains(",") && limpio.contains(".")) {
+            limpio = limpio.replace(",", "");
+        } else if (limpio.contains(",") && limpio.matches("[^,]*,[0-9]{1,2}")) {
+            limpio = limpio.replace(",", ".");
+        }
+        try {
+            return tipo == ReporteExcelGenerator.Tipo.ENTERO
+                    ? (Object) Long.parseLong(limpio)
+                    : (Object) new BigDecimal(limpio);
+        } catch (NumberFormatException e) {
+            return recortar(texto, 250);
+        }
+    }
+
+    private static String textoPdf(Object valor, ReporteExcelGenerator.Tipo tipo) {
+        if (valor == null) return "—";
+        if (valor instanceof BigDecimal bd) {
+            return tipo == ReporteExcelGenerator.Tipo.DINERO ? money(bd) : bd.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
+        }
+        if (valor instanceof Number n) {
+            return tipo == ReporteExcelGenerator.Tipo.ENTERO
+                    ? String.format(Locale.ROOT, "%,d", n.longValue())
+                    : money(new BigDecimal(n.toString()));
+        }
+        return valor.toString();
+    }
+
+    private static String recortar(String s, int max) {
+        if (s == null) return null;
+        String t = s.trim();
+        return t.length() <= max ? t : t.substring(0, max);
     }
 
     private void agregarResumen(List<ReportePdfGenerator.Seccion> pdf,
