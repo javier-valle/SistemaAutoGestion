@@ -1,6 +1,10 @@
 package com.autogestion.util;
 
 import com.autogestion.dto.ComprobanteResponseDTO;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -243,10 +247,10 @@ public final class TicketPdf {
                 "(**) Incluye impuestos, de ser Op. Gravada.");
         String qr = valor(c.getQrContenido(), "");
         if (!qr.isBlank()) {
-            List<String> lq = p.wrap("QR: " + qr, 54);
-            for (int i = 0; i < Math.min(3, lq.size()); i++) {
-                p.txt(IZQ + 6, yi + 24 + i * 8, "F1", 5.5f, GRIS_CLARO, lq.get(i));
-            }
+            dibujarQr(p, qr, IZQ + 8, yi + 22, 58);
+            p.txt(IZQ + 76, yi + 44, "F1", 6.5f, GRIS, "Escanea el QR para");
+            p.txt(IZQ + 76, yi + 53, "F1", 6.5f, GRIS, "verificar los datos del");
+            p.txt(IZQ + 76, yi + 62, "F1", 6.5f, GRIS, "comprobante.");
         }
 
         float yd = yi - 3;
@@ -260,7 +264,7 @@ public final class TicketPdf {
         yd = desglose(p, yd, "Otros Tributos :", dinero(BigDecimal.ZERO), false);
         yd = desglose(p, yd, "Importe Total :", dinero(c.getTotal()), true);
 
-        float inicioLegal = Math.max(yd, yi + (qr.isBlank() ? 30 : 46)) + 6;
+        float inicioLegal = Math.max(yd, yi + (qr.isBlank() ? 30 : 90)) + 6;
         float altoLegal = 38;
         p.caja(IZQ + 6, inicioLegal, DER - IZQ - 12, altoLegal, 0.6f);
         List<String> legal = p.wrap("Esta es una representación impresa de un comprobante "
@@ -280,6 +284,29 @@ public final class TicketPdf {
             p.centro(fin + 24, "F1", 7, ROJO, "Motivo: " + c.getMotivoAnulacion());
         }
         return anulado && c.getMotivoAnulacion() != null ? fin + 32 : fin + 22;
+    }
+
+    /**
+     * QR vectorial: se pintan los módulos como rectángulos negros. Sin imágenes
+     * incrustadas el PDF sigue siendo liviano y el código queda nítido a cualquier
+     * zoom. Si el contenido no se puede codificar, la hoja simplemente no lo lleva.
+     */
+    private static void dibujarQr(Pagina p, String contenido, float x, float yTop, float lado) {
+        BitMatrix matriz;
+        try {
+            matriz = new QRCodeWriter().encode(contenido, BarcodeFormat.QR_CODE, 33, 33);
+        } catch (WriterException e) {
+            return;
+        }
+        p.caja(x - 3, yTop - 3, lado + 6, lado + 6, 0.6f);
+        float modulo = lado / matriz.getWidth();
+        for (int fila = 0; fila < matriz.getHeight(); fila++) {
+            for (int col = 0; col < matriz.getWidth(); col++) {
+                if (matriz.get(col, fila)) {
+                    p.rectRelleno(x + col * modulo, yTop + fila * modulo, modulo, modulo);
+                }
+            }
+        }
     }
 
     private static float cierreParcial(Pagina p, float y) {
@@ -466,6 +493,11 @@ public final class TicketPdf {
             color(NEGRO);
             ops.add(grosor + " w " + n(x) + " " + n(H - yTop - h) + " " + n(w) + " "
                     + n(h) + " re S");
+        }
+
+        private void rectRelleno(float x, float yTop, float w, float h) {
+            color(NEGRO);
+            ops.add(n(x) + " " + n(H - yTop - h) + " " + n(w) + " " + n(h) + " re f");
         }
 
         private void linea(float x1, float yTop, float x2, float grosor, String c) {

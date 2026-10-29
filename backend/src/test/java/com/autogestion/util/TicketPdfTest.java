@@ -135,6 +135,23 @@ class TicketPdfTest {
     }
 
     @Test
+    void elQrSeDibujaComoVectoresDentroDelPdf() {
+        String pdf = new String(TicketPdf.generar(comprobante()), StandardCharsets.ISO_8859_1);
+        assertTrue(pdf.contains("Escanea el QR"), "El documento debe invitar a escanear el código");
+        int modulos = pdf.split(" re f", -1).length - 1;
+        assertTrue(modulos > 80,
+                "Un QR 33x33 deja decenas de módulos pintados; se encontraron " + modulos);
+    }
+
+    @Test
+    void sinContenidoDeQrNoSeDibujaNada() {
+        var c = comprobante();
+        c.setQrContenido(null);
+        String pdf = new String(TicketPdf.generar(c), StandardCharsets.ISO_8859_1);
+        assertFalse(pdf.contains("Escanea el QR"));
+    }
+
+    @Test
     void comprobanteAnuladoLoDiceEnElTicket() {
         var c = comprobante();
         c.setEstado("ANULADO");
