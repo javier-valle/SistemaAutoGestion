@@ -8,7 +8,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 <br>
 
-<img src="https://img.shields.io/badge/version-2.14.0-orange?style=for-the-badge" />
+<img src="https://img.shields.io/badge/version-2.14.1-orange?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
 <img src="https://img.shields.io/badge/Spring_Boot-3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
 
@@ -20,6 +20,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 | Version | Fecha | Lo destacado |
 | :-- | :-- | :-- |
+| [2.14.1](#-2141---2026-10-29) | 2026-10-29 | 📚 Documentación de `docs/` reescrita (guía, manual, permisos, políticas) · Notas de defensa retiradas · Caja autorizada a recepción, como ya mostraba el menú |
 | [2.14.0](#-2140---2026-10-29) | 2026-10-29 | 🧪 Avance 3: Guava y Commons Lang3 en el límite de consultas · Logback con archivo rotativo · Javadoc configurado · Migraciones compatibles con H2 · 98/98 pruebas en verde |
 | [2.13.0](#-2130---2026-10-28) | 2026-10-28 | 🆓 DNI y RUC sin token: dniperu.com y openruc.com consultados desde el backend · CORS para `file://` y cualquier puerto local · Fin del “La fuente de consulta no respondió” por bloqueo del navegador |
 | [2.12.0](#-2120---2026-10-28) | 2026-10-28 | 🧭 Login y panel del cliente rediseñados · Guía de uso y soporte · Fix real del autocompletado de DNI (sin datos de ejemplo) · Cotizaciones y solicitudes en el portal · Límite anti-enumeración · `fuente_verificacion` |
@@ -40,6 +41,15 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 | [1.0.0](#-100---2026-09-14) | 2026-09-14 | 🐛 Correccion de errores fundacionales (DTOs, pagos, cache) |
 
 <img src="./readme-assets/divider.svg" width="100%" height="6" alt="" />
+
+## 📚 2.14.1 — 2026-10-29
+
+### Documentación reescrita y permisos alineados
+- **`docs/` vuelve a ser documentación de verdad:** la guía de desarrollo y el manual de usuario se habían quedado reducidos a fragmentos sin título (6 y 10 líneas). Ahora son documentos completos: arquitectura por capas, diagramas de flujo y del modelo de datos, reglas del proyecto, cómo agregar un reporte paso a paso, y manual por rol con el módulo de reportes, el portal del cliente y glosario. Se agrega `docs/README.md` como índice de la carpeta.
+- **Matriz de permisos contra el código:** `docs/permisos.md` se reescribió a partir de las anotaciones `@RolesAllowed` reales, con el detalle por pestaña de reportes y el acceso del portal del cliente.
+- **Fuera las notas de defensa:** se elimina `docs/PREGUNTAS_PROFE.md`, un listado de respuestas sueltas que no formaba parte del entregable.
+- **Caja coherente con el menú:** `PagoEntregaController` estaba restringido a `ADMIN` a nivel de clase, pero el frontend ya mostraba *Pago y Entrega* a recepción y el manual describe que recepción cobra. El rol pasa a `{ADMIN, RECEPCIONISTA}`; el resto de endpoints no cambia.
+- **`docs/evidencia/` protegido en `.gitignore`:** reglas de negación explícitas para que ningún patrón futuro excluya las capturas, los diagramas y los registros de prueba del informe.
 
 ## 🧪 2.14.0 — 2026-10-29
 

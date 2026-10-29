@@ -109,13 +109,18 @@ restan como línea propia para que la diferencia con el conteo físico quede vis
 ## 7. Portal del cliente
 
 Con el documento, el cliente consulta el estado de su vehículo sin crear cuenta. Al
-registrarse con el código de verificación obtiene además historial de servicios, cotizaciones
-para aprobar o rechazar, comprobantes descargables, citas, encuesta de satisfacción y las
-políticas de datos personales con sus derechos ARCO.
+registrarse con el código de verificación obtiene además el panel con sus vehículos, el
+detalle de sus órdenes, las cotizaciones para aprobar o rechazar y la solicitud de
+cotización.
 
-La solicitud de cotización desde el portal no es una cotización con precios: es un aviso para
-que el taller revise el vehículo y elabore la cotización en recepción. Mientras una solicitud
-sigue pendiente, el mismo vehículo no admite otra.
+La solicitud desde el portal no es una cotización con precios: es un aviso para que el taller
+revise el vehículo y elabore la cotización en recepción. Mientras una solicitud sigue
+pendiente, el mismo vehículo no admite otra, y un cliente no puede acumular más de tres.
+
+Las pantallas de comprobantes, historial, citas y encuesta están maquetadas pero todavía no
+tienen endpoint: muestran un aviso en lugar de un formulario que no guarda nada. La política
+de datos personales sí es definitiva en cuanto al canal de contacto, que hoy es el correo
+publicado ahí para ejercer los derechos ARCO.
 
 ## 8. Glosario
 

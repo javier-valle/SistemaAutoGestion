@@ -51,7 +51,7 @@ botón no protege nada, y por eso el backend vuelve a comprobar el rol en cada e
 | Aprobar o rechazar una cotización | Sesión del portal |
 | Solicitar una cotización | Sesión del portal y vehículo propio sin solicitud pendiente |
 | Descargar comprobantes | Sesión del portal |
-| Ejercer derechos ARCO | Sesión del portal o correo de contacto |
+| Ejercer derechos ARCO | Correo de contacto publicado en la política; el portal todavía no tiene formulario |
 
 Los endpoints `/api/public/portal/**` son accesibles sin sesión porque el cliente no tiene
 usuario del sistema, y están limitados por `ConsultaDocumentoRateLimit` para impedir la

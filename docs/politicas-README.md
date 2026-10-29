@@ -23,8 +23,8 @@ datos ante la autoridad competente.
 | Elemento | Dónde vive | Qué hace |
 | :-- | :-- | :-- |
 | Consentimiento versionado | tabla `consentimiento` | Guarda la versión del texto aceptada y su fecha |
-| Solicitudes ARCO | tabla `solicitud_arco` | Número único, tipo, plazo y estado del trámite |
-| Acceso al portal auditado | tabla `portal_acceso_log` | Registra resultado del intento con documento e IP en hash, nunca en claro |
+| Solicitudes ARCO | tabla `solicitud_arco` | Estructura para registrar tipo, plazo y estado; el trámite se atiende hoy por el correo publicado, sin formulario en el portal |
+| Acceso al portal auditado | tabla `portal_acceso_log` | Registra el resultado del intento con documento e IP en hash, nunca en claro |
 | Notificaciones con opt-in | tabla `notificacion` | El cliente decide si recibe avisos |
 | Retención por tipo de dato | tarea programada | Elimina lo que supera el plazo definido |
 | Verificación de documento | tablas `padron_ruc` y `cliente` | Guarda la fuente de la consulta y si el documento quedó verificado |
