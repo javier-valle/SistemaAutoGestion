@@ -41,13 +41,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
+        // Desarrollo local: el portal se abre en varios puertos (Docker 5501,
+        // Live Server 5500/5501, `python -m http.server` 8000...) y a veces con
+        // doble clic sobre index.html, donde el navegador manda Origin "null".
+        // Sin estos patrones el navegador bloquea las llamadas a
+        // /api/public/portal/documento/consultar y el registro cae en
+        // "La fuente de consulta no respondió".
+        // En producción el frontend y la API comparten origen (Nginx), así que
+        // esta lista no interviene. El token del portal viaja en la cabecera
+        // Authorization (no en cookies), por lo que no hay CSRF entre orígenes.
         config.setAllowedOriginPatterns(List.of(
-                "http://localhost:5500",
-                "http://localhost:5501", // Live Server: puerto alterno del frontend
-                "http://localhost:8080",
-                "http://127.0.0.1:5500",
-                "http://127.0.0.1:5501", // Live Server: puerto alterno del frontend
-                "http://127.0.0.1:8080"
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "null"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
@@ -77,13 +83,24 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers("/api/auth/**", "/api/public/**").permitAll();
+                // Públicas: login del personal e identificación del portal (nada más).
+                auth.requestMatchers("/api/auth/**").permitAll();
+                auth.requestMatchers(HttpMethod.GET,
+                        "/api/public/portal/documento/consultar",
+                        "/api/public/portal/info").permitAll();
+                auth.requestMatchers(HttpMethod.POST,
+                        "/api/public/portal/identificar",
+                        "/api/public/portal/registro").permitAll();
                 if (h2Console) {
                     auth.requestMatchers("/h2-console/**").permitAll();
                 }
-                auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    .requestMatchers("/api/**").authenticated()
-                    .anyRequest().authenticated();
+                auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
+                auth.requestMatchers("/api/admin/padron-ruc/**").hasRole("ADMIN");
+                // Portal: solo token CLIENTE. API del personal: solo roles del personal
+                // (un token de cliente NO abre ningún endpoint del personal).
+                auth.requestMatchers("/api/portal/**").hasRole("CLIENTE");
+                auth.requestMatchers("/api/**").hasAnyRole("ADMIN", "MECANICO", "RECEPCIONISTA", "ALMACENERO");
+                auth.anyRequest().authenticated();
             })
             .exceptionHandling(ex ->
                 ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

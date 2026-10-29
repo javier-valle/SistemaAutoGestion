@@ -8,8 +8,8 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 <br>
 
-<img src="https://img.shields.io/badge/version-2.0.1-orange?style=for-the-badge" />
-<img src="https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
+<img src="https://img.shields.io/badge/version-2.13.0-orange?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
 <img src="https://img.shields.io/badge/Spring_Boot-3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
 
 </div>
@@ -20,6 +20,9 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 | Version | Fecha | Lo destacado |
 | :-- | :-- | :-- |
+| [2.13.0](#-2130---2026-10-28) | 2026-10-28 | 🆓 DNI y RUC sin token: dniperu.com y openruc.com consultados desde el backend · CORS para `file://` y cualquier puerto local · Fin del “La fuente de consulta no respondió” por bloqueo del navegador |
+| [2.12.0](#-2120---2026-10-28) | 2026-10-28 | 🧭 Login y panel del cliente rediseñados · Guía de uso y soporte · Fix real del autocompletado de DNI (sin datos de ejemplo) · Cotizaciones y solicitudes en el portal · Límite anti-enumeración · `fuente_verificacion` |
+| [2.11.0](#-2110---2026-10-26) | 2026-10-26 | 🪟 Cliente primero: `/` = portal del cliente, `/admin/` = acceso del personal · Token real de cliente (rol `CLIENTE`) · Nginx reenvía `/api` (sin CORS) · Límite de intentos en identificación/OTP · Fix: la placa debe pertenecer al cliente · OTP seguro |
 | [2.10.0](#-210---2026-10-23) | 2026-10-23 | 🚀 Portal cliente (seguridad + identificación modo A/B + OTP) · Nuevas ventanas (agenda, garantías, caja, checklist, compras, auditoría, cuentas, notificaciones, productividad, TV) · Políticas y cumplimiento (borradores) · Rediseño Bl4z3 base · Java 21 · Migración V5 |
 | [2.9.0](#-290---2026-10-22) | 2026-10-22 | 🔧 Módulo Reportes refactorizado: 13 bugs críticos corregidos, PDFBox, Excel con freeze/autofilter, rango RangoFechas, seguridad por rol, XSS escapado, mecanismo por id |
 | [2.8.0](#-280---2026-10-03) | 2026-10-03 | 🙋 Género del cliente + placas y persona de escala en el visor 3D |
@@ -34,6 +37,83 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 | [1.2.0](#-120---2026-09-20) | 2026-09-20 | 🛡️ Permisos por rol + pagina 403 + stepper propio |
 | [1.1.0](#-110---2026-09-20) | 2026-09-20 | ✨ Rediseño visual completo + tutorial + tour guiado |
 | [1.0.0](#-100---2026-09-14) | 2026-09-14 | 🐛 Correccion de errores fundacionales (DTOs, pagos, cache) |
+
+<img src="./readme-assets/divider.svg" width="100%" height="6" alt="" />
+
+## 🆓 2.13.0 — 2026-10-28
+
+### Autocompletado real de DNI y RUC sin tokens
+- **`DniPeruProvider` (DNI, habilitado por defecto):** replica el flujo de `example DNI and RUC search` en el backend: calienta la cookie de sesión, pide el token antirrobot (`cc_get_tokens`) si el sitio lo exige y reintenta con `cc_token`/`cc_sig`; parsea el mensaje `Clave: valor` (acentos y CRLF incluidos) y arma apellidos + nombres. `DNIPERU_DNI_HABILITADO=false` lo apaga.
+- **`OpenRucProvider` (RUC, habilitado por defecto):** consulta `openruc.com/api/ruc/{ruc}` sin clave y devuelve razón social, estado, condición y dirección. `{"error":"not_found"}`/404 = no encontrado; 5xx = error técnico para seguir con otra fuente.
+- **Causa del mensaje “La fuente de consulta no respondió”:** el navegador intentaba llamar a esas fuentes (o al backend desde `file://`) y el navegador bloqueaba la petición por CORS; el `catch` del portal lo mostraba como `ERROR`. Ahora la consulta externa la hace el servidor y `SecurityConfig` acepta `Origin: null` (doble clic sobre `index.html`) y cualquier puerto de `localhost`/`127.0.0.1` en desarrollo.
+- **Seguridad:** el token del portal sigue viajando en la cabecera `Authorization` (no en cookies), el límite de 12 consultas/10 min por IP se mantiene y los logs solo muestran el documento enmascarado. Las fuentes nuevas son terceros no oficiales: sus términos restringen la consulta automatizada, por eso quedan detrás de una variable de entorno.
+- **Pruebas:** `DniPeruProviderTest` (7) y `OpenRucProviderTest` (6) contra un `HttpServer` local: flujo con token, sin token, respuesta sin nombres, DNI/RUC inválidos, fuente apagada, 404 y 5xx. Además se probaron las dos fuentes reales desde el código compilado (DNI 70716281 → `VALLE COBEÑAS CARLOS JAVIER`; RUC 20131312955 → SUNAT ACTIVO/HABIDO) y `CorsConfiguration.checkOrigin` con `null`, `localhost:8000` y un origen externo rechazado.
+
+## 🧭 2.12.0 — 2026-10-28
+
+### Portal del cliente (login, panel y soporte)
+- **Login/registro rediseñado** (`frontend/index.html`): layout de marca + formulario, pestañas accesibles (Documento + placa / Código / Crear cuenta), validaciones de longitud y formato, estados de carga y errores específicos (401, 429, red). El registro tiene 3 pasos y conserva el modo manual cuando no hay fuente de nombres.
+- **Panel del cliente** (`portal/estado.html`): saludo con identidad, documento enmascarado, etiqueta de origen de los datos, resumen real (órdenes activas, vehículos, total), última orden, flujo de estados, vehículos, perfil con edición de celular/correo (`PATCH /api/portal/me/contacto`), acciones rápidas, guía/soporte, skeletons, estados vacíos, reintento y menú de cuenta con cierre de sesión confirmado.
+- **Sistema visual único** (`css/portal-ui.css` + `js/portal-ui.js`): acero + ámbar, foco visible, cabecera compartida, navegación desplazable en móvil, diálogos adaptables y sin scroll horizontal.
+- **Guía de uso** (`portal/ayuda.html`): 9 pasos reales, 8 preguntas frecuentes, solución de problemas y advertencias de privacidad.
+- **Soporte** (`portal/soporte.html`): solo muestra canales configurados (`APP_EMPRESA_EMAIL`, `APP_EMPRESA_WHATSAPP`, `APP_EMPRESA_TELEFONO`, `APP_EMPRESA_DIRECCION`); el reporte se prepara para el correo y avisa que la página no lo envía. Si falta un canal, se indica sin inventarlo.
+- **Fix de codificación:** los valores por defecto de `application*.properties` con acentos usan escapes Unicode (`Mart\u00EDn`), evitando “MartÃ­n” en la API.
+- **SUNAT sin API key:** nuevo `SunatDniProvider` que convierte el DNI en su RUC 10 y busca la razón social en el Padrón Reducido RUC local. Se importaron 18.491.506 filas del archivo oficial (2026-10-28). Cubre solo personas con RUC 10 y no es verificación de identidad.
+- **Scrall para DNI sin RUC 10:** nuevo `ScrallDniProvider` con `Authorization: Basic`, POST JSON y parseo de nombres/apellidos. Requiere `SCRALL_API_KEY` del plan API Básico gratuito; sin clave queda deshabilitado. No se usa el endpoint sin autenticación.
+- **Cotizaciones del portal:** `GET /api/portal/cotizaciones`, `GET /api/portal/cotizaciones/{id}`, `POST .../aprobar` y `POST .../rechazar`. El cliente solo ve sus propias cotizaciones (consulta por `clienteId` del token; un id ajeno responde 404) y la página dejó de ser texto: muestra detalle, total, servicios/repuestos y confirmación antes de decidir. La creación del presupuesto sigue siendo del taller desde recepción → diagnóstico; el cliente no inventa precios.
+- **Solicitudes de cotización desde el panel:** `GET/POST /api/portal/solicitudes-cotizacion` y bandeja del personal `GET /api/solicitudes-cotizacion?estado=`, `PUT .../atender`, `PUT .../rechazar`. El cliente elige su vehículo y describe el problema; se valida que la placa sea suya, se impide duplicar una solicitud pendiente por placa y se limita a 3 pendientes por cliente. El taller responde con una nota que el cliente ve en `cotizacion.html`. La tabla `solicitud_cotizacion` se crea con Flyway V9; no guarda precios.
+
+### DNI: causa raíz y corrección
+- **Causa raíz:** el único proveedor de DNI (`ReniecDniProvider`) apuntaba a un servicio que exige token; sin token se llamaba igual y el 401 se convertía en “sin datos”. El portal de registro no tenía autocompletado (solo un campo manual) y los formularios del personal solo validaban formato. No había forma de distinguir “sin fuente”, “no encontrado” y “error”.
+- **Proveedor:** `disponible()` para no llamar fuentes sin credenciales; URL con `{numero}` o `?numero=`; parseo de camelCase/snake_case/full_name; 404/422 = no encontrado; fuente real en la respuesta.
+- **Servicio:** motivos (`OK`, `SIN_FUENTE`, `NO_ENCONTRADO`, `ERROR`, `INVALIDO`, `LIMITE`), caché positiva 24 h / negativa 5 min / error 1 min, y registro de documento enmascarado.
+- **Frontend:** consulta automática solo con 8/11 dígitos, `AbortController` + secuencia para descartar respuestas viejas, limpieza de nombres al cambiar el documento, respeto de nombres editados a mano y bloqueo de “continuar” sin datos.
+- **Backend autoritativo:** con fuente disponible se ignora el nombre enviado por el navegador; se guarda `fuente_verificacion` (V7) y `documento_verificado`. V8 normaliza registros antiguos sin fuente a “datos declarados”.
+- **Personal:** nuevo `GET /api/documentos/consultar` (ADMIN/RECEPCIONISTA/MECANICO); `clientes.html` y `recepcion.html` autocompletan solo si el campo está vacío o fue autocompletado.
+- **Anti-abuso:** límite de 12 consultas/10 min por IP en el backend, además de Nginx; se usa `X-Real-IP` y el último `X-Forwarded-For` para evitar spoofing.
+
+### Pruebas ejecutadas
+- `mvn -Dtest=CotizacionPortalTest,ScrallDniProviderTest,SunatDniProviderTest,ConsultaDocumentoServiceTest,ClienteServiceTest test`: en verde (incluye DNI→RUC 10, Scrall con servidor HTTP local, listado de cotizaciones y rechazo de id ajeno).
+- `mvn -Dtest=SolicitudCotizacionServiceTest test`: en verde (creación con vehículo propio, rechazo de placa ajena, bloqueo de duplicados y de una solicitud ya atendida).
+- Stack real con PostgreSQL + Flyway V1→V8: login, dashboard, edición de contacto con validación, logout, registro manual, cambio de documento que limpia nombres, guía/soporte, autocompletado del personal y límite 429.
+- Ruta de éxito con un mock local autorizado: el nombre falso enviado por el cliente fue ignorado y se guardó el nombre de la fuente con `fuente_verificacion`.
+- **Limitación del entorno:** la suite completa sigue con fallos previos ajenos a este cambio (V5 usa un índice parcial no soportado por H2; dos tests de PDF/Excel esperan salidas antiguas). Se verificaron los cambios en PostgreSQL, que es el motor de despliegue.
+- **Ruta real de SUNAT:** padrón oficial importado (18.491.506 filas, 2.4 GB); `GET /api/public/portal/documento/consultar?tipo=DNI&numero=...` devuelve `NO_ENCONTRADO` para un DNI sin RUC 10 y `OK` con `fuente=SUNAT · Padrón Reducido (RUC 10)` cuando existe. La prueba de éxito usó una fila sintética y se eliminó después.
+
+### Pendiente ⏳
+- El padrón SUNAT ya cubre a las personas con RUC 10. Para los DNI sin RUC 10 hace falta un proveedor autorizado y su token (`RENIEC_DNI_TOKEN`); no existe API pública gratuita de RENIEC. Sin coincidencia, el portal funciona en modo manual y lo dice.
+- Comprobantes, historial, citas y encuesta siguen sin endpoint de portal: muestran estados honestos, sin formularios que no guardan nada. Cotización ya tiene listado, aprobación/rechazo y solicitud previa; el presupuesto con montos lo sigue generando el taller.
+
+## 🪟 2.11.0 — 2026-10-26
+
+### Orden de ventanas
+- `/` ahora es el **portal del cliente** (identificación por documento + placa, o por código OTP).
+- `/admin/` es el **acceso del personal** (login + paneles por rol). El login del personal dejó de estar en la raíz.
+- Carpetas: `frontend/index.html` = portal, `frontend/portal/*` = páginas del cliente, `frontend/admin/index.html` = login del personal, `frontend/admin/pages/*` = paneles. `css/` y `js/` se comparten con rutas absolutas (`/css/…`, `/js/…`).
+- Enlace discreto "Acceso personal" en el portal. `/admin/` va con `X-Robots-Tag: noindex`.
+
+### Docker / Nginx
+- Nginx reenvía `/api/` al backend: el navegador usa un solo origen (`http://localhost:5500`), sin CORS.
+- `limit_req` en `/api/public/` (20 req/min por IP, ráfaga 10) para frenar fuerza bruta sobre identificación y OTP.
+- Puertos de `backend` (8080) y `db` (5433) publicados solo en `127.0.0.1`.
+- `api.js` usa `/api` relativo; con Live Server (5501/5502) o `file://` cae a `http://localhost:8080/api`.
+
+### Seguridad (Java)
+- **Fix:** el modo A validaba documento y placa por separado; ahora la placa tiene que ser del cliente.
+- Token de sesión de cliente: JWT con `tipo=CLIENTE`, subject `c:<id>`, vence en 30 min (`app.portal.token-minutos`). El filtro le da solo `ROLE_CLIENTE`.
+- `SecurityConfig`: `/api/portal/**` → solo `CLIENTE`; `/api/**` → solo roles del personal. Un token de cliente no abre endpoints del personal.
+- `GET /api/portal/me`: el id del cliente sale del token, nunca del request.
+- OTP: `SecureRandom`, hash con sal, el código en claro ya no se guarda y solo se borran los códigos de ese documento (antes `deleteAllInBatch` borraba los de todos). Máx. 3 intentos.
+- Log de acceso con SHA-256 del documento y de la IP.
+
+### Portal (JS)
+- Nuevo `js/portal-api.js`: token en `sessionStorage` (se borra al cerrar la pestaña), separado del token del personal.
+- **Fix:** el portal llamaba `/api/api/public/…` (doble prefijo) usando el `api.js` del personal.
+- `portal/estado.html` conectado a `/api/portal/me`. Las demás páginas privadas del portal exigen sesión.
+
+### Pendiente ⏳
+- `portal/cotizacion`, `comprobantes`, `historial`, `mantenimiento`, `cita`, `encuesta` siguen estáticas (sin endpoint).
+- `LogNotificador` imprime el OTP en el log: solo para desarrollo. En producción, notificador real (WhatsApp/SMS).
 
 <img src="./readme-assets/divider.svg" width="100%" height="6" alt="" />
 

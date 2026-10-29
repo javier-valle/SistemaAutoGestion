@@ -4,28 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Encuesta de satisfacción — Portal del Cliente</title>
-<link rel="stylesheet" href="../css/styles.css?v=2">
-<style>
-:root{--bg:#000;--text:#fff;--text-2:#a0a0a0;--border:rgba(255,255,255,.15);--grad-surface:linear-gradient(135deg,#1a1a1a 0%,#000 100%);--r-lg:16px;--shadow-xl:0 20px 40px rgba(0,0,0,.6);--font-display:'Space Grotesk',sans-serif;--font-body:'Space Grotesk',sans-serif;--sp-1:.5rem;--sp-2:.75rem;--sp-3:1rem;--sp-4:1.5rem;--sp-5:2rem;}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;padding:var(--sp-5);margin:0;}
-.ag-wrap{max-width:700px;margin:0 auto;}
-h1{font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.2rem);font-weight:700;margin-bottom:var(--sp-3);letter-spacing:-.02em;}
-.card{background:var(--grad-surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-5);box-shadow:var(--shadow-xl);}
-</style>
+<meta name="description" content="Cuéntanos cómo fue tu experiencia en el taller.">
+<meta name="theme-color" content="#0a1120">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/css/styles.css?v=3">
+<link rel="stylesheet" href="/css/portal-ui.css?v=3">
+<script src="/js/portal-ui.js?v=3" defer></script>
 </head>
 <body>
-<div class="ag-wrap">
-  <h1>Encuesta de satisfacción</h1>
-  <div class="card">
-    <p>Un envío por OT. Solo disponible tras finalizar el servicio.</p>
-    <form onsubmit="event.preventDefault(); alert('Encuesta pendiente de implementación');">
-      <label>Puntuación (1-5 estrellas)</label>
-      <input type="number" min="1" max="5" value="5" required>
-      <label>Comentario</label>
-      <textarea rows="3" placeholder="Tu opinión nos ayuda a mejorar"></textarea>
-      <button type="submit" style="margin-top:1rem;padding:.75rem 1.25rem;background:linear-gradient(135deg,#fff 0%,#d0d0d0 100%);color:#000;border:none;border-radius:999px;font-weight:700;font-size:.9rem;cursor:pointer;">Enviar</button>
-    </form>
-  </div>
-</div>
+<main class="ag-wrap" id="contenido">
+  <header class="ph-hero">
+    <h1>Encuesta de satisfacción</h1>
+    <p class="sub">Tu opinión ayuda a mejorar la atención del taller.</p>
+  </header>
+
+  <section class="pd-card" aria-labelledby="enc-titulo">
+    <h2 id="enc-titulo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>
+      Encuesta en línea
+    </h2>
+    <p class="pu-empty-strong">La encuesta todavía no está habilitada en el portal.</p>
+    <p class="pu-empty">Se envía una sola vez por orden finalizada. Mientras no exista el formulario conectado, el taller puede tomarte la opinión al entregarte el vehículo.</p>
+    <p class="pu-note" style="margin-top:1rem;">No mostramos una encuesta que no se guarda en ningún lado: si ves un formulario aquí en el futuro, estará conectado a tu orden real.</p>
+    <div class="pu-btn-row" style="max-width:420px;margin-top:1rem;">
+      <a class="pu-btn pu-btn-secondary" href="/portal/estado.html">Volver al panel</a>
+      <a class="pu-btn" href="/portal/soporte.html">Comentar una atención</a>
+    </div>
+  </section>
+</main>
+<script src="/js/portal-api.js?v=3"></script>
+<script>portalGuard();</script>
 </body>
 </html>

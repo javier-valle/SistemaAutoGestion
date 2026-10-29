@@ -1,5 +1,6 @@
 package com.autogestion.config;
 
+import com.autogestion.repository.ClienteRepository;
 import com.autogestion.repository.UsuarioRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -31,6 +32,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private String jwtSecret;
 
     private final UsuarioRepository usuarioRepository;
+    private final ClienteRepository clienteRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -54,6 +56,30 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .build()
                         .parseSignedClaims(token)
                         .getPayload();
+
+                // Token del portal (tipo=CLIENTE): solo rol CLIENTE, nunca roles del personal.
+                if (PortalTokenService.TIPO_CLIENTE.equals(claims.get(PortalTokenService.TIPO_CLAIM, String.class))) {
+                    String sub = claims.getSubject();
+                    boolean valido = false;
+                    if (sub != null && sub.startsWith(PortalTokenService.PREFIJO)) {
+                        try {
+                            Long cid = Long.valueOf(sub.substring(PortalTokenService.PREFIJO.length()));
+                            valido = clienteRepository.findById(cid)
+                                    .map(c -> Boolean.TRUE.equals(c.getActivo())).orElse(false);
+                        } catch (NumberFormatException ignorado) {
+                            valido = false;
+                        }
+                    }
+                    if (valido) {
+                        SecurityContextHolder.getContext().setAuthentication(
+                                new UsernamePasswordAuthenticationToken(sub, null,
+                                        List.of(new SimpleGrantedAuthority("ROLE_CLIENTE"))));
+                    } else {
+                        SecurityContextHolder.clearContext();
+                    }
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 String userId = claims.getSubject();
                 final Long id;

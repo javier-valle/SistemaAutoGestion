@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-autogestion}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-autogestion2024}
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -21,7 +21,8 @@ services:
     build: ./frontend
     container_name: autogestion_frontend
     ports:
-      - "5500:80"
+      # 5501 por defecto: el 5500 puede estar ocupado por otro servicio del equipo
+      - "${FRONTEND_PORT:-5501}:80"
     depends_on:
       - backend
 
@@ -29,7 +30,7 @@ services:
     build: ./backend
     container_name: autogestion_backend
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"   # solo local (depuracion); el navegador entra por Nginx
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-autogestion}
@@ -43,6 +44,26 @@ services:
       APP_SEED_PASSWORD_MECANICO: ${APP_SEED_PASSWORD_MECANICO:-Meca-2026*}
       APP_SEED_PASSWORD_ALMACEN: ${APP_SEED_PASSWORD_ALMACEN:-Alma-2026*}
       APP_SEED_PASSWORD_RECEPCIONISTA: ${APP_SEED_PASSWORD_RECEPCIONISTA:-Recep-2026*}
+      PADRON_RUC_ARCHIVO: ${PADRON_RUC_ARCHIVO:-/padron/padron_reducido_ruc.zip}
+      PADRON_RUC_SOLO_ACTIVOS: ${PADRON_RUC_SOLO_ACTIVOS:-false}
+      PADRON_RUC_IMPORTAR_AL_INICIAR: ${PADRON_RUC_IMPORTAR_AL_INICIAR:-false}
+      RENIEC_DNI_TOKEN: ${RENIEC_DNI_TOKEN:-}
+      RENIEC_DNI_URL: ${RENIEC_DNI_URL:-https://api.decolecta.com/v1/reniec/dni}
+      RENIEC_DNI_REQUIERE_TOKEN: ${RENIEC_DNI_REQUIERE_TOKEN:-true}
+      RENIEC_CONSULTA_MAX: ${RENIEC_CONSULTA_MAX:-12}
+      RENIEC_CONSULTA_VENTANA_MIN: ${RENIEC_CONSULTA_VENTANA_MIN:-10}
+      SCRALL_API_KEY: ${SCRALL_API_KEY:-}
+      SCRALL_DNI_URL: ${SCRALL_DNI_URL:-https://api.scrall.net/v1/reniec/basico}
+      SCRALL_DNI_TIMEOUT_MS: ${SCRALL_DNI_TIMEOUT_MS:-4000}
+      DNIPERU_DNI_HABILITADO: ${DNIPERU_DNI_HABILITADO:-true}
+      DNIPERU_DNI_BASE_URL: ${DNIPERU_DNI_BASE_URL:-https://dniperu.com}
+      DNIPERU_DNI_TIMEOUT_MS: ${DNIPERU_DNI_TIMEOUT_MS:-8000}
+      OPENRUC_RUC_HABILITADO: ${OPENRUC_RUC_HABILITADO:-true}
+      OPENRUC_RUC_URL: ${OPENRUC_RUC_URL:-https://openruc.com/api/ruc}
+      OPENRUC_RUC_TIMEOUT_MS: ${OPENRUC_RUC_TIMEOUT_MS:-8000}
+      APP_EMPRESA_WHATSAPP: ${APP_EMPRESA_WHATSAPP:-}
+    volumes:
+      - ./padron:/padron:ro   # opcional: deja aquí padron_reducido_ruc.zip descargado de SUNAT
     depends_on:
       db:
         condition: service_healthy

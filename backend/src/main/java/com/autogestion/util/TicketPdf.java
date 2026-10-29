@@ -118,8 +118,8 @@ public final class TicketPdf {
         y = t.txt(M, y, "F1", 5.5f, GRAY, "Hash: -") + 12;
         y = t.centro(y, "F2", 9, anulado ? ROJO : GREEN, anulado ? "COMPROBANTE ANULADO" : "PAGO REGISTRADO") + 13;
         y = t.centro(y, "F1", 7.5f, GRAY, "Gracias por su preferencia") + 11;
-        for (String l : t.wrap("Documento generado por AutoGestion - representacion impresa academica,"
-                + " no valido ante SUNAT", 50).stream().limit(3).toList()) {
+        for (String l : t.wrap("Representación impresa de comprobante INTERNO (proyecto académico). "
+                + "Sin validez tributaria ante SUNAT.", 50).stream().limit(3).toList()) {
             t.centro(y, "F1", 6, GRAY, l);
             y += 8;
         }

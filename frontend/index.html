@@ -1,812 +1,804 @@
 <!DOCTYPE html>
-<html lang="es" class="login-page">
+<html lang="es">
 <head>
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <meta name="theme-color" content="#0f172a">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoGestion - Iniciar Sesion</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/animations.css">
-    <link rel="stylesheet" href="css/redesign.css">
-    <script>
-        (function(){var t=localStorage.getItem('ag-theme')||'system';if(t==='system')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',t);})();
-    </script>
-    <style>
-        html.login-page, html.login-page body {
-            margin: 0; padding: 0; height: 100%; overflow: hidden;
-        }
-
-        /* ================= Layout ================= */
-        .ag-login {
-            height: 100vh;
-            display: grid;
-            grid-template-columns: 1.05fr 0.95fr;
-            overflow: hidden;
-            background: var(--ag-ground);
-            transition: background 0.4s ease;
-        }
-
-        /* ================= Panel de marca ================= */
-        .ag-login .ag-login-brand {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 3.25rem 3.5rem 2.5rem;
-            position: relative;
-            overflow: hidden;
-            border-right: 1px solid rgba(255,255,255,0.06);
-            background:
-                radial-gradient(900px 520px at 8% -15%, rgba(217,119,6,0.28) 0%, transparent 60%),
-                radial-gradient(760px 640px at 115% 115%, rgba(100,116,139,0.28) 0%, transparent 62%),
-                linear-gradient(160deg, #0b1220 0%, #0f172a 55%, #111827 100%);
-            transition: background 0.4s ease, border-color 0.4s ease;
-        }
-        .ag-login .ag-login-brand::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: 56px 56px;
-            -webkit-mask-image: radial-gradient(78% 70% at 28% 32%, #000 0%, transparent 100%);
-            mask-image: radial-gradient(78% 70% at 28% 32%, #000 0%, transparent 100%);
-        }
-        .ag-login .ag-login-brand::after {
-            content: '';
-            position: absolute;
-            top: -32%;
-            right: -18%;
-            width: 620px;
-            height: 620px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(245,158,11,0.18) 0%, transparent 66%);
-            animation: brandGlow 7s ease-in-out infinite;
-            pointer-events: none;
-        }
-        .lg-brand-inner {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 560px;
-            margin: 0 auto;
-        }
-
-        .lg-top {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            margin-bottom: 2.4rem;
-            animation: brandSlideIn 0.5s ease backwards;
-        }
-        .lg-logo {
-            width: 46px;
-            height: 46px;
-            display: grid;
-            place-items: center;
-            border-radius: 14px;
-            flex-shrink: 0;
-            background: linear-gradient(145deg, #fbbf24 0%, #d97706 100%);
-            box-shadow: 0 10px 26px -8px rgba(217,119,6,0.65), inset 0 1px 0 rgba(255,255,255,0.45);
-        }
-        .lg-logo svg { width: 24px; height: 24px; color: #fffbeb; }
-        .lg-wordmark {
-            font-family: var(--ag-font-heading);
-            font-size: 1.35rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            color: #f8fafc;
-        }
-        .lg-badge {
-            font-size: 0.6rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.14em;
-            color: #fbbf24;
-            background: rgba(245,158,11,0.12);
-            border: 1px solid rgba(245,158,11,0.38);
-            padding: 0.28rem 0.55rem;
-            border-radius: 999px;
-        }
-
-        .lg-headline {
-            margin-bottom: 1.9rem;
-            animation: brandSlideIn 0.6s ease 0.1s backwards;
-        }
-        .lg-headline h1 {
-            font-family: var(--ag-font-heading);
-            font-size: clamp(2rem, 3.3vw, 2.9rem);
-            font-weight: 700;
-            line-height: 1.06;
-            letter-spacing: -0.03em;
-            color: #f8fafc;
-            margin: 0 0 0.85rem;
-        }
-        .lg-headline h1 em {
-            font-style: normal;
-            background: linear-gradient(100deg, #fbbf24 0%, #f59e0b 45%, #fb923c 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        .lg-headline p {
-            font-size: 1rem;
-            line-height: 1.65;
-            color: rgba(226,232,240,0.55);
-            max-width: 46ch;
-            margin: 0;
-        }
-
-        .lg-flow {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0.45rem;
-            margin-bottom: 1.9rem;
-            animation: brandSlideIn 0.6s ease 0.2s backwards;
-        }
-        .lg-flow-chip {
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: rgba(226,232,240,0.72);
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 0.34rem 0.7rem;
-            border-radius: 999px;
-            white-space: nowrap;
-        }
-        .lg-flow-chip.is-active {
-            color: #451a03;
-            background: linear-gradient(145deg, #fbbf24, #f59e0b);
-            border-color: transparent;
-            box-shadow: 0 6px 16px -6px rgba(245,158,11,0.7);
-        }
-        .lg-flow-arrow { color: rgba(255,255,255,0.28); font-size: 0.7rem; }
-
-        .lg-tiles {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.7rem;
-            margin-bottom: 2rem;
-        }
-        .lg-tile {
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
-            padding: 0.9rem 0.95rem;
-            background: rgba(255,255,255,0.045);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px;
-            animation: featureFadeIn 0.5s ease backwards;
-            transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
-        }
-        .lg-tile:nth-child(1) { animation-delay: 0.3s; }
-        .lg-tile:nth-child(2) { animation-delay: 0.4s; }
-        .lg-tile:nth-child(3) { animation-delay: 0.5s; }
-        .lg-tile:hover {
-            transform: translateY(-3px);
-            border-color: rgba(245,158,11,0.42);
-            background: rgba(245,158,11,0.08);
-        }
-        .lg-tile svg { width: 18px; height: 18px; color: #fbbf24; }
-        .lg-tile strong {
-            font-family: var(--ag-font-heading);
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #f1f5f9;
-        }
-        .lg-tile span { font-size: 0.74rem; line-height: 1.45; color: rgba(226,232,240,0.45); }
-
-        .lg-brand-foot {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 0.85rem;
-            padding-top: 1.2rem;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            animation: featureFadeIn 0.5s ease 0.6s backwards;
-        }
-        .lg-roles { display: flex; flex-wrap: wrap; gap: 0.7rem; }
-        .lg-role {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.42rem;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: rgba(226,232,240,0.55);
-        }
-        .lg-role i {
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: var(--c, #f59e0b);
-            box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
-        }
-        .lg-tut-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: rgba(251,191,36,0.85);
-            text-decoration: none;
-            transition: color 0.2s ease, gap 0.2s ease;
-        }
-        .lg-tut-link:hover { color: #fbbf24; gap: 0.6rem; }
-        .lg-tut-link svg { width: 14px; height: 14px; }
-
-        /* ================= Lado del formulario ================= */
-        .ag-login .ag-login-form-side {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 3rem;
-            position: relative;
-            overflow-y: auto;
-            background: var(--ag-ground);
-            transition: background 0.4s ease;
-        }
-
-        .lg-card {
-            position: relative;
-            width: 100%;
-            max-width: 440px;
-            padding: 2.2rem 2.2rem 1.7rem;
-            background: var(--ag-surface);
-            border: 1px solid var(--ag-border);
-            border-radius: 22px;
-            overflow: hidden;
-            box-shadow: 0 32px 64px -32px rgba(15,23,42,0.4), 0 2px 6px rgba(15,23,42,0.06);
-            transition: background 0.4s ease, border-color 0.4s ease;
-        }
-        .lg-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #d97706 0%, #fbbf24 35%, #f59e0b 65%, #d97706 100%);
-        }
-        .lg-card::after {
-            content: '';
-            position: absolute;
-            top: -130px; right: -130px;
-            width: 280px; height: 280px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(217,119,6,0.12) 0%, transparent 70%);
-            pointer-events: none;
-        }
-        .lg-card > * { position: relative; z-index: 1; }
-        .lg-card > * {
-            animation: lgFadeUp 0.45s ease backwards;
-        }
-        .lg-card > *:nth-child(1) { animation-delay: 0.05s; }
-        .lg-card > *:nth-child(2) { animation-delay: 0.1s; }
-        .lg-card > *:nth-child(3) { animation-delay: 0.15s; }
-        .lg-card > *:nth-child(4) { animation-delay: 0.2s; }
-        .lg-card > *:nth-child(5) { animation-delay: 0.25s; }
-        .lg-card > *:nth-child(6) { animation-delay: 0.3s; }
-
-        .lg-eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: var(--ag-font-heading);
-            font-size: 0.68rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.16em;
-            color: var(--ag-oil-text);
-            margin-bottom: 1rem;
-        }
-        .lg-eyebrow i {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: var(--ag-oil);
-            box-shadow: 0 0 0 4px var(--ag-oil-surface);
-            animation: lgPulse 2.4s ease-in-out infinite;
-        }
-
-        .lg-card-head h2 {
-            font-family: var(--ag-font-heading);
-            font-size: 1.6rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            color: var(--ag-text-heading);
-            margin: 0 0 0.35rem;
-            transition: color 0.4s ease;
-        }
-        .lg-card-head p {
-            font-size: 0.92rem;
-            color: var(--ag-text-muted);
-            margin: 0 0 1.4rem;
-            transition: color 0.4s ease;
-        }
-
-        .ag-login-form {
-            display: flex;
-            flex-direction: column;
-        }
-        .ag-login-form .ag-form-group { margin-bottom: 1rem; }
-        .ag-login-form .ag-form-label {
-            font-size: 0.74rem;
-            margin-bottom: 0.4rem;
-        }
-        .lg-input { position: relative; }
-        .lg-input-icon {
-            position: absolute;
-            left: 0.85rem;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 17px; height: 17px;
-            color: var(--ag-steel);
-            pointer-events: none;
-            transition: color 0.2s ease;
-        }
-        .lg-input:focus-within .lg-input-icon { color: var(--ag-oil); }
-        .lg-input .ag-form-control {
-            padding: 0.78rem 1rem 0.78rem 2.6rem;
-            font-size: 0.95rem;
-            border-radius: 12px;
-            background: var(--ag-ground);
-            transition: background 0.4s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.4s ease;
-        }
-        .lg-input.ag-pass-wrap .ag-form-control { padding-right: 2.6rem; }
-
-        .ag-login-submit { margin-top: 0.35rem; }
-        .ag-login-submit .ag-btn {
-            position: relative;
-            overflow: hidden;
-            padding: 0.85rem 1.5rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            border-radius: 12px;
-            box-shadow: 0 10px 22px -12px rgba(217,119,6,0.9);
-            transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-        }
-        .ag-login-submit .ag-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 16px 28px -12px rgba(217,119,6,0.95);
-        }
-        .ag-login-submit .ag-btn:active { transform: translateY(0); }
-        .lg-btn-text {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-        .lg-btn-text svg { width: 17px; height: 17px; transition: transform 0.25s ease; }
-        .ag-login-submit .ag-btn:hover .lg-btn-text svg { transform: translateX(3px); }
-        .lg-spinner {
-            position: absolute;
-            inset: 0;
-            margin: auto;
-            width: 18px; height: 18px;
-            border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.35);
-            border-top-color: #ffffff;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-        #loginBtn.is-loading { pointer-events: none; }
-        #loginBtn.is-loading .lg-btn-text { opacity: 0; transform: translateY(4px); }
-        #loginBtn.is-loading .lg-spinner { opacity: 1; animation: lgSpin 0.7s linear infinite; }
-
-        .ag-login-error { min-height: 0; margin-bottom: 0; }
-        .ag-login-error:not(:empty) { margin-bottom: 0.9rem; }
-
-        /* ================= Cuentas demo ================= */
-        .ag-demo-accounts {
-            margin-top: 1.5rem;
-            padding-top: 1.2rem;
-            border-top: 1px dashed var(--ag-border);
-        }
-        .lg-chips { display: grid; gap: 0.45rem; }
-        .ag-demo-chip {
-            justify-content: flex-start;
-            margin-bottom: 0;
-            padding: 0.5rem 0.7rem;
-            border-radius: 10px;
-        }
-        .ag-demo-chip:hover { transform: translateX(3px); }
-        .ag-demo-chip .demo-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            background: var(--dot, #94a3b8);
-            box-shadow: 0 0 0 3px rgba(148,163,184,0.18);
-            transition: box-shadow 0.2s ease;
-        }
-        .ag-demo-chip:hover .demo-dot { box-shadow: 0 0 0 3px color-mix(in srgb, var(--dot, #94a3b8) 28%, transparent); }
-        .ag-demo-chip .demo-role { flex-shrink: 0; }
-        .ag-demo-chip .demo-email {
-            margin-left: auto;
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .lg-card-foot {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 0.6rem;
-            margin-top: 1.4rem;
-            padding-top: 1.1rem;
-            border-top: 1px dashed var(--ag-border);
-            font-size: 0.75rem;
-            color: var(--ag-text-muted);
-        }
-        .lg-card-foot a {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            color: var(--ag-oil-text);
-            font-weight: 600;
-            text-decoration: none;
-        }
-        .lg-card-foot a:hover { text-decoration: underline; }
-        .lg-card-foot svg { width: 13px; height: 13px; }
-
-        /* ================= Toggle de tema ================= */
-        .ag-login-theme-toggle {
-            position: absolute;
-            bottom: 1.35rem;
-            right: 1.35rem;
-            z-index: 10;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 1px solid var(--ag-border);
-            background: var(--ag-surface);
-            color: var(--ag-text-mid);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            animation: formSlideIn 0.4s ease 0.55s backwards;
-        }
-        .ag-login-theme-toggle:hover {
-            border-color: #d97706;
-            color: #d97706;
-            box-shadow: 0 4px 16px rgba(217,119,6,0.2);
-            transform: scale(1.08);
-        }
-        .ag-login-theme-toggle:active { transform: scale(0.95); }
-        .ag-login-theme-toggle svg {
-            width: 18px;
-            height: 18px;
-            transition: transform 0.3s ease;
-        }
-        .ag-login-theme-toggle:hover svg { transform: rotate(15deg); }
-
-        /* ================= Keyframes ================= */
-        @keyframes brandSlideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes featureFadeIn {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes formSlideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes lgFadeUp {
-            from { opacity: 0; transform: translateY(14px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes brandGlow {
-            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.85; }
-            50% { transform: translate(-30px, 30px) scale(1.08); opacity: 1; }
-        }
-        @keyframes lgSpin { to { transform: rotate(360deg); } }
-        @keyframes lgPulse {
-            0%, 100% { box-shadow: 0 0 0 4px var(--ag-oil-surface); }
-            50% { box-shadow: 0 0 0 7px transparent; }
-        }
-        @keyframes lgShake {
-            10%, 90% { transform: translateX(-2px); }
-            20%, 80% { transform: translateX(3px); }
-            30%, 50%, 70% { transform: translateX(-5px); }
-            40%, 60% { transform: translateX(5px); }
-        }
-        .lg-card.lg-shake { animation: lgShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
-
-        /* ================= Responsive ================= */
-        @media (max-height: 820px) {
-            .lg-tiles { display: none; }
-        }
-        @media (max-width: 1180px) {
-            .ag-login { grid-template-columns: 1fr 1fr; }
-            .ag-login .ag-login-brand { padding: 2.5rem; }
-        }
-        @media (max-width: 1024px) {
-            .ag-login { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-            .ag-login .ag-login-brand {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: flex-start;
-                padding: 1.15rem 1.5rem;
-                border-right: none;
-                border-bottom: 1px solid rgba(255,255,255,0.08);
-            }
-            .ag-login .ag-login-brand::after { width: 340px; height: 340px; top: -180px; right: -80px; }
-            .ag-login .lg-brand-inner {
-                max-width: none;
-                display: flex;
-                align-items: center;
-                flex-wrap: wrap;
-                gap: 1.25rem;
-            }
-            .ag-login .lg-top { margin-bottom: 0; animation: none; }
-            .ag-login .lg-headline { margin-bottom: 0; animation: none; }
-            .ag-login .lg-headline h1 { font-size: 1.15rem; margin: 0; }
-            .ag-login .lg-headline p,
-            .ag-login .lg-flow,
-            .ag-login .lg-tiles,
-            .ag-login .lg-brand-foot { display: none; }
-            .ag-login .ag-login-form-side { padding: 2rem; }
-        }
-        @media (max-width: 720px) {
-            .ag-login .ag-login-brand { padding: 1rem 1.15rem; }
-            .ag-login .lg-badge { display: none; }
-            .ag-login .ag-login-form-side { padding: 1.25rem; align-items: stretch; }
-            .lg-card {
-                max-width: none;
-                padding: 1.7rem 1.3rem 1.4rem;
-                border-radius: 18px;
-            }
-            .lg-card-head h2 { font-size: 1.4rem; }
-            .ag-login-theme-toggle { bottom: 1rem; right: 1rem; width: 36px; height: 36px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal del Cliente — AutoGestión</title>
+<meta name="description" content="Consulta el estado de tu vehículo, tus comprobantes y tus citas. Ingresa con tu documento y la placa de tu vehículo.">
+<meta name="theme-color" content="#0a1120">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/css/styles.css?v=3">
+<link rel="stylesheet" href="/css/portal-ui.css?v=3">
 </head>
-<body>
-    <div class="ag-login">
-        <aside class="ag-login-brand">
-            <div class="lg-brand-inner">
-                <div class="lg-top">
-                    <span class="lg-logo">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-                    </span>
-                    <span class="lg-wordmark">AutoGestion</span>
-                    <span class="lg-badge">Demo</span>
-                </div>
+<body class="pl-page">
+<a class="pu-skip" href="#acceso">Saltar al formulario</a>
 
-                <div class="lg-headline">
-                    <h1>Tu taller, <em>en orden</em>.</h1>
-                    <p>Del ingreso del vehiculo a la entrega de la boleta: recepcion, ordenes de trabajo, inventario y comprobantes en un solo panel.</p>
-                </div>
+<div class="pl-shell">
+  <aside class="pl-brand" aria-label="Información del portal">
+    <div>
+      <div class="pl-logo-row">
+        <a class="pu-brand" href="/"><i>AG</i><span>AutoGestión</span></a>
+        <span class="pl-tag">Portal del cliente</span>
+      </div>
 
-                <div class="lg-flow" aria-hidden="true">
-                    <span class="lg-flow-chip is-active">Recepcion</span>
-                    <span class="lg-flow-arrow">&#8594;</span>
-                    <span class="lg-flow-chip">Cotizacion</span>
-                    <span class="lg-flow-arrow">&#8594;</span>
-                    <span class="lg-flow-chip">Orden de trabajo</span>
-                    <span class="lg-flow-arrow">&#8594;</span>
-                    <span class="lg-flow-chip">Comprobante</span>
-                    <span class="lg-flow-arrow">&#8594;</span>
-                    <span class="lg-flow-chip">Entrega</span>
-                </div>
+      <div class="pl-headline" style="margin-top:2.2rem;">
+        <h1>Tu vehículo,<br><em>sin llamadas</em>.</h1>
+        <p>Sigue la reparación, revisa tus comprobantes y coordina tu próxima visita al Taller San Martín desde un solo lugar.</p>
+      </div>
 
-                <div class="lg-tiles">
-                    <div class="lg-tile">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                        <strong>Comprobantes</strong>
-                        <span>Boletas, facturas y guias sin dolor de cabeza</span>
-                    </div>
-                    <div class="lg-tile">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                        <strong>Inventario</strong>
-                        <span>Repuestos e insumos con stock al dia</span>
-                    </div>
-                    <div class="lg-tile">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                        <strong>Reportes</strong>
-                        <span>Metricas de taller en tiempo real</span>
-                    </div>
-                </div>
+      <ul class="pl-benefits">
+        <li>
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></span>
+          <span><b>Estado en tiempo real.</b> Mira en qué paso va tu orden de trabajo.</span>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg></span>
+          <span><b>Tus documentos.</b> Boletas, facturas e historial de servicios.</span>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span>
+          <span><b>Datos protegidos.</b> La sesión se cierra al cerrar la pestaña.</span>
+        </li>
+      </ul>
 
-                <div class="lg-brand-foot">
-                    <div class="lg-roles">
-                        <span class="lg-role"><i style="--c:#f59e0b"></i>Admin</span>
-                        <span class="lg-role"><i style="--c:#0284c7"></i>Mecanico</span>
-                        <span class="lg-role"><i style="--c:#059669"></i>Recepcion</span>
-                        <span class="lg-role"><i style="--c:#7c3aed"></i>Almacen</span>
-                    </div>
-                    <a class="lg-tut-link" href="pages/tutorial.html">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                        Ver tutorial del sistema
-                    </a>
-                </div>
-            </div>
-        </aside>
-
-        <main class="ag-login-form-side">
-            <div class="lg-card" id="loginCard">
-                <span class="lg-eyebrow"><i></i> Acceso al sistema</span>
-
-                <div class="lg-card-head">
-                    <h2>Bienvenido de nuevo</h2>
-                    <p>Ingresa tus credenciales para continuar.</p>
-                </div>
-
-                <div id="alertContainer" class="ag-login-error"></div>
-
-                <form id="loginForm" class="ag-login-form" onsubmit="return false;">
-                    <div class="ag-form-group">
-                        <label class="ag-form-label" for="email">Correo electronico</label>
-                        <div class="lg-input">
-                            <svg class="lg-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                            <input type="email" class="ag-form-control" id="email" placeholder="usuario@sanmartin.pe" required autocomplete="email">
-                        </div>
-                    </div>
-                    <div class="ag-form-group">
-                        <label class="ag-form-label" for="password">Contrasena</label>
-                        <div class="lg-input ag-pass-wrap">
-                            <svg class="lg-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                            <input type="password" class="ag-form-control" id="password" placeholder="Ingrese su contrasena" required autocomplete="current-password">
-                            <button type="button" class="ag-pass-toggle" id="passToggle" aria-label="Mostrar contrasena" title="Mostrar / ocultar contrasena">
-                                <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="ag-login-submit">
-                        <button type="submit" class="ag-btn ag-btn-primary ag-btn-block" id="loginBtn">
-                            <span class="lg-btn-text">
-                                Iniciar Sesion
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                            </span>
-                            <span class="lg-spinner" aria-hidden="true"></span>
-                        </button>
-                    </div>
-                </form>
-
-                <div class="ag-demo-accounts">
-                    <div class="demo-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                        Accesos rapidos de prueba (claves demo distintas por rol)
-                    </div>
-                    <div class="lg-chips">
-                        <button type="button" class="ag-demo-chip" data-email="admin@sanmartin.pe" data-pass="Admin-2026*"><span class="demo-dot" style="--dot:#f59e0b"></span><span class="demo-role">Admin</span><span class="demo-email">admin@sanmartin.pe</span></button>
-                        <button type="button" class="ag-demo-chip" data-email="mecanico1@sanmartin.pe" data-pass="Meca-2026*"><span class="demo-dot" style="--dot:#0284c7"></span><span class="demo-role">Mecanico</span><span class="demo-email">mecanico1@sanmartin.pe</span></button>
-                        <button type="button" class="ag-demo-chip" data-email="recepcionista@sanmartin.pe" data-pass="Recep-2026*"><span class="demo-dot" style="--dot:#059669"></span><span class="demo-role">Recepcionista</span><span class="demo-email">recepcionista@sanmartin.pe</span></button>
-                        <button type="button" class="ag-demo-chip" data-email="almacen@sanmartin.pe" data-pass="Alma-2026*"><span class="demo-dot" style="--dot:#7c3aed"></span><span class="demo-role">Almacenero</span><span class="demo-email">almacen@sanmartin.pe</span></button>
-                    </div>
-                </div>
-
-                <div class="lg-card-foot">
-                    <a href="pages/tutorial.html">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                        Primera vez? Ver tutorial
-                    </a>
-                    <span>v2.0.1 &mdash; Taller San Martin</span>
-                </div>
-            </div>
-
-            <button class="ag-login-theme-toggle" id="loginThemeToggle" title="Cambiar tema" aria-label="Cambiar tema">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            </button>
-        </main>
+      <div class="pl-mini-flow" aria-hidden="true">
+        <span>Recepción</span><b>→</b><span>Diagnóstico</span><b>→</b><span>Reparación</span><b>→</b><span>Entrega</span>
+      </div>
     </div>
 
-    <script src="js/api.js"></script>
-    <script src="js/animations.js"></script>
-    <script>
-        if (isLoggedIn()) {
-            const u = getUser();
-            const rol = u ? u.rol : null;
-            window.location.href = homePageForRol(rol);
-        }
-        const themeOrder = ['system', 'light', 'dark'];
-        const themeIcons = {
-            system: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-            light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
-            dark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
-        };
-        function initLoginTheme() {
-            const stored = localStorage.getItem('ag-theme') || 'system';
-            applyTheme(stored);
-            updateLoginThemeIcon(stored);
-            const btn = document.getElementById('loginThemeToggle');
-            if (!btn) return;
-            btn.addEventListener('click', () => {
-                const current = localStorage.getItem('ag-theme') || 'system';
-                const next = themeOrder[(themeOrder.indexOf(current) + 1) % themeOrder.length];
-                localStorage.setItem('ag-theme', next);
-                applyTheme(next);
-                updateLoginThemeIcon(next);
-            });
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-                if ((localStorage.getItem('ag-theme') || 'system') === 'system') applyTheme('system');
-            });
-        }
-        function updateLoginThemeIcon(mode) {
-            const btn = document.getElementById('loginThemeToggle');
-            if (!btn) return;
-            btn.innerHTML = themeIcons[mode] || themeIcons.system;
-            btn.title = `Tema: ${mode}`;
-        }
-        initLoginTheme();
-        /* Mostrar / ocultar contrasena */
-        const passInput = document.getElementById('password');
-        document.getElementById('passToggle').addEventListener('click', () => {
-            const show = passInput.type === 'password';
-            passInput.type = show ? 'text' : 'password';
-            document.getElementById('eyeIcon').innerHTML = show
-                ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
-                : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-            passInput.focus();
-        });
-        /* Autorrelleno con cuentas demo */
-        document.querySelectorAll('.ag-demo-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                document.getElementById('email').value = chip.dataset.email;
-                passInput.value = chip.dataset.pass || '';
-                document.getElementById('loginForm').requestSubmit();
-            });
-        });
-        /* Feedback de envio: spinner en el boton + sacudida en la tarjeta */
-        function cargando(on) {
-            const btn = document.getElementById('loginBtn');
-            if (btn) btn.classList.toggle('is-loading', !!on);
-        }
-        function fallo(msg) {
-            showError('alertContainer', msg);
-            const card = document.getElementById('loginCard');
-            if (!card) return;
-            card.classList.remove('lg-shake');
-            void card.offsetWidth;
-            card.classList.add('lg-shake');
-        }
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            if (!email || !password) { fallo('Complete todos los campos'); return; }
-            cargando(true);
-            try {
-                const response = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                if (!response.ok) {
-                    let msg = 'Credenciales invalidas. Verifique su email y contrasena.';
-                    try {
-                        const err = await response.json();
-                        if (err && (err.mensaje || err.error)) msg = err.mensaje || err.error;
-                    } catch (_) { /* mensaje genérico */ }
-                    fallo(msg); return;
-                }
-                const data = await response.json();
-                setToken(data.token);
-                setUser({ id: data.id, nombre: data.nombreCompleto || data.nombre, email: data.email, rol: data.rol });
-                try {
-                    if (!localStorage.getItem('ag-hola-' + data.rol)) {
-                        localStorage.setItem('ag-hola-' + data.rol, '1');
-                        sessionStorage.setItem('ag-hola-msg', `Bienvenido, ${data.nombreCompleto || data.nombre}. Este es tu panel: usa el botón ¿Cómo usar? para el recorrido.`);
-                    }
-                } catch (_) { /* noop */ }
-                window.location.href = homePageForRol(data.rol);
-            } catch (error) {
-                fallo('Error de conexion. Verifique que el servidor este activo.');
-            } finally {
-                cargando(false);
-            }
-        });
-    </script>
+    <div class="pl-brand-foot">
+      <span>© 2026 Taller San Martín</span>
+      <a href="/portal/ayuda.html">Guía de uso</a>
+      <a href="/portal/soporte.html">Soporte</a>
+      <a href="/admin/" rel="nofollow">Acceso del personal</a>
+    </div>
+  </aside>
+
+  <main class="pl-main" id="acceso">
+    <div class="pl-card">
+      <div class="pl-card-head">
+        <span class="pl-eyebrow"><i></i> Acceso seguro</span>
+        <h2>Entra a tu cuenta</h2>
+        <p>Usa tu documento y la placa de tu vehículo, o crea tu cuenta si eres nuevo.</p>
+      </div>
+
+      <div class="pu-alert" id="msg" role="status" aria-live="polite"></div>
+
+      <nav class="pl-tabs" role="tablist" aria-label="Opciones de acceso">
+        <button type="button" class="pl-tab" role="tab" id="tab-doc" aria-selected="true" aria-controls="panel-doc" data-panel="doc">Documento + placa</button>
+        <button type="button" class="pl-tab" role="tab" id="tab-reg" aria-selected="false" aria-controls="panel-reg" data-panel="reg" tabindex="-1">Crear cuenta</button>
+      </nav>
+
+      <!-- ============================ ACCESO: DOCUMENTO + PLACA ============================ -->
+      <section id="panel-doc" class="pl-panel" role="tabpanel" aria-labelledby="tab-doc">
+        <form class="pu-form" id="formDoc" novalidate>
+          <div class="pu-field">
+            <label for="doc">Documento <span class="req" aria-hidden="true">*</span></label>
+            <input id="doc" type="text" inputmode="numeric" placeholder="DNI de 8 dígitos o RUC de 11" required autocomplete="off" aria-describedby="doc-hint" maxlength="11">
+            <p class="hint" id="doc-hint">DNI: 8 dígitos · RUC: 11 dígitos.</p>
+          </div>
+          <div class="pu-row">
+            <div class="pu-field">
+              <label for="tipo">Tipo de documento</label>
+              <select id="tipo" autocomplete="off">
+                <option value="DNI">DNI</option>
+                <option value="RUC">RUC</option>
+              </select>
+            </div>
+            <div class="pu-field">
+              <label for="placa">Placa del vehículo <span class="req" aria-hidden="true">*</span></label>
+              <input id="placa" type="text" placeholder="ABC-123" required autocomplete="off" autocapitalize="characters" maxlength="8" aria-describedby="placa-hint">
+              <p class="hint" id="placa-hint">Debe ser un vehículo registrado a tu nombre.</p>
+            </div>
+          </div>
+          <label class="pu-check">
+            <input type="checkbox" id="consentimiento" required>
+            <span>Acepto las <a href="/portal/politicas.html" target="_blank" rel="noopener">políticas de privacidad</a> y el tratamiento de mis datos para consultar mi vehículo.</span>
+          </label>
+          <button type="submit" class="pu-btn" id="btnConsultar">
+            <span class="pu-btn-label">Consultar mi vehículo</span>
+            <span class="pu-spinner" hidden aria-hidden="true"></span>
+          </button>
+        </form>
+        <p class="pu-links">
+          <a href="/portal/ayuda.html">¿Cómo ingreso?</a>
+          <a href="/portal/soporte.html">Necesito ayuda</a>
+        </p>
+      </section>
+
+      <!-- ============================ REGISTRO ============================ -->
+      <section id="panel-reg" class="pl-panel" role="tabpanel" aria-labelledby="tab-reg" hidden>
+        <div class="pl-steps" aria-label="Pasos del registro">
+          <div class="pl-step is-active" data-step="1"><i>1</i><span>Documento</span></div>
+          <div class="bar"></div>
+          <div class="pl-step" data-step="2"><i>2</i><span>Tus datos</span></div>
+          <div class="bar"></div>
+          <div class="pl-step" data-step="3"><i>3</i><span>Contacto</span></div>
+        </div>
+
+        <!-- Paso 1: documento -->
+        <div id="reg-paso1">
+          <form class="pu-form" id="formRegDoc" novalidate>
+            <div class="pu-row">
+              <div class="pu-field">
+                <label for="reg-tipo">Tipo de documento <span class="req" aria-hidden="true">*</span></label>
+                <select id="reg-tipo">
+                  <option value="DNI">DNI</option>
+                  <option value="RUC">RUC</option>
+                  <option value="CE">Carné de extranjería</option>
+                  <option value="PASAPORTE">Pasaporte</option>
+                </select>
+              </div>
+              <div class="pu-field">
+                <label for="reg-doc">Número <span class="req" aria-hidden="true">*</span></label>
+                <input id="reg-doc" type="text" inputmode="numeric" placeholder="8 dígitos" required autocomplete="off" maxlength="11" aria-describedby="reg-doc-hint">
+              </div>
+            </div>
+            <p class="hint" id="reg-doc-hint">DNI: 8 dígitos · RUC: 11 dígitos · CE/Pasaporte: tal como figura en el documento.</p>
+            <div class="pu-status" id="reg-status" role="status" aria-live="polite"></div>
+            <button type="submit" class="pu-btn" id="btnRegDoc">
+              <span class="pu-btn-label">Buscar mis datos</span>
+              <span class="pu-spinner" hidden aria-hidden="true"></span>
+            </button>
+            <button type="button" class="pu-btn pu-btn-secondary" id="btnRegManual" hidden>Continuar sin autocompletar</button>
+          </form>
+          <p class="pu-note" style="margin-top:1rem;">
+            El autocompletado depende de una fuente de datos autorizada. Si no está disponible, podrás escribir tus nombres y apellidos. Nunca mostramos nombres de ejemplo.
+          </p>
+        </div>
+
+        <!-- Paso 2: datos -->
+        <div id="reg-paso2" hidden>
+          <div id="reg-card" class="pl-doc-result" hidden>
+            <p class="label">Datos encontrados</p>
+            <p class="name" id="reg-nombre-confirmado">—</p>
+            <p class="meta" id="reg-tipo-confirmado">—</p>
+            <p id="reg-dir-confirmado" class="meta" hidden></p>
+            <span class="pl-source" id="reg-fuente">Fuente externa</span>
+            <p class="meta" style="margin-top:.55rem;">Estos datos provienen de la fuente consultada. No equivalen a una verificación oficial de identidad.</p>
+          </div>
+
+          <div id="reg-manual" hidden>
+            <div class="pu-alert is-info is-visible" id="reg-manual-aviso" style="margin-bottom:.8rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span id="reg-manual-texto">No pudimos traer tus datos automáticamente. Escríbelos tal como figuran en tu documento.</span>
+            </div>
+
+            <div id="grupo-nombres" class="pu-row-3" style="margin-bottom:.8rem;">
+              <div class="pu-field">
+                <label for="reg-nombres">Nombres <span class="req" aria-hidden="true">*</span></label>
+                <input id="reg-nombres" type="text" autocomplete="given-name" maxlength="80" placeholder="Juan Carlos">
+              </div>
+              <div class="pu-field">
+                <label for="reg-paterno">Apellido paterno <span class="req" aria-hidden="true">*</span></label>
+                <input id="reg-paterno" type="text" autocomplete="family-name" maxlength="60" placeholder="Pérez">
+              </div>
+              <div class="pu-field">
+                <label for="reg-materno">Apellido materno <span class="req" aria-hidden="true">*</span></label>
+                <input id="reg-materno" type="text" autocomplete="additional-name" maxlength="60" placeholder="García">
+              </div>
+            </div>
+            <div id="grupo-nombre-unico" class="pu-field" hidden style="margin-bottom:.8rem;">
+              <label for="reg-nombre-unico">Nombres y apellidos <span class="req" aria-hidden="true">*</span></label>
+              <input id="reg-nombre-unico" type="text" autocomplete="name" maxlength="150" placeholder="Tal como figura en tu documento">
+            </div>
+            <div id="grupo-razon" class="pu-field" hidden style="margin-bottom:.8rem;">
+              <label for="reg-razon">Razón social <span class="req" aria-hidden="true">*</span></label>
+              <input id="reg-razon" type="text" autocomplete="organization" maxlength="150" placeholder="Tal como figura en tu RUC">
+            </div>
+            <div id="grupo-dir" class="pu-field" hidden style="margin-bottom:.8rem;">
+              <label for="reg-dir">Dirección fiscal <span class="req" aria-hidden="true">*</span></label>
+              <input id="reg-dir" type="text" autocomplete="street-address" maxlength="250" placeholder="Av. / Calle, número, distrito">
+            </div>
+            <p class="pu-status" id="reg-manual-error" role="alert"></p>
+            <span class="pl-source is-manual">Datos declarados por ti · sin verificación externa</span>
+          </div>
+
+          <div class="pu-btn-row" style="margin-top:1rem;">
+            <button type="button" class="pu-btn pu-btn-secondary" id="btnRegVolver">Volver</button>
+            <button type="button" class="pu-btn" id="btnRegOk">Continuar</button>
+          </div>
+        </div>
+
+        <!-- Paso 3: contacto -->
+        <div id="reg-paso3" hidden>
+          <form class="pu-form" id="formRegistro" novalidate>
+            <div class="pu-row">
+              <div class="pu-field">
+                <label for="reg-tel">Celular <span class="req" aria-hidden="true">*</span></label>
+                <input id="reg-tel" type="tel" inputmode="numeric" placeholder="912345678" required autocomplete="tel" maxlength="9" aria-describedby="reg-tel-hint">
+                <p class="hint" id="reg-tel-hint">9 dígitos, empieza con 9.</p>
+              </div>
+              <div class="pu-field">
+                <label for="reg-email">Correo (opcional)</label>
+                <input id="reg-email" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" maxlength="150">
+              </div>
+            </div>
+            <div class="pu-field">
+              <label for="reg-placa">Placa del vehículo (opcional)</label>
+              <input id="reg-placa" type="text" placeholder="ABC-123" autocomplete="off" autocapitalize="characters" maxlength="8">
+              <p class="hint">Si la registras, podrás ingresar después con documento + placa.</p>
+            </div>
+            <div class="pu-row">
+              <div class="pu-field">
+                <label for="reg-marca">Marca (opcional)</label>
+                <input id="reg-marca" type="text" placeholder="Toyota" autocomplete="off" maxlength="50">
+              </div>
+              <div class="pu-field">
+                <label for="reg-anio">Año (opcional)</label>
+                <input id="reg-anio" type="number" placeholder="2020" min="1900" max="2100" inputmode="numeric">
+              </div>
+            </div>
+            <div class="pu-field">
+              <label for="reg-modelo">Modelo (opcional)</label>
+              <input id="reg-modelo" type="text" placeholder="Corolla" autocomplete="off" maxlength="50">
+            </div>
+            <label class="pu-check">
+              <input type="checkbox" id="consent-reg" required>
+              <span>He leído y acepto las <a href="/portal/politicas.html" target="_blank" rel="noopener">políticas de privacidad</a>. Declaro que mis datos son correctos.</span>
+            </label>
+            <button type="submit" class="pu-btn" id="btnRegistrar">
+              <span class="pu-btn-label">Crear mi cuenta</span>
+              <span class="pu-spinner" hidden aria-hidden="true"></span>
+            </button>
+            <button type="button" class="pu-btn pu-btn-secondary" id="btnRegVolver3">Volver</button>
+          </form>
+        </div>
+      </section>
+
+      <p class="pu-links">
+        <a href="/portal/ayuda.html">Guía de uso</a>
+        <a href="/portal/soporte.html">Soporte</a>
+        <a href="/portal/politicas.html">Privacidad</a>
+      </p>
+    </div>
+
+    <p class="pl-legal">
+      AutoGestión · Taller San Martín. Tus datos se usan solo para gestionar tu vehículo.
+      <a href="/admin/" rel="nofollow">Acceso del personal</a>
+    </p>
+  </main>
+</div>
+
+<script src="/js/portal-api.js?v=3"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const esc = portalEsc;
+  const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])';
+
+  /* ---------------------------------------------------------------- mensajes */
+  let msgTimer = null;
+  function msg(tipo, titulo, detalle) {
+    const el = $('msg');
+    el.className = 'pu-alert is-visible is-' + (tipo || 'info');
+    el.replaceChildren();
+    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke', 'currentColor');
+    icon.setAttribute('stroke-width', '2');
+    icon.setAttribute('stroke-linecap', 'round');
+    icon.setAttribute('stroke-linejoin', 'round');
+    icon.setAttribute('aria-hidden', 'true');
+    icon.innerHTML = tipo === 'ok'
+      ? '<path d="M20 6L9 17l-5-5"/>'
+      : tipo === 'error'
+        ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+        : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>';
+    const body = document.createElement('div');
+    const b = document.createElement('strong');
+    b.textContent = titulo || '';
+    body.appendChild(b);
+    if (detalle) {
+      const span = document.createElement('span');
+      span.textContent = detalle;
+      body.appendChild(span);
+    }
+    el.append(icon, body);
+    clearTimeout(msgTimer);
+    if (tipo === 'ok') msgTimer = setTimeout(() => el.classList.remove('is-visible'), 6000);
+  }
+  function limpiarMsg() { $('msg').classList.remove('is-visible'); }
+
+  function cargando(btn, on, texto) {
+    if (!btn) return;
+    btn.disabled = !!on;
+    btn.classList.toggle('is-loading', !!on);
+    const label = btn.querySelector('.pu-btn-label');
+    const sp = btn.querySelector('.pu-spinner');
+    if (sp) sp.hidden = !on;
+    if (label) {
+      if (!label.dataset.base) label.dataset.base = label.textContent;
+      label.textContent = on ? (texto || 'Procesando...') : label.dataset.base;
+    }
+  }
+
+  /* --------------------------------------------------------------- pestañas */
+  const tabs = Array.from(document.querySelectorAll('.pl-tab'));
+  function activarTab(nombre, enfocar) {
+    limpiarMsg();
+    tabs.forEach(t => {
+      const activo = t.dataset.panel === nombre;
+      t.setAttribute('aria-selected', String(activo));
+      t.tabIndex = activo ? 0 : -1;
+      const panel = $('panel-' + t.dataset.panel);
+      if (panel) panel.hidden = !activo;
+      if (activo && enfocar) t.focus();
+    });
+  }
+  tabs.forEach(t => {
+    t.addEventListener('click', () => activarTab(t.dataset.panel));
+    t.addEventListener('keydown', e => {
+      const i = tabs.indexOf(t);
+      let next = null;
+      if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+      if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+      if (e.key === 'Home') next = tabs[0];
+      if (e.key === 'End') next = tabs[tabs.length - 1];
+      if (next) { e.preventDefault(); activarTab(next.dataset.panel, true); }
+    });
+  });
+
+  /* ---------------------------------------------------------------- helpers */
+  const soloDigitos = s => String(s || '').replace(/\D/g, '');
+  const soloAlnum = s => String(s || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  const placaValida = s => /^[A-Z0-9]{3}-?[A-Z0-9]{3}$/.test(String(s || '').trim().toUpperCase());
+  const emailValido = s => /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(String(s || '').trim());
+  const nombreValido = s => /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ .'’\-]{1,79}$/.test(String(s || '').trim());
+
+  function entrar(res, texto) {
+    if (!res || !res.token) throw new Error('Respuesta de sesión inválida');
+    portalSetSesion(res.token, res.nombre || '');
+    msg('ok', 'Acceso correcto', texto || 'Te estamos llevando a tu panel...');
+    setTimeout(() => { window.location.href = '/portal/estado.html'; }, 550);
+  }
+
+  function mensajeDeError(e, contexto) {
+    if (!e) return 'No pudimos completar la solicitud. Intenta de nuevo.';
+    if (e.status === 429) return 'Hiciste demasiadas consultas seguidas. Espera unos minutos y vuelve a intentar.';
+    if (e.status === 401) return 'No encontramos coincidencia con los datos ingresados. Revisa tu documento y placa.';
+    if (e.detalle) return e.detalle;
+    if (e instanceof TypeError || e.name === 'TypeError') return 'No pudimos conectar con el taller. Revisa tu conexión e intenta de nuevo.';
+    return contexto || 'No pudimos completar la solicitud. Intenta de nuevo.';
+  }
+
+  if (portalToken()) {
+    window.location.replace('/portal/estado.html');
+    return;
+  }
+
+  /* ================================ LOGIN ================================ */
+  $('doc').addEventListener('input', e => {
+    e.target.value = soloDigitos(e.target.value).slice(0, e.target.maxLength);
+    e.target.removeAttribute('aria-invalid');
+  });
+  $('placa').addEventListener('input', e => {
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 8);
+    e.target.removeAttribute('aria-invalid');
+  });
+
+  $('formDoc').addEventListener('submit', async e => {
+    e.preventDefault();
+    limpiarMsg();
+    const doc = soloDigitos($('doc').value);
+    const placa = $('placa').value.trim().toUpperCase();
+    if (!doc) return marcar($('doc'), 'Ingresa tu documento.');
+    if (doc.length !== (($('tipo').value === 'DNI') ? 8 : 11)) return marcar($('doc'), 'El documento no tiene la longitud correcta.');
+    if (!placa) return marcar($('placa'), 'Ingresa la placa del vehículo.');
+    if (!placaValida(placa)) return marcar($('placa'), 'Placa inválida. Ejemplo: ABC-123.');
+    if (!$('consentimiento').checked) return msg('error', 'Falta tu consentimiento', 'Debes aceptar las políticas de privacidad para consultar tu vehículo.');
+
+    const btn = $('btnConsultar');
+    cargando(btn, true, 'Consultando...');
+    try {
+      const res = await portalFetch('/public/portal/identificar', {
+        method: 'POST',
+        body: JSON.stringify({ documento: doc, tipoDocumento: $('tipo').value, placa })
+      });
+      entrar(res);
+    } catch (err) {
+      msg('error', 'No pudimos identificarte', mensajeDeError(err, 'Revisa tu documento y la placa del vehículo.'));
+    } finally {
+      cargando(btn, false);
+    }
+  });
+
+  function marcar(input, texto) {
+    input.setAttribute('aria-invalid', 'true');
+    input.focus();
+    msg('error', texto, 'Corrige el campo marcado y vuelve a intentar.');
+  }
+
+  /* ============================== REGISTRO ============================== */
+  const REG = {
+    tipo: 'DNI',
+    doc: '',
+    paso: 1,
+    verificado: false,
+    nombre: '',
+    fuente: '',
+    direccion: '',
+    motivo: '',
+    ultimaClave: '',
+    secuencia: 0,
+    abort: null,
+    timer: null,
+    guardando: false
+  };
+
+  const longitudEsperada = tipo => tipo === 'DNI' ? 8 : tipo === 'RUC' ? 11 : 0;
+  const claveDoc = () => REG.tipo + ':' + REG.doc;
+
+  function pasos(n) {
+    document.querySelectorAll('.pl-step').forEach(el => {
+      const k = Number(el.dataset.step);
+      el.classList.toggle('is-active', k === n);
+      el.classList.toggle('is-done', k < n);
+    });
+  }
+
+  function irAPaso(n) {
+    REG.paso = n;
+    $('reg-paso1').hidden = n !== 1;
+    $('reg-paso2').hidden = n !== 2;
+    $('reg-paso3').hidden = n !== 3;
+    pasos(n);
+    if ($('panel-reg').hidden) return;
+    const primerCampo = n !== 2 ? $('reg-tipo')
+      : !$('reg-card').hidden ? $('btnRegOk')
+      : REG.tipo === 'RUC' ? $('reg-razon')
+      : REG.tipo === 'DNI' ? $('reg-nombres')
+      : $('reg-nombre-unico');
+    const first = n === 3 ? $('reg-tel') : primerCampo;
+    if (first) setTimeout(() => first.focus(), 60);
+  }
+
+  function estadoReg(texto, tipo) {
+    const el = $('reg-status');
+    el.replaceChildren();
+    el.className = 'pu-status' + (tipo ? ' is-' + tipo : '');
+    if (tipo === 'loading') {
+      const sp = document.createElement('span');
+      sp.className = 'pu-spinner';
+      sp.setAttribute('aria-hidden', 'true');
+      el.appendChild(sp);
+    }
+    const span = document.createElement('span');
+    span.textContent = texto || '';
+    el.appendChild(span);
+  }
+
+  function limpiarDatosVerificados() {
+    REG.verificado = false;
+    REG.nombre = '';
+    REG.fuente = '';
+    REG.direccion = '';
+    REG.motivo = '';
+    $('reg-card').hidden = true;
+    $('reg-manual').hidden = true;
+    $('btnRegManual').hidden = true;
+    ['reg-nombres', 'reg-paterno', 'reg-materno', 'reg-nombre-unico', 'reg-razon', 'reg-dir'].forEach(id => {
+      const el = $(id);
+      if (el) el.value = '';
+    });
+    $('reg-manual-error').textContent = '';
+  }
+
+  function configurarTipo() {
+    REG.tipo = $('reg-tipo').value;
+    const esNumerico = REG.tipo === 'DNI' || REG.tipo === 'RUC';
+    const input = $('reg-doc');
+    input.inputMode = esNumerico ? 'numeric' : 'text';
+    input.maxLength = REG.tipo === 'RUC' ? 11 : REG.tipo === 'DNI' ? 8 : 12;
+    input.placeholder = REG.tipo === 'DNI' ? '8 dígitos' : REG.tipo === 'RUC' ? '11 dígitos' : 'Tal como figura en el documento';
+    input.value = '';
+    REG.doc = '';
+    REG.ultimaClave = '';
+    limpiarDatosVerificados();
+    estadoReg('');
+    irAPaso(1);
+    $('reg-doc-hint').textContent = REG.tipo === 'DNI'
+      ? 'DNI: 8 dígitos. Con 8 dígitos intentamos traer tus nombres automáticamente.'
+      : REG.tipo === 'RUC'
+        ? 'RUC: 11 dígitos. Con 11 dígitos intentamos traer la razón social.'
+        : 'CE/Pasaporte: se registran en modo manual (no hay fuente pública de nombres).';
+  }
+
+  function alCambiarDocumento() {
+    const bruto = $('reg-doc').value;
+    const limpio = (REG.tipo === 'DNI' || REG.tipo === 'RUC') ? soloDigitos(bruto) : soloAlnum(bruto);
+    if (limpio !== bruto) $('reg-doc').value = limpio;
+    const cambio = limpio !== REG.doc;
+    REG.doc = limpio;
+    if (!cambio) return;
+
+    // El documento cambió: cualquier nombre anterior deja de ser válido.
+    limpiarDatosVerificados();
+    REG.ultimaClave = '';
+    estadoReg('');
+    if (REG.paso !== 1) irAPaso(1);
+
+    clearTimeout(REG.timer);
+    const esperado = longitudEsperada(REG.tipo);
+    if (!esperado || REG.doc.length !== esperado) return;
+    if (REG.tipo === 'CE' || REG.tipo === 'PASAPORTE') return;
+    $('btnRegManual').hidden = true;
+    REG.timer = setTimeout(() => consultarDocumento(false), 500);
+  }
+
+  function cancelarConsulta() {
+    if (REG.abort) { try { REG.abort.abort(); } catch (_) { /* noop */ } }
+    REG.abort = null;
+    REG.secuencia++;
+    clearTimeout(REG.timer);
+  }
+
+  async function consultarDocumento(forzar) {
+    const esperado = longitudEsperada(REG.tipo);
+    if (REG.tipo === 'CE' || REG.tipo === 'PASAPORTE') {
+      mostrarManual('SIN_FUENTE');
+      return;
+    }
+    if (!esperado || REG.doc.length !== esperado) {
+      estadoReg('Completa el número de documento para consultar.', 'error');
+      return;
+    }
+    if (!forzar && REG.ultimaClave === claveDoc() && REG.motivo) return;
+
+    cancelarConsulta();
+    const sec = REG.secuencia;
+    const clave = claveDoc();
+    const docConsultado = REG.doc;
+    const controller = new AbortController();
+    REG.abort = controller;
+    REG.ultimaClave = clave;
+    estadoReg('Consultando el documento...', 'loading');
+    cargando($('btnRegDoc'), true, 'Consultando...');
+    $('btnRegManual').hidden = true;
+
+    try {
+      const res = await portalFetch(
+        '/public/portal/documento/consultar?tipo=' + encodeURIComponent(REG.tipo) + '&numero=' + encodeURIComponent(docConsultado),
+        { signal: controller.signal }
+      );
+      if (sec !== REG.secuencia || REG.doc !== docConsultado || REG.tipo !== clave.split(':')[0]) return;
+      if (res && res.verificado && (res.nombre || res.razonSocial)) {
+        mostrarVerificado(res);
+      } else {
+        mostrarManual((res && res.motivo) || 'NO_ENCONTRADO');
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+      if (sec !== REG.secuencia || REG.doc !== docConsultado) return;
+      if (e && e.status === 429) {
+        estadoReg(e.detalle || 'Demasiadas consultas. Espera unos minutos.', 'error');
+        msg('error', 'Demasiadas consultas', 'Por seguridad limitamos las búsquedas de documento. Puedes continuar escribiendo tus datos.');
+        $('btnRegManual').hidden = false;
+        $('btnRegManual').textContent = 'Continuar sin autocompletar';
+      } else {
+        mostrarManual('ERROR');
+      }
+    } finally {
+      if (sec === REG.secuencia) {
+        cargando($('btnRegDoc'), false);
+        REG.abort = null;
+      }
+    }
+  }
+
+  function mostrarVerificado(res) {
+    REG.verificado = true;
+    REG.motivo = 'OK';
+    REG.nombre = String(res.razonSocial || res.nombre || '').trim();
+    REG.fuente = String(res.fuente || 'Fuente externa');
+    REG.direccion = String(res.direccion || '').trim();
+    const esRuc = REG.tipo === 'RUC';
+    $('reg-nombre-confirmado').textContent = REG.nombre;
+    $('reg-tipo-confirmado').textContent = esRuc
+      ? 'RUC · ' + REG.tipo + ' ' + REG.doc
+      : 'DNI · ' + REG.doc;
+    $('reg-dir-confirmado').textContent = REG.direccion;
+    $('reg-dir-confirmado').hidden = !REG.direccion;
+    $('reg-fuente').textContent = 'Fuente: ' + REG.fuente;
+    $('reg-card').hidden = false;
+    $('reg-manual').hidden = true;
+    $('btnRegOk').textContent = 'Sí, soy yo';
+    $('btnRegManual').hidden = true;
+    estadoReg(esRuc ? 'Razón social encontrada.' : 'Nombres encontrados.', 'ok');
+    irAPaso(2);
+  }
+
+  function mostrarManual(motivo) {
+    REG.verificado = false;
+    REG.motivo = motivo || 'NO_ENCONTRADO';
+    REG.nombre = '';
+    REG.fuente = '';
+    $('reg-card').hidden = true;
+    $('reg-manual').hidden = false;
+    $('btnRegOk').textContent = 'Continuar';
+    $('btnRegManual').hidden = true;
+
+    const esRuc = REG.tipo === 'RUC';
+    const esDni = REG.tipo === 'DNI';
+    $('grupo-nombres').hidden = !esDni;
+    $('grupo-nombre-unico').hidden = esDni || esRuc;
+    $('grupo-razon').hidden = !esRuc;
+    $('grupo-dir').hidden = !esRuc;
+    $('reg-razon').required = esRuc;
+    $('reg-dir').required = esRuc;
+
+    const texto = motivo === 'SIN_FUENTE'
+      ? 'El autocompletado no está configurado en este entorno. Escribe tus nombres y apellidos tal como figuran en tu documento.'
+      : motivo === 'ERROR'
+        ? 'La fuente de consulta no respondió. Puedes continuar y escribir tus datos; el taller los revisará.'
+        : motivo === 'LIMITE'
+          ? 'Se alcanzó el límite de consultas. Escribe tus datos para continuar; no se bloqueará tu registro.'
+          : motivo === 'INVALIDO'
+            ? 'El documento no tiene un formato válido. Revísalo o escribe tus datos.'
+            : motivo === 'NO_ENCONTRADO' && REG.tipo === 'DNI'
+              ? 'No encontramos tu DNI en las fuentes públicas disponibles. Eso no significa que el DNI no exista: por ejemplo, SUNAT solo cubre a personas con RUC 10. Puedes continuar y escribir tus datos; el taller los revisará.'
+              : 'No encontramos ese documento en la fuente consultada. Verifícalo o escribe tus datos tal como figuran en tu documento.';
+    $('reg-manual-texto').textContent = texto;
+    estadoReg('');
+    irAPaso(2);
+  }
+
+  $('reg-tipo').addEventListener('change', configurarTipo);
+  $('reg-doc').addEventListener('input', alCambiarDocumento);
+  $('reg-doc').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); consultarDocumento(true); }
+  });
+  $('formRegDoc').addEventListener('submit', e => {
+    e.preventDefault();
+    if (REG.tipo === 'CE' || REG.tipo === 'PASAPORTE') {
+      if (REG.doc.length < 4) return marcar($('reg-doc'), 'Ingresa el número de documento.');
+      mostrarManual('SIN_FUENTE');
+      return;
+    }
+    if (REG.doc.length !== longitudEsperada(REG.tipo)) {
+      return marcar($('reg-doc'), 'El documento debe tener ' + longitudEsperada(REG.tipo) + ' dígitos.');
+    }
+    consultarDocumento(true);
+  });
+
+  $('btnRegManual').addEventListener('click', () => mostrarManual('LIMITE'));
+
+  $('btnRegVolver').addEventListener('click', () => {
+    cancelarConsulta();
+    limpiarDatosVerificados();
+    REG.ultimaClave = '';
+    estadoReg('');
+    irAPaso(1);
+    $('reg-doc').focus();
+  });
+
+  $('btnRegOk').addEventListener('click', () => {
+    $('reg-manual-error').textContent = '';
+    if (!REG.verificado) {
+      if (REG.tipo === 'RUC') {
+        const razon = $('reg-razon').value.trim().replace(/\s+/g, ' ');
+        const dir = $('reg-dir').value.trim();
+        if (razon.length < 3) return errorManual('Ingresa la razón social tal como figura en tu RUC.');
+        if (dir.length < 5) return errorManual('Ingresa la dirección fiscal (mínimo 5 caracteres).');
+        REG.nombre = razon;
+        REG.direccion = dir;
+      } else if (REG.tipo === 'DNI') {
+        const nombres = $('reg-nombres').value.trim().replace(/\s+/g, ' ');
+        const paterno = $('reg-paterno').value.trim().replace(/\s+/g, ' ');
+        const materno = $('reg-materno').value.trim().replace(/\s+/g, ' ');
+        if (!nombreValido(nombres)) return errorManual('Escribe tus nombres (solo letras, mínimo 2 caracteres).');
+        if (!nombreValido(paterno)) return errorManual('Escribe tu apellido paterno.');
+        if (!nombreValido(materno)) return errorManual('Escribe tu apellido materno.');
+        REG.nombre = [nombres, paterno, materno].join(' ');
+      } else {
+        const unico = $('reg-nombre-unico').value.trim().replace(/\s+/g, ' ');
+        if (!nombreValido(unico)) return errorManual('Escribe tus nombres y apellidos tal como figuran en tu documento.');
+        REG.nombre = unico;
+      }
+    }
+    $('reg-paso2').hidden = true;
+    $('reg-paso3').hidden = false;
+    pasos(3);
+    $('reg-tel').focus();
+  });
+
+  function errorManual(texto) {
+    $('reg-manual-error').textContent = texto;
+    $('reg-manual-error').className = 'pu-status is-error';
+    return false;
+  }
+
+  $('btnRegVolver3').addEventListener('click', () => {
+    $('reg-paso3').hidden = true;
+    $('reg-paso2').hidden = false;
+    pasos(2);
+    $('btnRegOk').focus();
+  });
+
+  $('reg-tel').addEventListener('input', e => {
+    e.target.value = soloDigitos(e.target.value).slice(0, 9);
+    e.target.removeAttribute('aria-invalid');
+  });
+  $('reg-placa').addEventListener('input', e => {
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 8);
+  });
+
+  $('formRegistro').addEventListener('submit', async e => {
+    e.preventDefault();
+    limpiarMsg();
+    const tel = soloDigitos($('reg-tel').value);
+    const email = $('reg-email').value.trim();
+    const placa = $('reg-placa').value.trim().toUpperCase();
+    if (tel.length !== 9 || tel[0] !== '9') return marcar($('reg-tel'), 'El celular debe tener 9 dígitos y empezar con 9.');
+    if (email && !emailValido(email)) {
+      $('reg-email').setAttribute('aria-invalid', 'true');
+      return msg('error', 'Correo inválido', 'Revisa el formato: nombre@dominio.com.');
+    }
+    if (placa && !placaValida(placa)) return marcar($('reg-placa'), 'Placa inválida. Ejemplo: ABC-123.');
+    if (!$('consent-reg').checked) return msg('error', 'Falta tu consentimiento', 'Debes aceptar las políticas de privacidad para crear tu cuenta.');
+    if (REG.guardando) return;
+
+    const tipo = REG.tipo;
+    const doc = REG.doc;
+    const nombre = REG.nombre;
+    if (!doc || !nombre) {
+      msg('error', 'Faltan datos del registro', 'Vuelve al paso anterior y confirma tu documento.');
+      irAPaso(1);
+      return;
+    }
+
+    REG.guardando = true;
+    const btn = $('btnRegistrar');
+    cargando(btn, true, 'Creando tu cuenta...');
+    try {
+      const res = await portalFetch('/public/portal/registro', {
+        method: 'POST',
+        body: JSON.stringify({
+          tipoDocumento: tipo,
+          documento: doc,
+          nombre,
+          razonSocial: tipo === 'RUC' ? nombre : '',
+          telefono: tel,
+          email: email || null,
+          placa: placa || null,
+          marca: $('reg-marca').value.trim() || null,
+          modelo: $('reg-modelo').value.trim() || null,
+          anio: $('reg-anio').value ? parseInt($('reg-anio').value, 10) : null,
+          direccionFiscal: tipo === 'RUC' ? (REG.direccion || $('reg-dir').value.trim()) : '',
+          consentimiento: true
+        })
+      });
+      entrar(res, 'Cuenta creada. Te estamos llevando a tu panel...');
+    } catch (err) {
+      if (err.status === 409) {
+        msg('error', 'Ese documento ya tiene cuenta', (err.detalle || '') + ' Puedes volver a la pestaña Documento + placa para ingresar.');
+        activarTab('doc');
+        $('btnRegistrar').disabled = false;
+      } else {
+        msg('error', 'No pudimos crear tu cuenta', mensajeDeError(err, 'Revisa los datos e intenta de nuevo.'));
+      }
+    } finally {
+      REG.guardando = false;
+      cargando(btn, false);
+    }
+  });
+
+  /* Al cambiar de pestaña, no dejamos consultas ni temporizadores vivos. */
+  tabs.forEach(t => t.addEventListener('click', cancelarConsulta));
+
+  // Configuración inicial del registro
+  configurarTipo();
+
+  // Foco visible al cargar: primer campo útil
+  const params = new URLSearchParams(location.search);
+  if (params.get('panel') === 'registro') {
+    activarTab('reg');
+    setTimeout(() => $('reg-tipo').focus(), 80);
+  }
+})();
+</script>
 </body>
 </html>

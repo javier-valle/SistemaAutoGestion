@@ -8,7 +8,12 @@ const API_BASE = (() => {
             if (u.protocol === 'http:' || u.protocol === 'https:') return saved.replace(/\/$/, '');
         } catch (_) { /* valor inválido: se ignora */ }
     }
-    return 'http://localhost:8080/api';
+    // Docker: Nginx sirve la web y reenvia /api al backend (mismo origen, sin CORS).
+    // Live Server (5501/5502) o file:// no tienen proxy: hablan directo con el backend.
+    const { protocol, hostname, port } = window.location;
+    const sinProxy = protocol === 'file:' ||
+        ((hostname === 'localhost' || hostname === '127.0.0.1') && (port === '5501' || port === '5502'));
+    return sinProxy ? 'http://localhost:8080/api' : '/api';
 })();
 /* Escape HTML: todo dato del backend/usuario que se interpole en innerHTML
    debe pasar por aquí. Cubre & < > " ' ` =. */
@@ -23,8 +28,9 @@ function clearToken() { localStorage.removeItem('token'); localStorage.removeIte
 function getUser() { const u = localStorage.getItem('user'); return u ? JSON.parse(u) : null; }
 function setUser(user) { localStorage.setItem('user', JSON.stringify(user)); }
 function isLoggedIn() { return !!getToken(); }
-/* Rutas base: el login vive en frontend/index.html, las paginas en frontend/pages/.
-   Desde pages/ hay que subir un nivel (../index.html); desde la raiz no. */
+/* Rutas base: el login del personal vive en frontend/admin/index.html y las paginas en
+   frontend/admin/pages/. Desde pages/ hay que subir un nivel (../index.html); desde /admin/ no.
+   La raiz (/) es el portal del cliente. */
 function agIsInPages() { return window.location.pathname.replace(/\\/g, '/').includes('/pages/'); }
 function agLoginPath() { return agIsInPages() ? '../index.html' : 'index.html'; }
 function logout() { clearToken(); window.location.href = agLoginPath(); }

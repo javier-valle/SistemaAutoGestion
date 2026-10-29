@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+        <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#0f172a">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoGestion - Cotizacion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css?v=20260920b">
+    <link rel="stylesheet" href="/css/animations.css">
+    <link rel="stylesheet" href="/css/redesign.css">
+    <link rel="stylesheet" href="/css/polish.css?v=20261005">
+    <link rel="stylesheet" href="/css/panels-premium.css?v=20261002">
+    <script>
+        (function(){var t=localStorage.getItem('ag-theme')||'system';if(t==='system')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',t);})();
+    </script>
+</head>
+<body>
+    <div id="navbar"></div>
+    <div class="ag-page">
+        <div class="ag-page-header">
+            <h1>Diagnostico y Cotizacion</h1>
+            <p>Registrar diagnostico y generar cotizacion para una recepcion</p>
+        </div>
+        <div id="alertContainer"></div>
+        <div class="ag-wizard ag-mb-3" id="cotWizard" style="max-width:640px;">
+            <div class="ag-wz-step" data-s="1"><span class="ag-wz-dot">1</span>Diagnóstico</div>
+            <div class="ag-wz-line"></div>
+            <div class="ag-wz-step" data-s="2"><span class="ag-wz-dot">2</span>Cotización</div>
+            <div class="ag-wz-line"></div>
+            <div class="ag-wz-step" data-s="3"><span class="ag-wz-dot">3</span>Aprobar</div>
+        </div>
+        <div id="draftBar" class="ag-leer" hidden style="max-width:640px; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <span>📝 <b>Borrador en curso:</b> <span id="draftInfo">tienes cambios sin terminar</span>. Si cambias de ventana se te avisará para no perder nada.</span>
+            <button type="button" class="ag-btn ag-btn-outline ag-btn-sm" onclick="descartarBorrador()">Descartar borrador</button>
+        </div>
+        <div class="ag-layout-wide">
+            <div class="ag-layout-stack">
+                <div class="ag-section">
+                    <div class="ag-section-header">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>
+                            Diagnostico
+                        </h3>
+                    </div>
+                    <div class="ag-section-body">
+                        <form id="diagnosticoForm">
+                            <div class="ag-form-group">
+                                <label class="ag-form-label">Recepcion *</label>
+                                <select class="ag-form-control" id="recepcionSelect" required><option value="">-- Seleccionar --</option></select>
+                            </div>
+                            <div class="ag-form-group">
+                                <label class="ag-form-label">Mecanico *</label>
+                                <select class="ag-form-control" id="mecanicoSelect" required><option value="">-- Cargando mecánicos... --</option></select>
+                            </div>
+                            <div class="ag-form-group">
+                                <label class="ag-form-label">Descripcion *</label>
+                                <textarea class="ag-form-control" id="diagnosticoDesc" rows="3" required placeholder="Describa los hallazgos..."></textarea>
+                            </div>
+                            <button type="submit" class="ag-btn ag-btn-accent ag-btn-block">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                Registrar Diagnostico
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="ag-section">
+                    <div class="ag-section-header">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            Solicitudes del portal
+                        </h3>
+                        <span class="ag-text-muted ag-text-sm" id="solCount"></span>
+                    </div>
+                    <div class="ag-section-body" style="max-height:320px; overflow-y:auto;" id="solicitudesContainer">
+                        <p class="ag-text-muted">Cargando...</p>
+                    </div>
+                </div>
+                <div class="ag-section">
+                    <div class="ag-section-header">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Cotizaciones Existentes
+                        </h3>
+                    </div>
+                    <div class="ag-section-body" style="max-height:250px; overflow-y:auto;" id="cotizacionesContainer">
+                        <p class="ag-text-muted">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="ag-section" id="cotizacionSection">
+                <div class="ag-section-header">
+                    <h3>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Generar Cotizacion
+                    </h3>
+                    <span class="ag-text-muted ag-text-sm" id="cotLockHint">Primero registra el diagnóstico (paso 1)</span>
+                </div>
+                <div class="ag-section-body">
+                    <form id="cotizacionForm">
+                        <div class="ag-form-group">
+                            <label class="ag-form-label">Diagnostico ID *</label>
+                            <input type="number" class="ag-form-control" id="diagnosticoId" required placeholder="ID del diagnostico creado">
+                        </div>
+                        <div class="ag-section-title">Servicios</div>
+                        <div class="ag-form-group">
+                            <div class="ag-d-flex ag-gap-3">
+                                <input type="text" class="ag-form-control" id="servicioNombre" placeholder="Nombre del servicio" style="flex:2;">
+                                <input type="number" class="ag-form-control" id="servicioPrecio" step="0.01" placeholder="Precio" style="flex:1;">
+                                <button type="button" class="ag-btn ag-btn-outline ag-btn-sm" onclick="agregarServicio()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ag-section-title">Productos / Repuestos</div>
+                        <div class="ag-form-group" id="productosSelector"></div>
+                        <div class="ag-section-title" style="margin-top:1rem;">Items Seleccionados</div>
+                        <div id="itemsChips" style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.75rem;"></div>
+                        <div class="ag-table-wrap">
+                            <table class="ag-table">
+                                <thead><tr><th>Tipo</th><th>Descripcion</th><th class="col-num">Cant.</th><th class="col-num">Precio</th><th class="col-num">Subtotal</th><th></th></tr></thead>
+                                <tbody id="itemsSeleccionados"><tr><td colspan="6" class="ag-text-center ag-text-muted">No hay items</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div class="ag-d-flex ag-justify-between ag-align-center ag-mt-2" style="padding:0.85rem 1rem; border-top:1px solid var(--ag-border); background:var(--ag-oil-surface); border-radius:var(--ag-radius);">
+                            <div>
+                                <span class="ag-fw-600 ag-text-muted" style="font-size:0.72rem; font-family:var(--ag-font-heading); text-transform:uppercase; letter-spacing:0.05em; display:block;">Total a cotizar</span>
+                                <span class="ag-text-sm ag-text-muted" id="itemsCount">0 items</span>
+                            </div>
+                            <span class="ag-fw-700" id="totalDisplay" style="font-size:1.6rem; color:var(--ag-oil-text); font-family:var(--ag-font-heading); letter-spacing:-0.02em;">S/ 0.00</span>
+                        </div>
+                        <button type="submit" class="ag-btn ag-btn-primary ag-btn-block ag-btn-lg ag-mt-2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Generar Cotizacion
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="themeToggleWrap"></div>
+    <script src="/js/api.js?v=20261006"></script>
+    <script src="/js/animations.js?v=20261005"></script>
+    <script src="/js/ui-kit.js?v=20261005"></script>
+    <script src="/js/confirm-modal.js?v=20261005"></script>
+    <script>
+        (function() {
+            if (!guardPage('cotizacion')) return;
+            document.getElementById('navbar').innerHTML = renderNavbar('cotizacion');
+        document.getElementById('themeToggleWrap').innerHTML = renderThemeToggle();
+        initTheme();
+        let itemsSeleccionados = [];
+        let cotStep = 1;
+        /* ---- Borrador + bloqueo de navegación (no perder la cotización a medias) ---- */
+        const DRAFT_KEY = 'ag-cot-draft-v1';
+        function leerCamposBorrador() {
+            return {
+                recepcionId: document.getElementById('recepcionSelect').value || '',
+                mecanicoId: document.getElementById('mecanicoSelect').value || '',
+                diagnosticoDesc: document.getElementById('diagnosticoDesc').value || '',
+                diagnosticoId: document.getElementById('diagnosticoId').value || '',
+                servicioNombre: document.getElementById('servicioNombre').value || '',
+                servicioPrecio: document.getElementById('servicioPrecio').value || '',
+                items: itemsSeleccionados,
+                step: cotStep,
+                ts: Date.now()
+            };
+        }
+        function hayOperacionEnCurso() {
+            const d = leerCamposBorrador();
+            return (d.items && d.items.length > 0)
+                || (d.diagnosticoDesc && d.diagnosticoDesc.trim().length > 0)
+                || (d.diagnosticoId && String(d.diagnosticoId).trim() !== '')
+                || (d.servicioNombre && d.servicioNombre.trim().length > 0);
+        }
+        function pintarDraftBar() {
+            const bar = document.getElementById('draftBar');
+            if (!bar) return;
+            const enCurso = hayOperacionEnCurso();
+            bar.hidden = !enCurso;
+            if (enCurso) {
+                const n = itemsSeleccionados.length;
+                document.getElementById('draftInfo').textContent =
+                    n > 0 ? `${n} item(s) + diagnóstico en curso (autoguardado)` : 'diagnóstico/cotización en curso (autoguardado)';
+            }
+        }
+        function guardarBorrador() {
+            try {
+                if (hayOperacionEnCurso()) localStorage.setItem(DRAFT_KEY, JSON.stringify(leerCamposBorrador()));
+                else localStorage.removeItem(DRAFT_KEY);
+            } catch (_) { /* noop */ }
+            pintarDraftBar();
+        }
+        function restaurarBorrador() {
+            let d = null;
+            try { d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (_) { d = null; }
+            if (!d) return;
+            try {
+                if (d.diagnosticoDesc) document.getElementById('diagnosticoDesc').value = d.diagnosticoDesc;
+                if (d.diagnosticoId) document.getElementById('diagnosticoId').value = d.diagnosticoId;
+                if (d.servicioNombre) document.getElementById('servicioNombre').value = d.servicioNombre;
+                if (d.servicioPrecio) document.getElementById('servicioPrecio').value = d.servicioPrecio;
+                if (Array.isArray(d.items) && d.items.length) { itemsSeleccionados = d.items; actualizarItems(); }
+                // recepcion/mecanico se restauran cuando los selects ya cargaron (ver loadData)
+                window._draftRecep = d.recepcionId || '';
+                window._draftMec = d.mecanicoId || '';
+                if (d.step) setCotStep(d.step);
+                if (hayOperacionEnCurso()) toast('Borrador recuperado: sigue donde lo dejaste.', 'info');
+            } catch (_) { /* noop */ }
+            pintarDraftBar();
+        }
+        window.descartarBorrador = async function() {
+            if (!(await confirmarAccion('¿Descartar el borrador de cotización? Se borra el diagnóstico sin guardar y los items.', { tipo: 'danger' }))) return;
+            itemsSeleccionados = []; actualizarItems();
+            document.getElementById('diagnosticoDesc').value = '';
+            document.getElementById('diagnosticoId').value = '';
+            document.getElementById('servicioNombre').value = '';
+            document.getElementById('servicioPrecio').value = '';
+            try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+            setCotStep(1);
+            pintarDraftBar();
+            toast('Borrador descartado', 'success');
+        };
+        function limpiarBorradorAlTerminar() {
+            itemsSeleccionados = []; actualizarItems();
+            document.getElementById('servicioNombre').value = '';
+            document.getElementById('servicioPrecio').value = '';
+            // se conserva el diagnosticoId por si quiere generar otra cotización del mismo diagnóstico,
+            // pero si ya aprobó, el flujo terminó: limpiar todo
+            try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+            pintarDraftBar();
+        }
+        // Avisar al cerrar/recargar con operación a medias
+        window.addEventListener('beforeunload', (e) => {
+            if (hayOperacionEnCurso()) { e.preventDefault(); e.returnValue = ''; }
+        });
+        // Interceptar clicks del menú/buscador mientras haya operación en curso
+        document.addEventListener('click', async (e) => {
+            const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+            if (!a) return;
+            const href = a.getAttribute('href') || '';
+            if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+            if (!hayOperacionEnCurso()) return;
+            // mismo documento: dejar pasar modales internos
+            if (a.target === '_blank') return;
+            e.preventDefault();
+            e.stopPropagation();
+            const ok = await confirmarAccion(
+                'Tienes una cotización a medias (diagnóstico/items sin terminar). Si sales ahora, el borrador queda autoguardado y podrás retomarlo aquí. ¿Salir de todas formas?',
+                { tipo: 'primary', okLabel: 'Salir igual', cancelLabel: 'Seguir aquí' });
+            if (ok) { guardarBorrador(); window.location.href = a.href; }
+        }, true);
+        function setCotStep(n) {
+            cotStep = Math.min(3, Math.max(1, n));
+            document.querySelectorAll('#cotWizard .ag-wz-step').forEach(s => {
+                const k = parseInt(s.dataset.s, 10);
+                s.classList.toggle('now', k === cotStep);
+                s.classList.toggle('done', k < cotStep);
+                s.querySelector('.ag-wz-dot').textContent = k < cotStep ? '✓' : k;
+            });
+            const locked = !document.getElementById('diagnosticoId').value;
+            document.getElementById('cotizacionSection').style.opacity = locked ? '0.55' : '1';
+            document.getElementById('cotLockHint').textContent = locked
+                ? 'Primero registra el diagnóstico (paso 1)'
+                : 'Diagnóstico listo — agrega items y genera';
+        }
+        async function loadData() {
+            try {
+                const recepciones = await apiFetch('/recepciones?estado=PENDIENTE');
+                const sel = document.getElementById('recepcionSelect');
+                recepciones.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = `#${r.id} - ${r.vehiculo?.placa || r.vehiculoPlaca || '?'}`; sel.appendChild(o); });
+                const productos = await apiFetch('/productos');
+                window._cotProds = Object.fromEntries(productos.map(p => [p.id, p.nombre]));
+                document.getElementById('productosSelector').innerHTML = `<div class="ag-table-wrap"><table class="ag-table"><thead><tr><th>Producto</th><th style="width:70px;">Cant.</th><th style="width:100px;">Precio</th><th style="width:50px;"></th></tr></thead><tbody>${productos.map(p => `<tr><td>${esc(p.nombre)} <span class="ag-text-muted ag-text-sm">${esc(p.tipo)}</span></td><td>${agStepper(`cant_${p.id}`, { value: 1, min: 1, size: 'sm' })}</td><td><input type="number" class="ag-form-control" id="prec_${p.id}" value="${p.precioUnitario}" step="0.01" style="padding:0.3rem 0.5rem; font-size:0.8rem;"></td><td><button type="button" class="ag-btn ag-btn-outline ag-btn-sm" onclick="agregarProductoById(${p.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></td></tr>`).join('')}</tbody></table></div>`;
+                cargarMecanicos();
+                loadSolicitudes();
+                loadCotizaciones();
+                // restaurar selects del borrador una vez cargados
+                try {
+                    if (window._draftRecep) { const s = document.getElementById('recepcionSelect'); if ([...s.options].some(o => o.value === String(window._draftRecep))) s.value = String(window._draftRecep); }
+                    if (window._draftMec) { const m = document.getElementById('mecanicoSelect'); if ([...m.options].some(o => o.value === String(window._draftMec))) m.value = String(window._draftMec); }
+                } catch (_) {}
+                pintarDraftBar();
+            } catch (e) { console.error('loadData error:', e); showError('alertContainer', 'Error al cargar datos: ' + e.message); }
+        }
+        /* Mecánicos desde la API, ordenados por menor carga (el primero es el sugerido) */
+        async function cargarMecanicos() {
+            const sel = document.getElementById('mecanicoSelect');
+            try {
+                const mecs = (await apiFetch('/usuarios/mecanicos')).sort((a, b) => a.otActivas - b.otActivas);
+                sel.innerHTML = '<option value="">-- Seleccionar --</option>';
+                mecs.forEach((m, i) => {
+                    const o = document.createElement('option');
+                    o.value = m.id;
+                    o.textContent = `${m.nombreCompleto} — ${m.especialidadEtiqueta || 'General'} · ${m.otActivas} OT activas${i === 0 ? ' · Sugerido' : ''}`;
+                    sel.appendChild(o);
+                });
+                if (!mecs.length) sel.innerHTML = '<option value="">Sin mecánicos activos</option>';
+                try { if (window._draftMec && [...sel.options].some(o => o.value === String(window._draftMec))) sel.value = String(window._draftMec); } catch (_) {}
+            } catch (e) { sel.innerHTML = '<option value="">No se pudo cargar</option>'; }
+        }
+        window.agregarServicio = function() {
+            const n = document.getElementById('servicioNombre').value;
+            const p = parseFloat(document.getElementById('servicioPrecio').value);
+            if (!n || isNaN(p)) { showError('alertContainer', 'Ingrese nombre y precio'); return; }
+            itemsSeleccionados.push({ tipo: 'SERVICIO', descripcion: n, cantidad: 1, precio: p, id: null });
+            actualizarItems();
+            document.getElementById('servicioNombre').value = '';
+            document.getElementById('servicioPrecio').value = '';
+        }
+        window.agregarProductoById = function(id) {
+            const nombre = (window._cotProds && window._cotProds[id]) || '';
+            agregarProducto(id, nombre);
+        };
+        window.agregarProducto = function(id, nombre) {
+            const c = parseInt(document.getElementById(`cant_${id}`).value);
+            const p = parseFloat(document.getElementById(`prec_${id}`).value);
+            if (isNaN(c) || isNaN(p) || c < 1) { showError('alertContainer', 'Cantidad y precio validos requeridos'); return; }
+            itemsSeleccionados.push({ tipo: 'PRODUCTO', descripcion: nombre, cantidad: c, precio: p, id });
+            actualizarItems();
+        }
+        window.eliminarItem = function(i) { itemsSeleccionados.splice(i, 1); actualizarItems(); }
+        function actualizarItems() {
+            const tbody = document.getElementById('itemsSeleccionados');
+            const chips = document.getElementById('itemsChips');
+            const countEl = document.getElementById('itemsCount');
+            if (!itemsSeleccionados.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="ag-text-center ag-text-muted">No hay items</td></tr>';
+                chips.innerHTML = '';
+                countEl.textContent = '0 items';
+                document.getElementById('totalDisplay').textContent = 'S/ 0.00';
+                return;
+            }
+            let total = 0;
+            tbody.innerHTML = itemsSeleccionados.map((it, i) => {
+                const sub = it.precio * it.cantidad; total += sub;
+                return `<tr><td><span class="ag-badge ag-badge-${it.tipo==='SERVICIO'?'info':'repuesto'}">${it.tipo}</span></td><td>${esc(it.descripcion)}</td><td class="col-num">${it.cantidad}</td><td class="col-num">${formatCurrency(it.precio)}</td><td class="col-num ag-fw-600">${formatCurrency(sub)}</td><td><button class="ag-btn ag-btn-outline ag-btn-sm" onclick="eliminarItem(${i})" title="Quitar item" style="padding:0.2rem 0.4rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td></tr>`;
+            }).join('');
+            chips.innerHTML = itemsSeleccionados.map((it, i) => `
+                <span class="ag-chip" style="cursor:default; padding:0.25rem 0.7rem;">${esc(it.descripcion.length > 26 ? it.descripcion.slice(0, 26) + '…' : it.descripcion)} <b style="color:var(--ag-oil);">${formatCurrency(it.precio * it.cantidad)}</b>
+                    <button type="button" onclick="eliminarItem(${i})" title="Quitar" style="background:none; border:none; color:var(--ag-signal-stop); cursor:pointer; font-weight:700; padding:0 0.15rem;">×</button>
+                </span>`).join('');
+            const nServ = itemsSeleccionados.filter(i => i.tipo === 'SERVICIO').length;
+            const nProd = itemsSeleccionados.length - nServ;
+            countEl.textContent = `${itemsSeleccionados.length} item(s): ${nServ} servicio(s) · ${nProd} producto(s)`;
+            const totalEl = document.getElementById('totalDisplay');
+            totalEl.textContent = formatCurrency(total);
+            totalEl.style.transform = 'scale(1.12)';
+            setTimeout(() => totalEl.style.transform = 'scale(1)', 180);
+            totalEl.style.transition = 'transform 0.18s ease';
+            guardarBorrador();
+        }
+        document.getElementById('diagnosticoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const d = await apiFetch('/diagnosticos', { method: 'POST', body: JSON.stringify({ recepcionId: parseInt(document.getElementById('recepcionSelect').value), mecanicoId: parseInt(document.getElementById('mecanicoSelect').value), descripcion: document.getElementById('diagnosticoDesc').value }) });
+                document.getElementById('diagnosticoId').value = d.id;
+                setCotStep(2);
+                guardarBorrador();
+                toast(`Diagnóstico #${d.id} listo. Siguiente: agrega servicios y productos.`, 'success');
+                document.getElementById('cotizacionSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const sel = document.getElementById('recepcionSelect');
+                sel.innerHTML = '<option value="">-- Seleccionar --</option>';
+                const recepciones = await apiFetch('/recepciones?estado=PENDIENTE');
+                recepciones.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = `#${r.id} - ${r.vehiculo?.placa || '?'}`; sel.appendChild(o); });
+            } catch (error) { showError('alertContainer', 'Error: ' + error.message); }
+        });
+        document.getElementById('cotizacionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!itemsSeleccionados.length) { showError('alertContainer', 'Agregue al menos un servicio o producto'); return; }
+            try {
+                const allServicios = await apiFetch('/servicios');
+                const servicioMap = Object.fromEntries(allServicios.map(s => [s.nombre, s.id]));
+                const servicios = itemsSeleccionados.filter(i => i.tipo === 'SERVICIO').map(i => {
+                    const sid = servicioMap[i.descripcion] || 1;
+                    return { servicioId: sid, precio: i.precio };
+                });
+                const productos = itemsSeleccionados.filter(i => i.tipo === 'PRODUCTO').map(i => ({ productoId: i.id, cantidadEstimada: i.cantidad, precioUnitario: i.precio }));
+                const c = await apiFetch('/cotizaciones/completa', { method: 'POST', body: JSON.stringify({ diagnosticoId: parseInt(document.getElementById('diagnosticoId').value), servicios, productos }) });
+                setCotStep(3);
+                toast(`Cotización #${c.id} creada (${formatCurrency(c.total)}). Último paso: apruébala abajo.`, 'success');
+                limpiarBorradorAlTerminar(); loadCotizaciones();
+                document.getElementById('cotizacionesContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch (error) { showError('alertContainer', 'Error: ' + error.message); }
+        });
+        async function loadSolicitudes() {
+            const c = document.getElementById('solicitudesContainer');
+            const contador = document.getElementById('solCount');
+            try {
+                const lista = await apiFetch('/solicitudes-cotizacion?estado=PENDIENTE');
+                contador.textContent = lista.length ? `${lista.length} pendiente(s)` : '';
+                if (!lista.length) {
+                    c.innerHTML = '<p class="ag-text-muted ag-text-center">No hay solicitudes pendientes. Cuando un cliente pida una revisión desde el portal, aparecerá aquí.</p>';
+                    return;
+                }
+                c.innerHTML = lista.map(s => `
+                    <div class="ag-state-card" style="margin-bottom:0.6rem; padding:0.7rem 0.9rem;">
+                        <div class="ag-d-flex ag-justify-between ag-align-center ag-flex-wrap" style="gap:0.5rem;">
+                            <div class="ag-d-flex ag-align-center" style="gap:0.6rem; flex-wrap:wrap;">
+                                <span class="sc-id">#${s.id}</span>
+                                <span class="ag-badge ag-badge-warning">PENDIENTE</span>
+                            </div>
+                            <span class="ag-text-muted ag-text-sm">${esc(s.vehiculoPlaca || 'sin placa')}</span>
+                        </div>
+                        <p class="ag-fw-600" style="margin:0.45rem 0 0.2rem;">${esc(s.clienteNombre || 'Cliente')}</p>
+                        <p class="ag-text-sm ag-text-muted" style="margin:0 0 0.55rem;">${esc(s.descripcion)}</p>
+                        <div class="ag-d-flex ag-gap-2 ag-flex-wrap">
+                            <button class="ag-btn ag-btn-success ag-btn-sm" onclick="atenderSolicitud(${s.id})">Atender</button>
+                            <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="rechazarSolicitud(${s.id})">Rechazar</button>
+                        </div>
+                    </div>`).join('');
+            } catch (e) {
+                contador.textContent = '';
+                c.innerHTML = '<p class="ag-text-muted ag-text-center">No se pudieron cargar las solicitudes. Revisa la consola o recarga la página.</p>';
+            }
+        }
+        window.atenderSolicitud = async function(id) {
+            if (!(await confirmarAccion('¿Marcar la solicitud #' + id + ' como atendida? El cliente verá tu respuesta en el portal. Luego registra la recepción y el diagnóstico para generar la cotización.', { tipo: 'primary', okLabel: 'Marcar atendida' }))) return;
+            try {
+                await apiFetch(`/solicitudes-cotizacion/${id}/atender`, { method: 'PUT', body: JSON.stringify({ nota: 'Solicitud revisada. El taller continúa con la recepción y el diagnóstico del vehículo para preparar la cotización.' }) });
+                toast('Solicitud atendida. Continúa con la recepción del vehículo.', 'success');
+                loadSolicitudes();
+            } catch (e) { toast('Error: ' + e.message, 'danger'); }
+        };
+        window.rechazarSolicitud = async function(id) {
+            if (!(await confirmarAccion('¿Rechazar la solicitud #' + id + '? El cliente verá el motivo en el portal.', { tipo: 'danger', okLabel: 'Rechazar' }))) return;
+            try {
+                await apiFetch(`/solicitudes-cotizacion/${id}/rechazar`, { method: 'PUT', body: JSON.stringify({ nota: 'El taller no puede atender esta solicitud por ahora. Comunícate para coordinar una revisión.' }) });
+                toast('Solicitud rechazada.', 'success');
+                loadSolicitudes();
+            } catch (e) { toast('Error: ' + e.message, 'danger'); }
+        };
+        async function loadCotizaciones() {
+            try {
+                const cotizaciones = await apiFetch('/cotizaciones');
+                console.log('loadCotizaciones response:', cotizaciones);
+                const c = document.getElementById('cotizacionesContainer');
+                if (!cotizaciones.length) { c.innerHTML = '<p class="ag-text-muted ag-text-center">No hay cotizaciones</p>'; return; }
+                c.innerHTML = cotizaciones.map(ct => `
+                    <div class="ag-state-card sc-${(ct.estado || '').toLowerCase()}" style="margin-bottom:0.6rem; padding:0.7rem 0.9rem;">
+                        <div class="ag-d-flex ag-justify-between ag-align-center ag-flex-wrap" style="gap:0.5rem;">
+                            <div class="ag-d-flex ag-align-center" style="gap:0.6rem; flex-wrap:wrap;">
+                                <span class="sc-id">#${ct.id}</span>
+                                ${estadoBadge(ct.estado)}
+                            </div>
+                            <div class="ag-d-flex ag-align-center" style="gap:0.6rem; flex-wrap:wrap;">
+                                <span class="sc-amount">${formatCurrency(ct.total)}</span>
+                                ${ct.estado === 'PENDIENTE' ? `
+                                    <button class="ag-btn ag-btn-success ag-btn-sm" onclick="aprobarCotizacion(${ct.id})">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Aprobar
+                                    </button>
+                                    <button class="ag-btn ag-btn-danger ag-btn-sm" onclick="rechazarCotizacion(${ct.id})" title="Rechazar">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    </button>` : ''}
+                            </div>
+                        </div>
+                    </div>`).join('');
+            } catch (e) { console.error(e); showError('alertContainer', 'Error al cargar cotizaciones: ' + e.message); }
+        }
+        window.aprobarCotizacion = async function(id) {
+            if (!(await confirmarAccion(`Aprobar la cotización #${id}? Con eso podrá crearse la Orden de Trabajo y la recepción pasa a COTIZADA.`, { tipo: 'primary' }))) return;
+            try { await apiFetch(`/cotizaciones/${id}/aprobar`, { method: 'PUT' }); toast('Cotización aprobada. Siguiente: crea la OT en Órdenes de Trabajo.', 'success'); loadCotizaciones(); }
+            catch (e) { toast('Error: ' + e.message, 'danger'); }
+        };
+        window.rechazarCotizacion = async function(id) { try { await apiFetch(`/cotizaciones/${id}/rechazar`, { method: 'PUT' }); showSuccess('alertContainer', 'Cotizacion rechazada'); loadCotizaciones(); } catch (e) { showError('alertContainer', e.message); } };
+        /* Enter en el campo de servicio agrega directamente */
+        document.getElementById('servicioPrecio').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); agregarServicio(); }
+        });
+        ['recepcionSelect', 'mecanicoSelect', 'diagnosticoDesc', 'diagnosticoId', 'servicioNombre', 'servicioPrecio'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.addEventListener('input', guardarBorrador); el.addEventListener('change', guardarBorrador); }
+        });
+        restaurarBorrador();
+        loadData();
+        setCotStep(1);
+        })();
+    </script>
+</body>
+</html>

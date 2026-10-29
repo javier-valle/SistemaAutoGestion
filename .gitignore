@@ -95,3 +95,8 @@ yarn-error.log
 # Production build
 frontend/dist/
 frontend/build/
+# --- Archivos locales que NO se suben al repositorio ---
+# Carpeta de referencia del scraping de ejemplo (herramienta aparte, no es del proyecto).
+/example DNI and RUC search/
+# Padron Reducido RUC de SUNAT (~394 MB): se descarga y se monta en Docker, no se versiona.
+/padron/

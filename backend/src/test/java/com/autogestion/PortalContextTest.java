@@ -14,8 +14,6 @@ class PortalContextTest {
     @Autowired
     private PortalAccesoLogRepository portalLogRepo;
     @Autowired
-    private OtpCodigoRepository otpRepo;
-    @Autowired
     private CitaRepository citaRepo;
     @Autowired
     private EncuestaSatisfaccionRepository encuestaRepo;
@@ -29,7 +27,6 @@ class PortalContextTest {
     @Test
     void contextoArrancaYRepositoriosPortalExisten() {
         assertNotNull(portalLogRepo);
-        assertNotNull(otpRepo);
         assertNotNull(citaRepo);
         assertNotNull(encuestaRepo);
         assertNotNull(consentimientoRepo);

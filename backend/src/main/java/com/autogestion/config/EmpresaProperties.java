@@ -28,6 +28,8 @@ public class EmpresaProperties {
     private String ubigeo;
     private String telefono;
     private String email;
+    /** Número de WhatsApp de atención (vacío = no se muestra el canal). */
+    private String whatsapp;
     private BigDecimal igv = new BigDecimal("0.18");
     private Boolean preciosIncluyenIgv = true;
     private BigDecimal boletaUmbralDni = new BigDecimal("700.00");

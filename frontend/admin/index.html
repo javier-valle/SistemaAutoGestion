@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es" class="login-page">
+<head>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#0f172a">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoGestion - Iniciar Sesion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/animations.css">
+    <link rel="stylesheet" href="/css/redesign.css">
+    <script>
+        (function(){var t=localStorage.getItem('ag-theme')||'system';if(t==='system')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',t);})();
+    </script>
+    <style>
+        html.login-page, html.login-page body {
+            margin: 0; padding: 0; height: 100%; overflow: hidden;
+        }
+
+        /* ================= Layout ================= */
+        .ag-login {
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            overflow: hidden;
+            background: var(--ag-ground);
+            transition: background 0.4s ease;
+        }
+
+        /* ================= Panel de marca ================= */
+        .ag-login .ag-login-brand {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3.25rem 3.5rem 2.5rem;
+            position: relative;
+            overflow: hidden;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            background:
+                radial-gradient(900px 520px at 8% -15%, rgba(148,163,184,0.12) 0%, transparent 60%),
+                radial-gradient(760px 640px at 115% 115%, rgba(217,119,6,0.08) 0%, transparent 62%),
+                linear-gradient(160deg, #0f172a 0%, #0b1120 55%, #020617 100%);
+            transition: background 0.4s ease, border-color 0.4s ease;
+        }
+        .ag-login .ag-login-brand::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 56px 56px;
+            -webkit-mask-image: radial-gradient(78% 70% at 28% 32%, #000 0%, transparent 100%);
+            mask-image: radial-gradient(78% 70% at 28% 32%, #000 0%, transparent 100%);
+        }
+        .ag-login .ag-login-brand::after {
+            content: '';
+            position: absolute;
+            top: -32%;
+            right: -18%;
+            width: 620px;
+            height: 620px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(245,158,11,0.18) 0%, transparent 66%);
+            animation: brandGlow 7s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .lg-brand-inner {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .lg-top {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 2.4rem;
+            animation: brandSlideIn 0.5s ease backwards;
+        }
+        .lg-logo {
+            width: 46px;
+            height: 46px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            flex-shrink: 0;
+            background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+            box-shadow: 0 10px 26px -8px rgba(148,163,184,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .lg-logo svg { width: 24px; height: 24px; color: #fffbeb; }
+        .lg-wordmark {
+            font-family: var(--ag-font-heading);
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #f8fafc;
+        }
+        .lg-badge {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #94a3b8;
+            background: rgba(148,163,184,0.08);
+            border: 1px solid rgba(148,163,184,0.25);
+            padding: 0.28rem 0.55rem;
+            border-radius: 999px;
+        }
+
+        .lg-headline {
+            margin-bottom: 1.9rem;
+            animation: brandSlideIn 0.6s ease 0.1s backwards;
+        }
+        .lg-headline h1 {
+            font-family: var(--ag-font-heading);
+            font-size: clamp(2rem, 3.3vw, 2.9rem);
+            font-weight: 700;
+            line-height: 1.06;
+            letter-spacing: -0.03em;
+            color: #f8fafc;
+            margin: 0 0 0.85rem;
+        }
+        .lg-headline h1 em {
+            font-style: normal;
+            color: #94a3b8;
+        }
+        .lg-headline p {
+            font-size: 1rem;
+            line-height: 1.65;
+            color: rgba(226,232,240,0.55);
+            max-width: 46ch;
+            margin: 0;
+        }
+
+        .lg-flow {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-bottom: 1.9rem;
+            animation: brandSlideIn 0.6s ease 0.2s backwards;
+        }
+        .lg-flow-chip {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: rgba(226,232,240,0.72);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 0.34rem 0.7rem;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+        .lg-flow-chip.is-active {
+            color: #451a03;
+            background: linear-gradient(145deg, #fbbf24, #f59e0b);
+            border-color: transparent;
+            box-shadow: 0 6px 16px -6px rgba(245,158,11,0.7);
+        }
+        .lg-flow-arrow { color: rgba(255,255,255,0.28); font-size: 0.7rem; }
+
+        .lg-tiles {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.7rem;
+            margin-bottom: 2rem;
+        }
+        .lg-tile {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            padding: 0.9rem 0.95rem;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            animation: featureFadeIn 0.5s ease backwards;
+            transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+        }
+        .lg-tile:nth-child(1) { animation-delay: 0.3s; }
+        .lg-tile:nth-child(2) { animation-delay: 0.4s; }
+        .lg-tile:nth-child(3) { animation-delay: 0.5s; }
+        .lg-tile:hover {
+            transform: translateY(-3px);
+            border-color: rgba(245,158,11,0.42);
+            background: rgba(245,158,11,0.08);
+        }
+        .lg-tile svg { width: 18px; height: 18px; color: #fbbf24; }
+        .lg-tile strong {
+            font-family: var(--ag-font-heading);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        .lg-tile span { font-size: 0.74rem; line-height: 1.45; color: rgba(226,232,240,0.45); }
+
+        .lg-brand-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.85rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            animation: featureFadeIn 0.5s ease 0.6s backwards;
+        }
+        .lg-roles { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+        .lg-role {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.42rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: rgba(226,232,240,0.55);
+        }
+        .lg-role i {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--c, #f59e0b);
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
+        }
+        .lg-tut-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: rgba(251,191,36,0.85);
+            text-decoration: none;
+            transition: color 0.2s ease, gap 0.2s ease;
+        }
+        .lg-tut-link:hover { color: #fbbf24; gap: 0.6rem; }
+        .lg-tut-link svg { width: 14px; height: 14px; }
+
+        /* ================= Lado del formulario ================= */
+        .ag-login .ag-login-form-side {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            position: relative;
+            overflow-y: auto;
+            background: var(--ag-ground);
+            transition: background 0.4s ease;
+        }
+
+        .lg-card {
+            position: relative;
+            width: 100%;
+            max-width: 440px;
+            padding: 2.2rem 2.2rem 1.7rem;
+            background: var(--ag-surface);
+            border: 1px solid var(--ag-border);
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 32px 64px -32px rgba(15,23,42,0.4), 0 2px 6px rgba(15,23,42,0.06);
+            transition: background 0.4s ease, border-color 0.4s ease;
+        }
+        .lg-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #334155 0%, #64748b 50%, #334155 100%);
+        }
+        .lg-card::after {
+            content: '';
+            position: absolute;
+            top: -130px; right: -130px;
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(148,163,184,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .lg-card > * { position: relative; z-index: 1; }
+        .lg-card > * {
+            animation: lgFadeUp 0.45s ease backwards;
+        }
+        .lg-card > *:nth-child(1) { animation-delay: 0.05s; }
+        .lg-card > *:nth-child(2) { animation-delay: 0.1s; }
+        .lg-card > *:nth-child(3) { animation-delay: 0.15s; }
+        .lg-card > *:nth-child(4) { animation-delay: 0.2s; }
+        .lg-card > *:nth-child(5) { animation-delay: 0.25s; }
+        .lg-card > *:nth-child(6) { animation-delay: 0.3s; }
+
+        .lg-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--ag-font-heading);
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--ag-oil-text);
+            margin-bottom: 1rem;
+        }
+        .lg-eyebrow i {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--ag-oil);
+            box-shadow: 0 0 0 4px var(--ag-oil-surface);
+            animation: lgPulse 2.4s ease-in-out infinite;
+        }
+
+        .lg-card-head h2 {
+            font-family: var(--ag-font-heading);
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--ag-text-heading);
+            margin: 0 0 0.35rem;
+            transition: color 0.4s ease;
+        }
+        .lg-card-head p {
+            font-size: 0.92rem;
+            color: var(--ag-text-muted);
+            margin: 0 0 1.4rem;
+            transition: color 0.4s ease;
+        }
+
+        .ag-login-form {
+            display: flex;
+            flex-direction: column;
+        }
+        .ag-login-form .ag-form-group { margin-bottom: 1rem; }
+        .ag-login-form .ag-form-label {
+            font-size: 0.74rem;
+            margin-bottom: 0.4rem;
+        }
+        .lg-input { position: relative; }
+        .lg-input-icon {
+            position: absolute;
+            left: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 17px; height: 17px;
+            color: var(--ag-steel);
+            pointer-events: none;
+            transition: color 0.2s ease;
+        }
+        .lg-input:focus-within .lg-input-icon { color: var(--ag-oil); }
+        .lg-input .ag-form-control {
+            padding: 0.78rem 1rem 0.78rem 2.6rem;
+            font-size: 0.95rem;
+            border-radius: 12px;
+            background: var(--ag-ground);
+            transition: background 0.4s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.4s ease;
+        }
+        .lg-input.ag-pass-wrap .ag-form-control { padding-right: 2.6rem; }
+
+        .ag-login-submit { margin-top: 0.35rem; }
+        .ag-login-submit .ag-btn {
+            position: relative;
+            overflow: hidden;
+            padding: 0.85rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 12px;
+            box-shadow: 0 10px 22px -12px rgba(217,119,6,0.9);
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+        }
+        .ag-login-submit .ag-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 28px -12px rgba(217,119,6,0.95);
+        }
+        .ag-login-submit .ag-btn:active { transform: translateY(0); }
+        .lg-btn-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .lg-btn-text svg { width: 17px; height: 17px; transition: transform 0.25s ease; }
+        .ag-login-submit .ag-btn:hover .lg-btn-text svg { transform: translateX(3px); }
+        .lg-spinner {
+            position: absolute;
+            inset: 0;
+            margin: auto;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.35);
+            border-top-color: #ffffff;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        #loginBtn.is-loading { pointer-events: none; }
+        #loginBtn.is-loading .lg-btn-text { opacity: 0; transform: translateY(4px); }
+        #loginBtn.is-loading .lg-spinner { opacity: 1; animation: lgSpin 0.7s linear infinite; }
+
+        .ag-login-error { min-height: 0; margin-bottom: 0; }
+        .ag-login-error:not(:empty) { margin-bottom: 0.9rem; }
+
+        /* ================= Cuentas demo ================= */
+        .ag-demo-accounts {
+            margin-top: 1.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px dashed var(--ag-border);
+        }
+        .lg-chips { display: grid; gap: 0.45rem; }
+        .ag-demo-chip {
+            justify-content: flex-start;
+            margin-bottom: 0;
+            padding: 0.5rem 0.7rem;
+            border-radius: 10px;
+        }
+        .ag-demo-chip:hover { transform: translateX(3px); }
+        .ag-demo-chip .demo-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: var(--dot, #94a3b8);
+            box-shadow: 0 0 0 3px rgba(148,163,184,0.18);
+            transition: box-shadow 0.2s ease;
+        }
+        .ag-demo-chip:hover .demo-dot { box-shadow: 0 0 0 3px color-mix(in srgb, var(--dot, #94a3b8) 28%, transparent); }
+        .ag-demo-chip .demo-role { flex-shrink: 0; }
+        .ag-demo-chip .demo-email {
+            margin-left: auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .lg-card-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 1.4rem;
+            padding-top: 1.1rem;
+            border-top: 1px dashed var(--ag-border);
+            font-size: 0.75rem;
+            color: var(--ag-text-muted);
+        }
+        .lg-card-foot a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            color: var(--ag-oil-text);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .lg-card-foot a:hover { text-decoration: underline; }
+        .lg-card-foot svg { width: 13px; height: 13px; }
+
+        /* ================= Toggle de tema ================= */
+        .ag-login-theme-toggle {
+            position: absolute;
+            bottom: 1.35rem;
+            right: 1.35rem;
+            z-index: 10;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--ag-border);
+            background: var(--ag-surface);
+            color: var(--ag-text-mid);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            animation: formSlideIn 0.4s ease 0.55s backwards;
+        }
+        .ag-login-theme-toggle:hover {
+            border-color: #d97706;
+            color: #d97706;
+            box-shadow: 0 4px 16px rgba(217,119,6,0.2);
+            transform: scale(1.08);
+        }
+        .ag-login-theme-toggle:active { transform: scale(0.95); }
+        .ag-login-theme-toggle svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+        .ag-login-theme-toggle:hover svg { transform: rotate(15deg); }
+
+        /* ================= Keyframes ================= */
+        @keyframes brandSlideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes featureFadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes formSlideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes lgFadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes brandGlow {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.85; }
+            50% { transform: translate(-30px, 30px) scale(1.08); opacity: 1; }
+        }
+        @keyframes lgSpin { to { transform: rotate(360deg); } }
+        @keyframes lgPulse {
+            0%, 100% { box-shadow: 0 0 0 4px var(--ag-oil-surface); }
+            50% { box-shadow: 0 0 0 7px transparent; }
+        }
+        @keyframes lgShake {
+            10%, 90% { transform: translateX(-2px); }
+            20%, 80% { transform: translateX(3px); }
+            30%, 50%, 70% { transform: translateX(-5px); }
+            40%, 60% { transform: translateX(5px); }
+        }
+        .lg-card.lg-shake { animation: lgShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+
+        /* ================= Responsive ================= */
+        @media (max-height: 820px) {
+            .lg-tiles { display: none; }
+        }
+        @media (max-width: 1180px) {
+            .ag-login { grid-template-columns: 1fr 1fr; }
+            .ag-login .ag-login-brand { padding: 2.5rem; }
+        }
+        @media (max-width: 1024px) {
+            .ag-login { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+            .ag-login .ag-login-brand {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: flex-start;
+                padding: 1.15rem 1.5rem;
+                border-right: none;
+                border-bottom: 1px solid rgba(255,255,255,0.08);
+            }
+            .ag-login .ag-login-brand::after { width: 340px; height: 340px; top: -180px; right: -80px; }
+            .ag-login .lg-brand-inner {
+                max-width: none;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 1.25rem;
+            }
+            .ag-login .lg-top { margin-bottom: 0; animation: none; }
+            .ag-login .lg-headline { margin-bottom: 0; animation: none; }
+            .ag-login .lg-headline h1 { font-size: 1.15rem; margin: 0; }
+            .ag-login .lg-headline p,
+            .ag-login .lg-flow,
+            .ag-login .lg-tiles,
+            .ag-login .lg-brand-foot { display: none; }
+            .ag-login .ag-login-form-side { padding: 2rem; }
+        }
+        @media (max-width: 720px) {
+            .ag-login .ag-login-brand { padding: 1rem 1.15rem; }
+            .ag-login .lg-badge { display: none; }
+            .ag-login .ag-login-form-side { padding: 1.25rem; align-items: stretch; }
+            .lg-card {
+                max-width: none;
+                padding: 1.7rem 1.3rem 1.4rem;
+                border-radius: 18px;
+            }
+            .lg-card-head h2 { font-size: 1.4rem; }
+            .ag-login-theme-toggle { bottom: 1rem; right: 1rem; width: 36px; height: 36px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="ag-login">
+        <aside class="ag-login-brand">
+            <div class="lg-brand-inner">
+                <div class="lg-top">
+                    <span class="lg-logo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                    </span>
+                    <span class="lg-wordmark">AutoGestion</span>
+                    <span class="lg-badge">Demo</span>
+                </div>
+
+                <div class="lg-headline">
+                    <h1>Tu taller, <em>en orden</em>.</h1>
+                    <p>Del ingreso del vehiculo a la entrega de la boleta: recepcion, ordenes de trabajo, inventario y comprobantes en un solo panel.</p>
+                </div>
+
+                <div class="lg-flow" aria-hidden="true">
+                    <span class="lg-flow-chip is-active">Recepcion</span>
+                    <span class="lg-flow-arrow">&#8594;</span>
+                    <span class="lg-flow-chip">Cotizacion</span>
+                    <span class="lg-flow-arrow">&#8594;</span>
+                    <span class="lg-flow-chip">Orden de trabajo</span>
+                    <span class="lg-flow-arrow">&#8594;</span>
+                    <span class="lg-flow-chip">Comprobante</span>
+                    <span class="lg-flow-arrow">&#8594;</span>
+                    <span class="lg-flow-chip">Entrega</span>
+                </div>
+
+                <div class="lg-tiles">
+                    <div class="lg-tile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <strong>Comprobantes</strong>
+                        <span>Boletas, facturas y guias sin dolor de cabeza</span>
+                    </div>
+                    <div class="lg-tile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                        <strong>Inventario</strong>
+                        <span>Repuestos e insumos con stock al dia</span>
+                    </div>
+                    <div class="lg-tile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        <strong>Reportes</strong>
+                        <span>Metricas de taller en tiempo real</span>
+                    </div>
+                </div>
+
+                <div class="lg-brand-foot">
+                    <div class="lg-roles">
+                        <span class="lg-role"><i style="--c:#f59e0b"></i>Admin</span>
+                        <span class="lg-role"><i style="--c:#0284c7"></i>Mecanico</span>
+                        <span class="lg-role"><i style="--c:#059669"></i>Recepcion</span>
+                        <span class="lg-role"><i style="--c:#7c3aed"></i>Almacen</span>
+                    </div>
+                    <a class="lg-tut-link" href="pages/tutorial.html">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                        Ver tutorial del sistema
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <main class="ag-login-form-side">
+            <div class="lg-card" id="loginCard">
+                <span class="lg-eyebrow"><i></i> Acceso al sistema</span>
+
+                <div class="lg-card-head">
+                    <h2>Bienvenido de nuevo</h2>
+                    <p>Ingresa tus credenciales para continuar.</p>
+                </div>
+
+                <div id="alertContainer" class="ag-login-error"></div>
+
+                <form id="loginForm" class="ag-login-form" onsubmit="return false;">
+                    <div class="ag-form-group">
+                        <label class="ag-form-label" for="email">Correo electronico</label>
+                        <div class="lg-input">
+                            <svg class="lg-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            <input type="email" class="ag-form-control" id="email" placeholder="usuario@sanmartin.pe" required autocomplete="email">
+                        </div>
+                    </div>
+                    <div class="ag-form-group">
+                        <label class="ag-form-label" for="password">Contrasena</label>
+                        <div class="lg-input ag-pass-wrap">
+                            <svg class="lg-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <input type="password" class="ag-form-control" id="password" placeholder="Ingrese su contrasena" required autocomplete="current-password">
+                            <button type="button" class="ag-pass-toggle" id="passToggle" aria-label="Mostrar contrasena" title="Mostrar / ocultar contrasena">
+                                <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ag-login-submit">
+                        <button type="submit" class="ag-btn ag-btn-primary ag-btn-block" id="loginBtn">
+                            <span class="lg-btn-text">
+                                Iniciar Sesion
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                            </span>
+                            <span class="lg-spinner" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="lg-card-foot">
+                    <a href="pages/tutorial.html">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        Primera vez? Ver tutorial
+                    </a>
+                    <span>v2.0.1 &mdash; Taller San Martin</span>
+                </div>
+            </div>
+
+            <button class="ag-login-theme-toggle" id="loginThemeToggle" title="Cambiar tema" aria-label="Cambiar tema">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </button>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/animations.js"></script>
+    <script>
+        if (isLoggedIn()) {
+            const u = getUser();
+            const rol = u ? u.rol : null;
+            window.location.href = homePageForRol(rol);
+        }
+        const themeOrder = ['system', 'light', 'dark'];
+        const themeIcons = {
+            system: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+            light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+            dark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+        };
+        function initLoginTheme() {
+            const stored = localStorage.getItem('ag-theme') || 'system';
+            applyTheme(stored);
+            updateLoginThemeIcon(stored);
+            const btn = document.getElementById('loginThemeToggle');
+            if (!btn) return;
+            btn.addEventListener('click', () => {
+                const current = localStorage.getItem('ag-theme') || 'system';
+                const next = themeOrder[(themeOrder.indexOf(current) + 1) % themeOrder.length];
+                localStorage.setItem('ag-theme', next);
+                applyTheme(next);
+                updateLoginThemeIcon(next);
+            });
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                if ((localStorage.getItem('ag-theme') || 'system') === 'system') applyTheme('system');
+            });
+        }
+        function updateLoginThemeIcon(mode) {
+            const btn = document.getElementById('loginThemeToggle');
+            if (!btn) return;
+            btn.innerHTML = themeIcons[mode] || themeIcons.system;
+            btn.title = `Tema: ${mode}`;
+        }
+        initLoginTheme();
+        /* Mostrar / ocultar contrasena */
+        const passInput = document.getElementById('password');
+        document.getElementById('passToggle').addEventListener('click', () => {
+            const show = passInput.type === 'password';
+            passInput.type = show ? 'text' : 'password';
+            document.getElementById('eyeIcon').innerHTML = show
+                ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+                : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+            passInput.focus();
+        });
+        /* Feedback de envio: spinner en el boton + sacudida en la tarjeta */
+        function cargando(on) {
+            const btn = document.getElementById('loginBtn');
+            if (btn) btn.classList.toggle('is-loading', !!on);
+        }
+        function fallo(msg) {
+            showError('alertContainer', msg);
+            const card = document.getElementById('loginCard');
+            if (!card) return;
+            card.classList.remove('lg-shake');
+            void card.offsetWidth;
+            card.classList.add('lg-shake');
+        }
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            if (!email || !password) { fallo('Complete todos los campos'); return; }
+            cargando(true);
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                if (!response.ok) {
+                    let msg = 'Credenciales invalidas. Verifique su email y contrasena.';
+                    try {
+                        const err = await response.json();
+                        if (err && (err.mensaje || err.error)) msg = err.mensaje || err.error;
+                    } catch (_) { /* mensaje genérico */ }
+                    fallo(msg); return;
+                }
+                const data = await response.json();
+                setToken(data.token);
+                setUser({ id: data.id, nombre: data.nombreCompleto || data.nombre, email: data.email, rol: data.rol });
+                try {
+                    if (!localStorage.getItem('ag-hola-' + data.rol)) {
+                        localStorage.setItem('ag-hola-' + data.rol, '1');
+                        sessionStorage.setItem('ag-hola-msg', `Bienvenido, ${data.nombreCompleto || data.nombre}. Este es tu panel: usa el botón ¿Cómo usar? para el recorrido.`);
+                    }
+                } catch (_) { /* noop */ }
+                window.location.href = homePageForRol(data.rol);
+            } catch (error) {
+                fallo('Error de conexion. Verifique que el servidor este activo.');
+            } finally {
+                cargando(false);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+        <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#0f172a">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoGestion - Panel Recepcionista</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css?v=20261005">
+    <link rel="stylesheet" href="/css/animations.css?v=20261005">
+    <link rel="stylesheet" href="/css/redesign.css?v=20261005">
+    <link rel="stylesheet" href="/css/polish.css?v=20261005">
+    <link rel="stylesheet" href="/css/panels-premium.css?v=20261002">
+    <script>
+        (function(){var t=localStorage.getItem('ag-theme')||'system';if(t==='system')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',t);})();
+    </script>
+</head>
+<body>
+    <div id="navbar"></div>
+    <div class="ag-page">
+        <div class="ag-page-header">
+            <div class="ag-d-flex ag-align-center ag-flex-wrap" style="gap:0.6rem;">
+                <h1 style="margin:0;">Panel del Recepcionista</h1>
+                <span class="ag-badge ag-badge-info">RECEPCIONISTA</span>
+            </div>
+            <p id="recepHello">Recepciones y cotizaciones del taller</p>
+        </div>
+        <div class="ag-grid ag-grid-3 ag-mb-3">
+            <div class="ag-indicator">
+                <div class="ag-indicator-icon ic-blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>
+                </div>
+                <div>
+                    <div class="ag-indicator-value" id="recepcionesActivas">--</div>
+                    <div class="ag-indicator-label">Recepciones Activas</div>
+                </div>
+            </div>
+            <div class="ag-indicator">
+                <div class="ag-indicator-icon ic-amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div>
+                    <div class="ag-indicator-value" id="cotizacionesPendientes">--</div>
+                    <div class="ag-indicator-label">Cotizaciones Pendientes</div>
+                </div>
+            </div>
+            <div class="ag-indicator">
+                <div class="ag-indicator-icon ic-green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div>
+                    <div class="ag-indicator-value" id="cotizacionesAprobadas">--</div>
+                    <div class="ag-indicator-label">Cotizaciones Aprobadas</div>
+                </div>
+            </div>
+        </div>
+        <div class="ag-layout-main">
+            <div class="ag-layout-stack">
+                <div class="ag-section">
+                    <div class="ag-section-header">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            Ultimas Cotizaciones
+                        </h3>
+                    </div>
+                    <div class="ag-section-body" id="cotizacionesRecientes" style="max-height:380px; overflow-y:auto;">
+                        <p class="ag-text-muted ag-text-center">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="ag-layout-stack">
+                <div class="ag-section">
+                    <div class="ag-section-header">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            Acceso Rapido
+                        </h3>
+                    </div>
+                    <div class="ag-section-body" style="display:flex; flex-direction:column; gap:0.5rem;">
+                        <a href="recepcion.html" class="ag-action-link">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
+                            Nueva Recepcion
+                            <svg class="ag-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </a>
+                        <a href="cotizacion.html" class="ag-action-link">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Nueva Cotizacion
+                            <svg class="ag-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </a>
+                        <a href="orden_trabajo.html" class="ag-action-link">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                            Ordenes de Trabajo
+                            <svg class="ag-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </a>
+                        <a href="tutorial.html" class="ag-action-link" style="border-style:dashed; color:var(--ag-oil); border-color:var(--ag-oil-border); background:var(--ag-oil-surface);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                            Tutorial del sistema
+                            <svg class="ag-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="ag-section">
+                    <div class="ag-section-header">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Recuerda
+                        </h3>
+                    </div>
+                    <div class="ag-section-body">
+                        <p class="ag-text-sm ag-text-muted" style="margin:0; line-height:1.6;">
+                            El flujo de cada vehiculo es: <strong>Recepcion &rarr; Diagnostico &rarr; Cotizacion</strong>.
+                            Cuando el cliente apruebe una cotizacion, el taller podra crear la Orden de Trabajo.
+                            Usa <kbd style="font-family:var(--ag-font-mono); font-size:0.7rem; background:var(--ag-ground); border:1px solid var(--ag-border); border-radius:4px; padding:0.05rem 0.35rem;">Ctrl+K</kbd> para navegar rapido.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="themeToggleWrap"></div>
+    <script src="/js/api.js?v=20261006"></script>
+    <script src="/js/animations.js?v=20261005"></script>
+    <script src="/js/ui-kit.js"></script>
+    <script>
+        (function() {
+            if (!guardPage('recepcionista')) return;
+            document.getElementById('navbar').innerHTML = renderNavbar('recepcionista');
+            document.getElementById('themeToggleWrap').innerHTML = renderThemeToggle();
+            initTheme();
+            const user = getUser();
+            if (!user || user.rol !== 'RECEPCIONISTA') { window.location.href = 'acceso_denegado.html'; return; }
+            document.getElementById('recepHello').textContent = `Hola, ${user.nombre} — recepciones y cotizaciones del taller`;
+
+            async function loadStats() {
+                try {
+                    const [recepciones, cotizaciones] = await Promise.all([
+                        apiFetch('/recepciones'),
+                        apiFetch('/cotizaciones')
+                    ]);
+                    const activas = recepciones.filter(r => !['FINALIZADA', 'CANCELADA'].includes(r.estado)).length;
+                    const pend = cotizaciones.filter(c => c.estado === 'PENDIENTE').length;
+                    const aprob = cotizaciones.filter(c => c.estado === 'APROBADA').length;
+                    document.getElementById('recepcionesActivas').textContent = activas;
+                    document.getElementById('cotizacionesPendientes').textContent = pend;
+                    document.getElementById('cotizacionesAprobadas').textContent = aprob;
+
+                    const c = document.getElementById('cotizacionesRecientes');
+                    if (!cotizaciones.length) {
+                        agEmptyState(c, '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', 'No hay cotizaciones aun', 'Cuando registres cotizaciones aparecera aqui su estado y total.');
+                        return;
+                    }
+                    c.innerHTML = cotizaciones.slice(0, 12).map(ct => `
+                        <div class="ag-state-card sc-${(ct.estado || '').toLowerCase()}" style="margin-bottom:0.6rem; padding:0.7rem 0.9rem;">
+                            <div class="ag-d-flex ag-justify-between ag-align-center">
+                                <div class="ag-d-flex ag-align-center" style="gap:0.6rem;">
+                                    <span class="sc-id">#${ct.id}</span>
+                                    ${estadoBadge(ct.estado)}
+                                </div>
+                                <span class="sc-amount">${formatCurrency(ct.total)}</span>
+                            </div>
+                        </div>`).join('');
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById('cotizacionesRecientes').innerHTML = '<p class="ag-text-muted">No se pudieron cargar los datos. ¿Esta activo el servidor?</p>';
+                }
+            }
+            loadStats();
+        })();
+    </script>
+</body>
+</html>

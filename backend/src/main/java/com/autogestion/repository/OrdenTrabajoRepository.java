@@ -23,6 +23,10 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
     @Query("SELECT ot FROM OrdenTrabajo ot LEFT JOIN FETCH ot.cotizacion c LEFT JOIN FETCH c.diagnostico d LEFT JOIN FETCH d.recepcion r LEFT JOIN FETCH r.vehiculo v LEFT JOIN FETCH v.cliente LEFT JOIN FETCH ot.mecanico WHERE ot.id = :id")
     Optional<OrdenTrabajo> findById(Long id);
 
+    /** Órdenes de un cliente (portal). Lecturas lazy dentro de la transacción del servicio. */
+    @Query("SELECT ot FROM OrdenTrabajo ot JOIN ot.cotizacion c JOIN c.diagnostico d JOIN d.recepcion r JOIN r.vehiculo v WHERE v.cliente.id = :clienteId ORDER BY ot.fechaCreacion DESC")
+    List<OrdenTrabajo> findByClienteId(Long clienteId);
+
     @Query("SELECT COUNT(ot) FROM OrdenTrabajo ot WHERE ot.estado = :estado AND ot.fechaFin >= :desde AND ot.fechaFin < :hasta")
     long countFinalizadasEntre(com.autogestion.entity.EstadoOT estado, java.time.LocalDateTime desde, java.time.LocalDateTime hasta);
 

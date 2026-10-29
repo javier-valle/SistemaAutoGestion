@@ -3,46 +3,448 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cotización — Portal del Cliente</title>
-<meta name="description" content="Aprobación o rechazo de cotización del taller.">
-<link rel="stylesheet" href="../css/styles.css?v=2">
-<link rel="stylesheet" href="../css/redesign.css?v=2">
+<title>Cotizaciones — Portal del Cliente</title>
+<meta name="description" content="Revisa, aprueba o rechaza las cotizaciones reales de tu vehículo.">
+<meta name="theme-color" content="#0a1120">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/css/styles.css?v=3">
+<link rel="stylesheet" href="/css/portal-ui.css?v=3">
 <style>
-:root{--bg:#000;--text:#fff;--text-2:#a0a0a0;--border:rgba(255,255,255,.15);--border-strong:rgba(255,255,255,.50);--danger:#ff3b3b;--grad-surface:linear-gradient(135deg,#1a1a1a 0%,#000 100%);--r-md:10px;--r-lg:16px;--shadow-xl:0 20px 40px rgba(0,0,0,.6);--font-display:'Space Grotesk',sans-serif;--font-body:'Space Grotesk',sans-serif;--font-mono:'DM Mono',ui-monospace,monospace;--sp-1:.5rem;--sp-2:.75rem;--sp-3:1rem;--sp-4:1.5rem;--sp-5:2rem;--sp-6:3rem;}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;padding:var(--sp-5);margin:0;}
-.ag-wrap{max-width:900px;margin:0 auto;}
-h1{font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.2rem);font-weight:700;margin-bottom:var(--sp-3);letter-spacing:-.02em;}
-.card{background:var(--grad-surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-5);margin-bottom:var(--sp-4);box-shadow:var(--shadow-xl);}
-.card h2{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:var(--sp-3);}
-.table{width:100%;border-collapse:collapse;font-size:.9rem;}
-.table th,.table td{padding:.6rem .5rem;text-align:left;border-bottom:1px solid var(--border);font-family:var(--font-mono);}
-.table th{color:var(--text-2);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;}
-.btn{display:inline-flex;align-items:center;justify-content:center;padding:.75rem 1.25rem;background:linear-gradient(135deg,#fff 0%,#d0d0d0 100%);color:#000;border:none;border-radius:999px;font-weight:700;font-size:.9rem;cursor:pointer;margin-right:.5rem;margin-top:var(--sp-3);}
-.btn-danger{background:var(--danger);color:#fff;}
-.sub{color:var(--text-2);font-size:.9rem;margin-bottom:var(--sp-5);}
+  .pu-quote { margin-bottom: 1rem; }
+  .pu-quote-head { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .pu-quote-head h2 { margin: .45rem 0 .15rem; font-size: 1.08rem; }
+  .pu-quote-meta { color: var(--pu-mut); font-size: .78rem; margin: .15rem 0; }
+  .pu-quote-total { text-align: right; min-width: 150px; }
+  .pu-quote-total small { display: block; color: var(--pu-mut); font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; }
+  .pu-quote-total b { display: block; font: 700 1.35rem var(--pu-head); color: var(--pu-amber-2); }
+  .pu-quote-total span { color: var(--pu-mut); font-size: .7rem; }
+  .pu-quote-diag { font-size: .86rem; color: var(--pu-txt-2); line-height: 1.55; margin: .2rem 0; }
+  .pu-quote-detail { border-top: 1px solid var(--pu-line); padding-top: .7rem; }
+  .pu-quote-detail summary { cursor: pointer; color: var(--pu-amber-2); font-size: .82rem; font-weight: 600; }
+  .pu-quote-detail h3 { font-size: .8rem; color: var(--pu-mut); text-transform: uppercase; letter-spacing: .08em; margin: 1rem 0 .4rem; }
+  .pu-quote-table { overflow-x: auto; }
+  .pu-quote-table table { width: 100%; border-collapse: collapse; font-size: .8rem; min-width: 520px; }
+  .pu-quote-table th { text-align: left; color: var(--pu-mut); font-weight: 600; padding: .45rem .5rem; border-bottom: 1px solid var(--pu-line); }
+  .pu-quote-table td { padding: .5rem; border-bottom: 1px solid var(--pu-line); color: var(--pu-txt-2); }
+  .pu-quote-table td:last-child, .pu-quote-table th:last-child { text-align: right; white-space: nowrap; }
+  .pu-quote-actions { margin-top: .3rem; }
+  .pu-badge.is-info { border-color: rgba(96, 165, 250, .35); background: var(--pu-info-dim); color: #d8e9ff; }
+  .pu-sol-form { display: grid; gap: .85rem; margin-top: .9rem; }
+  .pu-sol-form .pu-btn { justify-self: start; }
+  .pu-sol-list { display: grid; gap: .7rem; }
+  .pu-sol { border: 1px solid var(--pu-line); border-radius: 12px; padding: .85rem .95rem; background: rgba(255,255,255,.02); }
+  .pu-sol-head { display: flex; justify-content: space-between; gap: .6rem; align-items: center; flex-wrap: wrap; }
+  .pu-sol-head small { color: var(--pu-mut); font-size: .72rem; }
+  .pu-sol p { margin: .45rem 0 0; color: var(--pu-txt-2); font-size: .84rem; line-height: 1.55; }
+  .pu-sol .pu-sol-nota { border-left: 2px solid var(--pu-amber-2); padding-left: .65rem; color: var(--pu-mut); }
+  @media (max-width: 640px) {
+    .pu-quote-head { flex-direction: column; }
+    .pu-quote-total { text-align: left; }
+    .pu-sol-form .pu-btn { width: 100%; justify-self: stretch; }
+  }
 </style>
+<script src="/js/portal-ui.js?v=3" defer></script>
 </head>
 <body>
-<div class="ag-wrap">
-  <h1>Cotización</h1>
-  <p class="sub">Aprueba o rechaza la propuesta. Cada acción se registra con fecha y versión de política aceptada.</p>
-  <div class="card">
-    <h2>Cotización pendiente</h2>
-    <table class="table" aria-label="Detalle de cotización">
-      <thead><tr><th>Servicio</th><th>Cantidad</th><th>Subtotal</th></tr></thead>
-      <tbody>
-        <tr><td>Diagnóstico inicial</td><td>1</td><td>S/ 50.00</td></tr>
-        <tr><td>Repuestos (referencia)</td><td>1</td><td>S/ 120.00</td></tr>
-      </tbody>
-    </table>
-    <p style="margin-top:var(--sp-3);font-size:.9rem;color:var(--text-2);">Vigencia: 7 días. Aprobación requiere modo B (OTP).</p>
-    <button class="btn" onclick="alert('Aprobación pendiente de implementación')">Aprobar</button>
-    <button class="btn btn-danger" onclick="alert('Rechazo pendiente de implementación')">Rechazar</button>
+<main class="ag-wrap" id="contenido">
+  <header class="ph-hero">
+    <h1>Cotizaciones</h1>
+    <p class="sub">Revisa el presupuesto real de tu vehículo, con sus servicios y repuestos. Tú decides si lo apruebas.</p>
+  </header>
+
+  <div class="pu-alert" id="alerta" role="status" aria-live="polite"></div>
+
+  <section class="pd-card" id="solicitud-card" aria-labelledby="solicitud-titulo">
+    <div class="pu-quote-head">
+      <div>
+        <h2 id="solicitud-titulo">Solicitar una cotización</h2>
+        <p class="card-sub">Cuéntanos qué le pasa a tu vehículo. El taller lo revisa y prepara el presupuesto con precios reales.</p>
+      </div>
+      <span class="pu-badge is-info no-dot">Sin costo</span>
+    </div>
+    <form class="pu-sol-form" id="formSolicitud" novalidate>
+      <div class="pu-field">
+        <label for="solVehiculo">Vehículo</label>
+        <select id="solVehiculo" required>
+          <option value="">Cargando tus vehículos...</option>
+        </select>
+        <p class="pu-note" id="solSinVehiculo" hidden style="margin:.45rem 0 0;">Tu cuenta no tiene vehículos registrados. Pide en recepción que asocien tu placa a tu documento y vuelve a intentarlo. <a href="/portal/soporte.html">Contactar al taller</a>.</p>
+      </div>
+      <div class="pu-field">
+        <label for="solDescripcion">¿Qué le pasa al vehículo? <span class="req" aria-hidden="true">*</span></label>
+        <textarea id="solDescripcion" required minlength="10" maxlength="800" rows="3" placeholder="Ejemplo: ruido al frenar y vibración en la dirección desde hace una semana."></textarea>
+        <p class="hint" id="solContador">Mínimo 10 caracteres. No incluyas contraseñas ni códigos.</p>
+      </div>
+      <p class="pu-status" id="solicitud-error" role="alert"></p>
+      <button type="submit" class="pu-btn" id="btnSolicitud">
+        <span class="pu-btn-label">Enviar solicitud al taller</span>
+        <span class="pu-spinner" hidden aria-hidden="true"></span>
+      </button>
+    </form>
+    <p class="pu-note" style="margin:.9rem 0 0;">Esto no fija ningún precio ni crea un cobro: solo avisa al taller. La cotización con montos la prepara el personal después de revisar el vehículo.</p>
+  </section>
+
+  <section class="pd-card" id="solicitudes-card" style="margin-top:1rem;" aria-labelledby="solicitudes-titulo" hidden>
+    <h2 id="solicitudes-titulo">Tus solicitudes</h2>
+    <p class="card-sub">El taller responde aquí mismo cuando revisa tu pedido.</p>
+    <div class="pu-sol-list" id="solicitudes" aria-live="polite"></div>
+  </section>
+
+  <div id="cargando" aria-hidden="true">
+    <div class="pd-card" style="margin-bottom:1rem;"><div class="pu-skel" style="height:150px"></div></div>
+    <div class="pd-card"><div class="pu-skel" style="height:150px"></div></div>
   </div>
-  <div class="links" style="margin-top:var(--sp-4);font-size:.85rem;color:var(--text-muted);display:flex;gap:var(--sp-4);flex-wrap:wrap;">
-    <a href="index.html">Inicio</a>
-    <a href="estado.html">Estado</a>
+
+  <section class="pd-card" id="vacio" hidden>
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Aún no tienes cotizaciones
+    </h2>
+    <p class="pu-empty-strong">La cotización la prepara el taller, no se genera sola.</p>
+    <p class="pu-empty">Después de recibir tu vehículo, recepción registra el problema y un mecánico hace el diagnóstico. Con eso el taller arma la cotización con servicios y repuestos reales. Cuando esté lista, aparecerá aquí para que la revises y decidas.</p>
+    <p class="pu-note" style="margin-top:.8rem;">No mostramos montos de ejemplo ni inventamos precios: si no hay cotización, esta página queda vacía.</p>
+    <div class="pu-btn-row" style="max-width:460px;margin-top:1rem;">
+      <a class="pu-btn pu-btn-secondary" href="/portal/estado.html">Volver al panel</a>
+      <a class="pu-btn" href="#solicitud-card">Solicitar una revisión</a>
+    </div>
+  </section>
+
+  <section id="lista" hidden aria-live="polite"></section>
+
+  <aside class="pu-note" style="margin-top:1.2rem;">
+    <strong>¿Cómo se crea?</strong> Envías la solicitud desde esta página; el taller registra la recepción, hace el diagnóstico y arma la cotización con precios. Aquí la revisas, la apruebas o la rechazas. Así nadie puede alterar montos ni crear cargos a tu nombre.
+    <a href="/portal/ayuda.html#cotizacion">Ver los pasos en la guía</a>.
+  </aside>
+</main>
+
+<dialog class="pu-dialog" id="dlgAccion" aria-labelledby="dlgTitulo">
+  <form method="dialog" class="dlg-body">
+    <h3 id="dlgTitulo">Confirmar</h3>
+    <p id="dlgTexto"></p>
+  </form>
+  <div class="dlg-foot">
+    <button type="button" class="pu-btn pu-btn-secondary" id="dlgCancelar">Cancelar</button>
+    <button type="button" class="pu-btn" id="dlgConfirmar">Confirmar</button>
   </div>
-</div>
+</dialog>
+
+<script src="/js/portal-api.js?v=3"></script>
+<script>
+(function () {
+  'use strict';
+  if (!portalGuard()) return;
+
+  const $ = id => document.getElementById(id);
+  const esc = portalEsc;
+  const ESTADOS = {
+    PENDIENTE: ['Pendiente de tu decisión', 'is-warn'],
+    EN_DIAGNOSTICO: ['En preparación', 'is-info'],
+    APROBADA: ['Aprobada por ti', 'is-ok'],
+    RECHAZADA: ['Rechazada', 'is-err'],
+    CONVERTIDA: ['Convertida en orden de trabajo', 'is-ok']
+  };
+  const dinero = n => new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(Number(n || 0));
+  const fecha = v => {
+    if (!v) return '—';
+    if (Array.isArray(v)) return new Date(v[0], v[1] - 1, v[2], v[3] || 0, v[4] || 0);
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  };
+  const fmtFecha = v => {
+    const d = fecha(v);
+    return d ? new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }).format(d) : '—';
+  };
+
+  let pendiente = null;
+
+  function alerta(titulo, detalle) {
+    const el = $('alerta');
+    el.className = 'pu-alert is-visible is-error';
+    el.replaceChildren();
+    const b = document.createElement('strong');
+    b.textContent = titulo;
+    el.appendChild(b);
+    if (detalle) {
+      const s = document.createElement('span');
+      s.textContent = detalle;
+      el.appendChild(s);
+    }
+  }
+  function limpiarAlerta() { $('alerta').className = 'pu-alert'; $('alerta').replaceChildren(); }
+
+  function toast(texto) {
+    const t = document.createElement('div');
+    t.className = 'pu-toast';
+    t.setAttribute('role', 'status');
+    t.textContent = texto;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4200);
+  }
+
+  function tabla(items, tipo) {
+    if (!items || !items.length) return '';
+    const filas = items.map(i => {
+      const cant = tipo === 'producto' ? (i.cantidadEstimada || 0) : 1;
+      const unitario = tipo === 'producto' ? i.precioUnitario : i.precio;
+      const subtotal = Number(unitario || 0) * cant;
+      return '<tr>' +
+        '<td>' + esc(tipo === 'producto' ? (i.productoNombre || 'Repuesto') : (i.servicioNombre || 'Servicio')) + '</td>' +
+        '<td>' + esc(cant) + '</td>' +
+        '<td>' + esc(dinero(unitario)) + '</td>' +
+        '<td>' + esc(dinero(subtotal)) + '</td>' +
+      '</tr>';
+    }).join('');
+    return '<div class="pu-quote-table"><table>' +
+      '<thead><tr><th>Concepto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead>' +
+      '<tbody>' + filas + '</tbody></table></div>';
+  }
+
+  function tarjeta(c) {
+    const estado = ESTADOS[c.estado] || [String(c.estado || 'Sin estado').replace(/_/g, ' '), 'is-warn'];
+    const servicios = c.servicios || [];
+    const productos = c.productos || [];
+    const totalItems = servicios.length + productos.length;
+    const puedeDecidir = c.estado === 'PENDIENTE';
+
+    return '<article class="pd-card pu-quote" data-id="' + esc(c.id) + '">' +
+      '<div class="pu-quote-head">' +
+        '<div>' +
+          '<span class="pu-badge ' + esc(estado[1]) + '">' + esc(estado[0]) + '</span>' +
+          '<h2>Cotización #' + esc(c.id) + ' · ' + esc(c.vehiculoPlaca || 'sin placa') + '</h2>' +
+          '<p class="pu-quote-meta">Emitida el ' + esc(fmtFecha(c.fecha)) + ' · Recepción ' + esc(c.recepcionId || '—') + '</p>' +
+        '</div>' +
+        '<div class="pu-quote-total"><small>Total</small><b>' + esc(dinero(c.total)) + '</b><span>Incluye lo detallado abajo</span></div>' +
+      '</div>' +
+      (c.diagnosticoDescripcion
+        ? '<p class="pu-quote-diag"><strong>Diagnóstico:</strong> ' + esc(c.diagnosticoDescripcion) + '</p>'
+        : '') +
+      (c.mecanicoNombre ? '<p class="pu-quote-meta">Diagnóstico realizado por ' + esc(c.mecanicoNombre) + '.</p>' : '') +
+      (totalItems
+        ? '<details class="pu-quote-detail"><summary>Ver ' + esc(totalItems) + ' concepto' + (totalItems === 1 ? '' : 's') + '</summary>' +
+            (servicios.length ? '<h3>Servicios</h3>' + tabla(servicios, 'servicio') : '') +
+            (productos.length ? '<h3>Repuestos</h3>' + tabla(productos, 'producto') : '') +
+          '</details>'
+        : '<p class="pu-empty">Esta cotización no tiene líneas detalladas. Consulta con el taller antes de decidir.</p>') +
+      (puedeDecidir
+        ? '<div class="pu-btn-row pu-quote-actions">' +
+            '<button type="button" class="pu-btn pu-btn-secondary" data-accion="rechazar" data-id="' + esc(c.id) + '">Rechazar</button>' +
+            '<button type="button" class="pu-btn" data-accion="aprobar" data-id="' + esc(c.id) + '">Aprobar cotización</button>' +
+          '</div>'
+        : '<p class="pu-note">' + (c.estado === 'APROBADA'
+            ? 'Ya la aprobaste. El taller continuará con la orden de trabajo.'
+            : c.estado === 'RECHAZADA'
+              ? 'La rechazaste. Si cambias de opinión, contacta al taller.'
+              : c.estado === 'CONVERTIDA'
+                ? 'Esta cotización ya se convirtió en una orden de trabajo.'
+                : 'El taller todavía está preparando esta cotización.') + '</p>') +
+    '</article>';
+  }
+
+  function pintar(cotizaciones) {
+    const lista = $('lista');
+    const vacio = $('vacio');
+    if (!cotizaciones.length) {
+      lista.hidden = true;
+      lista.replaceChildren();
+      vacio.hidden = false;
+      return;
+    }
+    vacio.hidden = true;
+    lista.hidden = false;
+    lista.innerHTML = cotizaciones.map(tarjeta).join('');
+    lista.querySelectorAll('[data-accion]').forEach(btn => {
+      btn.addEventListener('click', () => abrirDialogo(btn.dataset.id, btn.dataset.accion));
+    });
+  }
+
+  function abrirDialogo(id, accion) {
+    const c = { id, accion };
+    pendiente = c;
+    const aprobar = accion === 'aprobar';
+    $('dlgTitulo').textContent = aprobar ? '¿Aprobar la cotización #' + id + '?' : '¿Rechazar la cotización #' + id + '?';
+    $('dlgTexto').textContent = aprobar
+      ? 'El taller podrá convertirla en una orden de trabajo y comenzar la reparación. Revisa el detalle y el total antes de confirmar.'
+      : 'El taller no continuará con esta cotización. Si fue un error, podrás contactar al taller para revisarlo.';
+    const confirmar = $('dlgConfirmar');
+    confirmar.textContent = aprobar ? 'Sí, aprobar' : 'Sí, rechazar';
+    confirmar.style.background = aprobar ? '' : 'var(--pu-err)';
+    confirmar.style.color = aprobar ? '' : '#2a0a10';
+    $('dlgAccion').showModal();
+  }
+
+  $('dlgCancelar').addEventListener('click', () => $('dlgAccion').close());
+  $('dlgConfirmar').addEventListener('click', async () => {
+    if (!pendiente) return;
+    const { id, accion } = pendiente;
+    const btn = $('dlgConfirmar');
+    btn.disabled = true;
+    btn.classList.add('is-loading');
+    try {
+      await portalFetch('/portal/cotizaciones/' + encodeURIComponent(id) + '/' + accion, { method: 'POST' });
+      $('dlgAccion').close();
+      toast(accion === 'aprobar' ? 'Cotización aprobada. El taller continuará.' : 'Cotización rechazada.');
+      await cargar();
+    } catch (e) {
+      $('dlgAccion').close();
+      alerta('No pudimos guardar tu decisión', (e && (e.detalle || e.message)) || 'Intenta de nuevo o contacta al taller.');
+    } finally {
+      pendiente = null;
+      btn.disabled = false;
+      btn.classList.remove('is-loading');
+    }
+  });
+
+  function pintarVehiculos(veh) {
+    const sel = $('solVehiculo');
+    const sin = $('solSinVehiculo');
+    const btn = $('btnSolicitud');
+    sel.replaceChildren();
+    if (!veh || !veh.length) {
+      const o = document.createElement('option');
+      o.value = '';
+      o.textContent = 'No tienes vehículos registrados';
+      sel.appendChild(o);
+      sel.disabled = true;
+      btn.disabled = true;
+      sin.hidden = false;
+      return;
+    }
+    sel.disabled = false;
+    btn.disabled = false;
+    sin.hidden = true;
+    const vacia = document.createElement('option');
+    vacia.value = '';
+    vacia.textContent = 'Elige un vehículo';
+    sel.appendChild(vacia);
+    veh.forEach(v => {
+      const o = document.createElement('option');
+      o.value = v.id;
+      o.textContent = (v.placa || 'Sin placa') + (v.marca || v.modelo ? ' · ' + [v.marca, v.modelo].filter(Boolean).join(' ') : '');
+      sel.appendChild(o);
+    });
+  }
+
+  const ESTADOS_SOL = {
+    PENDIENTE: ['En revisión', 'is-warn'],
+    ATENDIDA: ['Atendida por el taller', 'is-ok'],
+    RECHAZADA: ['Rechazada', 'is-err']
+  };
+
+  function pintarSolicitudes(lista) {
+    const card = $('solicitudes-card');
+    const box = $('solicitudes');
+    if (!lista || !lista.length) {
+      card.hidden = true;
+      box.replaceChildren();
+      return;
+    }
+    card.hidden = false;
+    box.innerHTML = lista.map(s => {
+      const e = ESTADOS_SOL[s.estado] || [String(s.estado || '').replace(/_/g, ' '), 'is-warn'];
+      return '<article class="pu-sol">' +
+        '<div class="pu-sol-head">' +
+          '<span class="pu-badge ' + esc(e[1]) + '">' + esc(e[0]) + '</span>' +
+          '<small>' + esc(s.vehiculoPlaca || 'sin placa') + ' · ' + esc(fmtFecha(s.creadoEn)) + '</small>' +
+        '</div>' +
+        '<p><strong>Tu reporte:</strong> ' + esc(s.descripcion) + '</p>' +
+        (s.notaTaller ? '<p class="pu-sol-nota"><strong>Respuesta del taller:</strong> ' + esc(s.notaTaller) + '</p>' : '') +
+      '</article>';
+    }).join('');
+  }
+
+  async function cargarSolicitudes() {
+    try {
+      const lista = await portalFetch('/portal/solicitudes-cotizacion');
+      pintarSolicitudes(lista || []);
+    } catch (e) {
+      if (e && e.status === 401) return;
+      $('solicitudes-card').hidden = false;
+      $('solicitudes').innerHTML = '<p class="pu-empty">No pudimos cargar tus solicitudes. Recarga la página o consulta con el taller.</p>';
+    }
+  }
+
+  $('solDescripcion').addEventListener('input', () => {
+    const n = $('solDescripcion').value.trim().length;
+    $('solContador').textContent = n < 10
+      ? 'Mínimo 10 caracteres. Llevas ' + n + '.'
+      : n + ' caracteres. No incluyas contraseñas ni códigos.';
+  });
+
+  $('formSolicitud').addEventListener('submit', async e => {
+    e.preventDefault();
+    const err = $('solicitud-error');
+    err.textContent = '';
+    err.className = 'pu-status';
+    const vehiculoId = $('solVehiculo').value;
+    const descripcion = $('solDescripcion').value.trim().replace(/\s+/g, ' ');
+    if (!vehiculoId) {
+      err.textContent = 'Elige el vehículo de la solicitud.';
+      err.className = 'pu-status is-error';
+      $('solVehiculo').focus();
+      return;
+    }
+    if (descripcion.length < 10) {
+      err.textContent = 'Cuéntanos un poco más: mínimo 10 caracteres.';
+      err.className = 'pu-status is-error';
+      $('solDescripcion').focus();
+      return;
+    }
+    const btn = $('btnSolicitud');
+    btn.disabled = true;
+    btn.classList.add('is-loading');
+    btn.querySelector('.pu-spinner').hidden = false;
+    try {
+      await portalFetch('/portal/solicitudes-cotizacion', {
+        method: 'POST',
+        body: JSON.stringify({ vehiculoId: Number(vehiculoId), descripcion })
+      });
+      $('solDescripcion').value = '';
+      $('solContador').textContent = 'Mínimo 10 caracteres. No incluyas contraseñas ni códigos.';
+      limpiarAlerta();
+      toast('Solicitud enviada. El taller la revisará y te responderá aquí.');
+      await cargarSolicitudes();
+      $('solicitudes-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (ex) {
+      err.textContent = (ex && (ex.detalle || ex.message)) || 'No pudimos enviar la solicitud. Intenta de nuevo.';
+      err.className = 'pu-status is-error';
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('is-loading');
+      btn.querySelector('.pu-spinner').hidden = true;
+    }
+  });
+
+  async function cargar() {
+    limpiarAlerta();
+    $('cargando').hidden = false;
+    $('lista').hidden = true;
+    $('vacio').hidden = true;
+    try {
+      const [cotizaciones, me] = await Promise.all([
+        portalFetch('/portal/cotizaciones'),
+        portalFetch('/portal/me').catch(() => null)
+      ]);
+      pintarVehiculos(me && me.vehiculos ? me.vehiculos : []);
+      pintar(cotizaciones || []);
+      await cargarSolicitudes();
+    } catch (e) {
+      if (e && e.status === 401) return;
+      alerta('No pudimos cargar tus cotizaciones', 'Revisa tu conexión o vuelve a ingresar. Si el problema continúa, contacta al taller.');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'pu-btn pu-btn-secondary pu-btn-sm';
+      btn.style.marginTop = '.6rem';
+      btn.textContent = 'Reintentar';
+      btn.addEventListener('click', cargar);
+      $('alerta').appendChild(btn);
+    } finally {
+      $('cargando').hidden = true;
+    }
+  }
+
+  cargar();
+})();
+</script>
 </body>
 </html>

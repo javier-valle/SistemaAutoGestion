@@ -4,20 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Historial del vehículo — Portal del Cliente</title>
-<link rel="stylesheet" href="../css/styles.css?v=2">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=DM+Mono:wght@400&display=swap');
-:root{--bg:#000;--text:#fff;--text-2:#a0a0a0;--border:rgba(255,255,255,.15);--grad-surface:linear-gradient(135deg,#1a1a1a 0%,#000 100%);--r-lg:16px;--shadow-xl:0 20px 40px rgba(0,0,0,.6);--font-display:'Space Grotesk',sans-serif;--font-body:'Space Grotesk',sans-serif;--font-mono:'DM Mono',ui-monospace,monospace;--sp-1:.5rem;--sp-2:.75rem;--sp-3:1rem;--sp-4:1.5rem;--sp-5:2rem;}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;padding:var(--sp-5);margin:0;}
-.ag-wrap{max-width:900px;margin:0 auto;}
-h1{font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.2rem);font-weight:700;margin-bottom:var(--sp-3);letter-spacing:-.02em;}
-.card{background:var(--grad-surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-5);margin-bottom:var(--sp-4);box-shadow:var(--shadow-xl);}
-</style>
+<meta name="description" content="Servicios anteriores de tus vehículos.">
+<meta name="theme-color" content="#0a1120">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/css/styles.css?v=3">
+<link rel="stylesheet" href="/css/portal-ui.css?v=3">
+<script src="/js/portal-ui.js?v=3" defer></script>
 </head>
 <body>
-<div class="ag-wrap">
-  <h1>Historial del vehículo</h1>
-  <div class="card"><h2>Servicios anteriores</h2><p>Sin historial disponible para esta placa. Datos protegidos.</p></div>
-</div>
+<main class="ag-wrap" id="contenido">
+  <header class="ph-hero">
+    <h1>Historial</h1>
+    <p class="sub">Los servicios que el taller ha realizado en tus vehículos.</p>
+  </header>
+
+  <section class="pd-card" aria-labelledby="hist-titulo">
+    <h2 id="hist-titulo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 3 3 8 8 8"/><polyline points="12 7 12 12 15 14"/></svg>
+      Servicios anteriores
+    </h2>
+    <p class="pu-empty-strong">El historial detallado todavía no se muestra en el portal.</p>
+    <p class="pu-empty">En <a href="/portal/estado.html">tu panel</a> puedes ver las órdenes de trabajo recientes y su estado. Para el detalle de visitas anteriores, pídelo en recepción indicando tu placa.</p>
+    <p class="pu-note" style="margin-top:1rem;">Cuando el taller habilite esta sección, verás solo los servicios de los vehículos registrados a tu nombre.</p>
+    <div class="pu-btn-row" style="max-width:420px;margin-top:1rem;">
+      <a class="pu-btn pu-btn-secondary" href="/portal/estado.html">Volver al panel</a>
+      <a class="pu-btn" href="/portal/soporte.html">Solicitar historial</a>
+    </div>
+  </section>
+</main>
+<script src="/js/portal-api.js?v=3"></script>
+<script>portalGuard();</script>
 </body>
 </html>

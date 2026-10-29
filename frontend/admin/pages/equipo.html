@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+        <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#0f172a">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoGestion - Equipo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css?v=20261005">
+    <link rel="stylesheet" href="/css/animations.css?v=20261005">
+    <link rel="stylesheet" href="/css/redesign.css?v=20261005">
+    <link rel="stylesheet" href="/css/polish.css?v=20261005">
+    <link rel="stylesheet" href="/css/panels-premium.css?v=20261002">
+    <script>
+        (function(){var t=localStorage.getItem('ag-theme')||'system';if(t==='system')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',t);})();
+    </script>
+    <style>
+        .ag-avatar { width:40px; height:40px; flex-shrink:0; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; font-family:var(--ag-font-heading); background:linear-gradient(135deg, var(--ag-oil), var(--ag-btn-primary-dark, #b45309)); color:#fff; }
+        .ag-member { display:flex; align-items:center; gap:0.7rem; min-width:0; }
+        .ag-member b { display:block; font-size:0.88rem; color:var(--ag-text-heading); }
+        .ag-member small { display:block; font-size:0.72rem; color:var(--ag-text-muted); }
+    </style>
+</head>
+<body>
+    <div id="navbar"></div>
+    <div class="ag-page">
+        <div class="ag-head">
+            <div class="ag-head-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2" fill="currentColor" stroke="none" opacity=".28"/><circle cx="9" cy="8.5" r="3.2"/><path d="M3.3 19.5c.7-3.1 2.9-4.8 5.7-4.8s5 1.7 5.7 4.8"/><path d="M15.2 5.9a3.2 3.2 0 0 1 0 5.4"/><path d="M17.3 14.9c2 .7 3.2 2.2 3.6 4.3"/></svg>
+            </div>
+            <div class="ag-head-titles">
+                <h1>Equipo <span class="ag-badge ag-badge-primary">ADMIN</span></h1>
+                <p>Mecánicos y personal con nombre real, especialidad y carga de trabajo</p>
+            </div>
+            <div class="ag-head-meta">
+                <button class="ag-cta" onclick="abrirMiembroModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Nuevo miembro</button>
+            </div>
+        </div>
+        <div id="alertContainer"></div>
+        <div class="ag-grid ag-grid-3 ag-mb-3">
+            <div class="ag-indicator">
+                <div class="ag-indicator-icon ic-blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                </div>
+                <div><div class="ag-indicator-value" id="eqTotal">--</div><div class="ag-indicator-label">Miembros</div></div>
+            </div>
+            <div class="ag-indicator">
+                <div class="ag-indicator-icon ic-amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                </div>
+                <div><div class="ag-indicator-value" id="eqMecanicos">--</div><div class="ag-indicator-label">Mecánicos activos</div></div>
+            </div>
+            <div class="ag-indicator">
+                <div class="ag-indicator-icon ic-red">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                </div>
+                <div><div class="ag-indicator-value" id="eqInactivos">--</div><div class="ag-indicator-label">Inactivos</div></div>
+            </div>
+        </div>
+        <div class="ag-section">
+            <div class="ag-section-header">
+                <h3>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    Personal
+                </h3>
+                <div class="ag-d-flex ag-gap-3 ag-flex-wrap">
+                    <select class="ag-form-control" id="eqRol" onchange="eqBuscar()" style="width:auto;">
+                        <option value="">Todos los roles</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="MECANICO">Mecánicos</option>
+                        <option value="RECEPCIONISTA">Recepcionistas</option>
+                        <option value="ALMACENERO">Almaceneros</option>
+                    </select>
+                    <input class="ag-form-control" id="eqQ" placeholder="Nombre, email o documento" style="width:220px;" onkeydown="if(event.key==='Enter')eqBuscar()">
+                    <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="eqBuscar()">Buscar</button>
+                </div>
+            </div>
+            <div class="ag-section-body">
+                <div class="ag-table-wrap">
+                    <table class="ag-table">
+                        <thead><tr><th>Persona</th><th>Rol</th><th>Contacto</th><th>Carga</th><th>Estado</th><th></th></tr></thead>
+                        <tbody id="eqBody"><tr><td colspan="6" class="ag-text-center ag-text-muted">Cargando...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="ag-d-flex ag-justify-between ag-align-center ag-mt-2 ag-flex-wrap" style="gap:0.5rem;">
+                    <span class="ag-text-muted ag-text-sm" id="eqInfo"></span>
+                    <div class="ag-d-flex ag-gap-3">
+                        <button class="ag-btn ag-btn-outline ag-btn-sm" id="eqPrev" onclick="eqGo(-1)">Anterior</button>
+                        <button class="ag-btn ag-btn-outline ag-btn-sm" id="eqNext" onclick="eqGo(1)">Siguiente</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal miembro -->
+    <div class="ag-modal-overlay" id="miembroModal">
+        <div class="ag-modal ag-modal--wide">
+            <div class="ag-modal-header">
+                <h3 id="miembroTitle">Nuevo miembro</h3>
+                <button class="ag-modal-close" onclick="cerrarMiembroModal()">&times;</button>
+            </div>
+            <div class="ag-modal-body">
+                <div class="ag-grid ag-grid-2">
+                    <div class="ag-form-group"><label class="ag-form-label">Nombres *</label><input class="ag-form-control" id="mNombres" placeholder="Luis Alberto"></div>
+                    <div class="ag-form-group"><label class="ag-form-label">Apellidos *</label><input class="ag-form-control" id="mApellidos" placeholder="Ramírez Torres"></div>
+                </div>
+                <div class="ag-grid ag-grid-2">
+                    <div class="ag-form-group"><label class="ag-form-label">Tipo de documento</label>
+                        <select class="ag-form-control" id="mTipoDoc"><option>DNI</option><option>RUC</option><option>CE</option><option>PASAPORTE</option></select></div>
+                    <div class="ag-form-group"><label class="ag-form-label">Documento</label>
+                        <input class="ag-form-control" id="mDoc" placeholder="8 dígitos" maxlength="12" inputmode="numeric">
+                        <p class="ag-field-hint" id="mDocHint">Opcional. Si lo escribes, se valida en vivo.</p></div>
+                </div>
+                <div class="ag-grid ag-grid-2">
+                    <div class="ag-form-group"><label class="ag-form-label">Email *</label><input class="ag-form-control" id="mEmail" type="email" placeholder="nombre@sanmartin.pe"></div>
+                    <div class="ag-form-group"><label class="ag-form-label">Celular</label><input class="ag-form-control" id="mTelefono" placeholder="9XXXXXXXX" maxlength="9" inputmode="numeric"></div>
+                </div>
+                <div class="ag-grid ag-grid-2">
+                    <div class="ag-form-group"><label class="ag-form-label">Rol *</label>
+                        <select class="ag-form-control" id="mRol" onchange="document.getElementById('mEspGroup').hidden = this.value !== 'MECANICO'">
+                            <option value="MECANICO">Mecánico</option><option value="RECEPCIONISTA">Recepcionista</option>
+                            <option value="ALMACENERO">Almacenero</option><option value="ADMIN">Administrador</option>
+                        </select></div>
+                    <div class="ag-form-group" id="mEspGroup"><label class="ag-form-label">Especialidad *</label>
+                        <select class="ag-form-control" id="mEsp">
+                            <option value="MECANICA_GENERAL">Mecánica general</option><option value="MOTOR">Motor</option>
+                            <option value="FRENOS_SUSPENSION">Frenos y suspensión</option><option value="ELECTRICIDAD">Electricidad</option>
+                            <option value="DIAGNOSTICO_COMPUTARIZADO">Diagnóstico computarizado</option><option value="ALINEACION_BALANCEO">Alineación y balanceo</option>
+                        </select></div>
+                </div>
+                <div class="ag-form-group" id="mPassGroup"><label class="ag-form-label">Contraseña inicial (mínimo 8) *</label>
+                    <input class="ag-form-control" id="mPass" type="password" placeholder="Solo al crear"></div>
+                <p class="ag-field-error" id="mError" hidden></p>
+            </div>
+            <div class="ag-modal-footer">
+                <button class="ag-btn ag-btn-outline" onclick="cerrarMiembroModal()">Cancelar</button>
+                <button class="ag-btn ag-btn-success" id="mSaveBtn" onclick="guardarMiembro()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal clave -->
+    <div class="ag-modal-overlay" id="claveModal">
+        <div class="ag-modal">
+            <div class="ag-modal-header"><h3 id="claveTitle">Restablecer clave</h3>
+                <button class="ag-modal-close" onclick="document.getElementById('claveModal').classList.remove('show')">&times;</button></div>
+            <div class="ag-modal-body">
+                <div class="ag-form-group"><label class="ag-form-label">Nueva clave (mínimo 8)</label>
+                    <input class="ag-form-control" id="nuevaClave" type="password" placeholder="Anótala y entrégala al usuario"></div>
+                <p class="ag-field-error" id="claveError" hidden></p>
+            </div>
+            <div class="ag-modal-footer">
+                <button class="ag-btn ag-btn-outline" onclick="document.getElementById('claveModal').classList.remove('show')">Cancelar</button>
+                <button class="ag-btn ag-btn-primary" onclick="confirmarClave()">Guardar clave</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="themeToggleWrap"></div>
+    <script src="/js/api.js?v=20261006"></script>
+    <script src="/js/animations.js?v=20261005"></script>
+    <script src="/js/ui-kit.js?v=20261005"></script>
+    <script src="/js/confirm-modal.js?v=20261005"></script>
+    <script>
+        if (!guardPage('equipo')) throw new Error('Acceso denegado');
+        document.getElementById('navbar').innerHTML = renderNavbar('equipo');
+        document.getElementById('themeToggleWrap').innerHTML = renderThemeToggle();
+        initTheme();
+
+        let eqPage = 0, editId = null, claveId = null, cargaPorMecanico = {};
+        const ROL_BADGE = { ADMIN: 'ag-badge-primary', MECANICO: 'ag-badge-warning', RECEPCIONISTA: 'ag-badge-info', ALMACENERO: 'ag-badge-success' };
+
+        async function loadEquipo() {
+            const rol = document.getElementById('eqRol').value;
+            const q = document.getElementById('eqQ').value.trim();
+            try {
+                const [p, mecs] = await Promise.all([
+                    apiFetch(`/usuarios?rol=${rol}&activo=&q=${encodeURIComponent(q)}&page=${eqPage}&size=10&sort=nombre,asc`),
+                    apiFetch('/usuarios/mecanicos?soloActivos=false').catch(() => [])
+                ]);
+                cargaPorMecanico = {};
+                (mecs || []).forEach(m => { cargaPorMecanico[m.id] = m; });
+                const rows = (p.content || []).map(u => {
+                    const carga = cargaPorMecanico[u.id];
+                    return `<tr>
+                        <td><div class="ag-member"><span class="ag-avatar">${u.iniciales || '?'}</span>
+                            <div><b>${u.nombreCompleto}</b><small>${u.tipoDocumento || 'DNI'} ${u.documento || '—'}${u.especialidadEtiqueta ? ' · ' + u.especialidadEtiqueta : ''}</small></div></div></td>
+                        <td><span class="ag-badge ${ROL_BADGE[u.rol] || 'ag-badge-secondary'}">${u.rol}</span></td>
+                        <td class="ag-text-sm">${u.email}<br><span class="ag-text-muted">${u.telefono || '—'}</span></td>
+                        <td class="ag-text-sm">${carga ? `${carga.otActivas} OT activas · ${carga.otFinalizadasMes} este mes` : '<span class="ag-text-muted">—</span>'}</td>
+                        <td>${u.activo ? '<span class="ag-badge ag-badge-success">ACTIVO</span>' : '<span class="ag-badge ag-badge-danger">INACTIVO</span>'}</td>
+                        <td style="white-space:nowrap;">
+                            <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="abrirMiembroModal(${u.id})">Editar</button>
+                            <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="abrirClaveModal(${u.id}, '${u.nombreCompleto.replace(/'/g, "\\'")}')">Clave</button>
+                            ${u.activo
+                                ? `<button class="ag-btn ag-btn-outline ag-btn-sm" onclick="cambiarActivo(${u.id}, false)">Desactivar</button>`
+                                : `<button class="ag-btn ag-btn-success ag-btn-sm" onclick="cambiarActivo(${u.id}, true)">Activar</button>`}
+                        </td>
+                    </tr>`;
+                }).join('');
+                document.getElementById('eqBody').innerHTML = rows || '<tr><td colspan="6" class="ag-text-center ag-text-muted">Sin resultados</td></tr>';
+                document.getElementById('eqInfo').textContent = `Página ${p.number + 1} de ${Math.max(1, p.totalPages)} · ${p.totalElements} personas`;
+                document.getElementById('eqPrev').disabled = p.first;
+                document.getElementById('eqNext').disabled = p.last;
+                const all = p.content || [];
+                document.getElementById('eqTotal').textContent = p.totalElements;
+                document.getElementById('eqMecanicos').textContent = all.filter(u => u.rol === 'MECANICO' && u.activo).length + (p.totalElements > all.length ? '+' : '');
+                document.getElementById('eqInactivos').textContent = all.filter(u => !u.activo).length;
+            } catch (e) { document.getElementById('eqBody').innerHTML = '<tr><td colspan="6" class="ag-text-center ag-text-muted">Error al cargar</td></tr>'; }
+        }
+        function eqGo(d) { eqPage = Math.max(0, eqPage + d); loadEquipo(); }
+        function eqBuscar() { eqPage = 0; loadEquipo(); }
+
+        function abrirMiembroModal(id) {
+            editId = id || null;
+            document.getElementById('miembroTitle').textContent = id ? 'Editar miembro' : 'Nuevo miembro';
+            document.getElementById('mPassGroup').hidden = !!id;
+            ['mNombres', 'mApellidos', 'mDoc', 'mEmail', 'mTelefono', 'mPass'].forEach(x => document.getElementById(x).value = '');
+            document.getElementById('mRol').value = 'MECANICO';
+            document.getElementById('mEspGroup').hidden = false;
+            document.getElementById('mTipoDoc').value = 'DNI';
+            document.getElementById('mError').hidden = true;
+            if (id) {
+                apiFetch(`/usuarios?page=0&size=100`).then(p => {
+                    const u = (p.content || []).find(x => x.id === id);
+                    if (!u) return;
+                    document.getElementById('mNombres').value = u.nombres || '';
+                    document.getElementById('mApellidos').value = u.apellidos || '';
+                    document.getElementById('mTipoDoc').value = u.tipoDocumento || 'DNI';
+                    document.getElementById('mDoc').value = u.documento || '';
+                    document.getElementById('mEmail').value = u.email || '';
+                    document.getElementById('mTelefono').value = u.telefono || '';
+                    document.getElementById('mRol').value = u.rol || 'MECANICO';
+                    document.getElementById('mEspGroup').hidden = u.rol !== 'MECANICO';
+                    if (u.especialidad) document.getElementById('mEsp').value = u.especialidad;
+                });
+            }
+            document.getElementById('miembroModal').classList.add('show');
+        }
+        function cerrarMiembroModal() { document.getElementById('miembroModal').classList.remove('show'); editId = null; }
+        function mError(msg) {
+            const e = document.getElementById('mError');
+            if (!msg) { e.hidden = true; return true; }
+            e.textContent = msg; e.hidden = false; return false;
+        }
+        async function guardarMiembro() {
+            const body = {
+                nombres: document.getElementById('mNombres').value.trim(),
+                apellidos: document.getElementById('mApellidos').value.trim(),
+                tipoDocumento: document.getElementById('mTipoDoc').value,
+                documento: document.getElementById('mDoc').value.trim(),
+                email: document.getElementById('mEmail').value.trim(),
+                telefono: document.getElementById('mTelefono').value.trim(),
+                rol: document.getElementById('mRol').value,
+                especialidad: document.getElementById('mRol').value === 'MECANICO' ? document.getElementById('mEsp').value : null,
+                password: document.getElementById('mPass').value
+            };
+            if (!body.nombres || !body.apellidos) { mError('Nombres y apellidos son obligatorios.'); return; }
+            if (!body.email) { mError('El email es obligatorio.'); return; }
+            if (!editId && (!body.password || body.password.length < 8)) { mError('La contraseña inicial debe tener al menos 8 caracteres.'); return; }
+            const btn = document.getElementById('mSaveBtn');
+            btn.disabled = true;
+            try {
+                if (editId) await apiFetch(`/usuarios/${editId}`, { method: 'PUT', body: JSON.stringify(body) });
+                else await apiFetch('/usuarios', { method: 'POST', body: JSON.stringify(body) });
+                cerrarMiembroModal();
+                toast(editId ? 'Miembro actualizado' : 'Miembro creado. Ya aparece en los selects de mecánico.', 'success');
+                loadEquipo();
+            } catch (e) { mError(e.message); }
+            finally { btn.disabled = false; }
+        }
+        async function cambiarActivo(id, activo) {
+            const acc = activo ? 'activar' : 'desactivar';
+            if (!(await confirmarAccion(`¿${activo ? 'Activar' : 'Desactivar'} a este miembro?${activo ? '' : ' No se borra nada; solo deja de entrar al sistema.'}`, { tipo: activo ? 'primary' : 'danger' }))) return;
+            try { await apiFetch(`/usuarios/${id}/activo`, { method: 'PATCH', body: JSON.stringify({ activo }) }); toast(`Miembro ${activo ? 'activado' : 'desactivado'}`, 'success'); loadEquipo(); }
+            catch (e) { toast('Error: ' + e.message, 'danger'); }
+        }
+        function abrirClaveModal(id, nombre) {
+            claveId = id;
+            document.getElementById('claveTitle').textContent = `Clave de ${nombre}`;
+            document.getElementById('nuevaClave').value = '';
+            document.getElementById('claveError').hidden = true;
+            document.getElementById('claveModal').classList.add('show');
+        }
+        async function confirmarClave() {
+            const v = document.getElementById('nuevaClave').value;
+            if (!v || v.length < 8) { const e = document.getElementById('claveError'); e.textContent = 'Mínimo 8 caracteres.'; e.hidden = false; return; }
+            try { await apiFetch(`/usuarios/${claveId}/restablecer-clave`, { method: 'POST', body: JSON.stringify({ nuevaClave: v }) }); document.getElementById('claveModal').classList.remove('show'); toast('Clave actualizada. Entrégala al usuario.', 'success'); }
+            catch (e) { const x = document.getElementById('claveError'); x.textContent = e.message; x.hidden = false; }
+        }
+        /* Validación de documento en vivo (misma regla del backend) */
+        document.getElementById('mDoc').addEventListener('input', async (e) => {
+            const num = e.target.value.trim();
+            const hint = document.getElementById('mDocHint');
+            const tipo = document.getElementById('mTipoDoc').value;
+            if (!num) { hint.textContent = 'Opcional. Si lo escribes, se valida en vivo.'; hint.style.color = ''; return; }
+            try {
+                const r = await apiFetch(`/documentos/validar?tipo=${tipo}&numero=${encodeURIComponent(num)}`);
+                hint.textContent = (r.valido ? '✔ ' : '✖ ') + r.mensaje;
+                hint.style.color = r.valido ? 'var(--ag-signal-go)' : 'var(--ag-signal-stop)';
+            } catch (_) { /* el backend valida al guardar */ }
+        });
+        document.getElementById('miembroModal').addEventListener('click', (e) => { if (e.target.id === 'miembroModal') cerrarMiembroModal(); });
+        document.getElementById('claveModal').addEventListener('click', (e) => { if (e.target.id === 'claveModal') e.target.classList.remove('show'); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cerrarMiembroModal(); document.getElementById('claveModal').classList.remove('show'); } });
+        loadEquipo();
+    </script>
+</body>
+</html>

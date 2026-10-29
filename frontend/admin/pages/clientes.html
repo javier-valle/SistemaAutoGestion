@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+        <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#0f172a">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoGestion - Clientes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css?v=20261005">
+    <link rel="stylesheet" href="/css/animations.css?v=20261005">
+    <link rel="stylesheet" href="/css/redesign.css?v=20261005">
+    <link rel="stylesheet" href="/css/polish.css?v=20261005">
+    <link rel="stylesheet" href="/css/panels-premium.css?v=20261002">
+    <script>
+        (function(){var t=localStorage.getItem('ag-theme')||'system';if(t==='system')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',t);})();
+    </script>
+</head>
+<body>
+    <div id="navbar"></div>
+    <div class="ag-page">
+        <div class="ag-head">
+            <div class="ag-head-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13.5" rx="2.5" fill="currentColor" stroke="none" opacity=".22"/><rect x="3" y="5.5" width="18" height="13.5" rx="2.5"/><circle cx="8.3" cy="11" r="2"/><path d="M5.9 15.9c.5-1.6 1.4-2.4 2.4-2.4s1.9.8 2.4 2.4"/><path d="M14 9.5h4.5M14 13h4.5"/></svg>
+            </div>
+            <div class="ag-head-titles">
+                <h1>Clientes</h1>
+                <p>Personas y empresas con sus vehículos, visitas y comprobantes</p>
+            </div>
+            <div class="ag-head-meta">
+                <button class="ag-cta" onclick="abrirClienteModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Nuevo cliente</button>
+            </div>
+        </div>
+        <div id="alertContainer"></div>
+        <div class="ag-section">
+            <div class="ag-section-header">
+                <h3>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Buscar
+                </h3>
+                <div class="ag-d-flex ag-gap-3 ag-flex-wrap">
+                    <input class="ag-form-control" id="cliFQ" placeholder="Documento, nombre, teléfono o placa" style="width:260px;">
+                    <select class="ag-form-control" id="cliFTipo" onchange="cliBuscar()" style="width:auto;">
+                        <option value="">Todos los docs</option><option>DNI</option><option>RUC</option><option>CE</option><option>PASAPORTE</option>
+                    </select>
+                    <select class="ag-form-control" id="cliFEstado" onchange="cliBuscar()" style="width:auto;">
+                        <option value="">Activos e inactivos</option><option value="true">Activos</option><option value="false">Inactivos</option>
+                    </select>
+                    <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="exportarClientesCSV()">Exportar CSV</button>
+                </div>
+            </div>
+            <div class="ag-section-body">
+                <div class="ag-table-wrap">
+                    <table class="ag-table">
+                        <thead><tr><th>Cliente</th><th>Contacto</th><th>Estado</th><th></th></tr></thead>
+                        <tbody id="cliBody"><tr><td colspan="4" class="ag-text-center ag-text-muted">Cargando...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="ag-d-flex ag-justify-between ag-align-center ag-mt-2 ag-flex-wrap" style="gap:0.5rem;">
+                    <span class="ag-text-muted ag-text-sm" id="cliInfo"></span>
+                    <div class="ag-d-flex ag-gap-3">
+                        <button class="ag-btn ag-btn-outline ag-btn-sm" id="cliPrev" onclick="cliGo(-1)">Anterior</button>
+                        <button class="ag-btn ag-btn-outline ag-btn-sm" id="cliNext" onclick="cliGo(1)">Siguiente</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal detalle -->
+    <div class="ag-modal-overlay" id="cliDetalleModal">
+        <div class="ag-modal ag-modal--wide">
+            <div class="ag-modal-header"><h3 id="cliDetTitle">Cliente</h3>
+                <button class="ag-modal-close" onclick="cerrarDetalle()">&times;</button></div>
+            <div class="ag-modal-body" id="cliDetBody"></div>
+            <div class="ag-modal-footer">
+                <button class="ag-btn ag-btn-outline" onclick="cerrarDetalle()">Cerrar</button>
+                <span style="flex:1"></span>
+                <button class="ag-btn ag-btn-outline" id="cliDetEditar">Editar</button>
+                <button class="ag-btn ag-btn-primary" id="cliDetRecep">Nueva recepción</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal formulario -->
+    <div class="ag-modal-overlay" id="cliFormModal">
+        <div class="ag-modal">
+            <div class="ag-modal-header"><h3 id="cliFormTitle">Nuevo cliente</h3>
+                <button class="ag-modal-close" onclick="cerrarForm()">&times;</button></div>
+            <div class="ag-modal-body">
+                <div class="ag-grid ag-grid-2">
+                    <div class="ag-form-group"><label class="ag-form-label">Tipo de documento</label>
+                        <select class="ag-form-control" id="cfTipo"><option>DNI</option><option>RUC</option><option>CE</option><option>PASAPORTE</option></select></div>
+                    <div class="ag-form-group"><label class="ag-form-label">Documento *</label>
+                        <input class="ag-form-control" id="cfDoc" maxlength="12">
+                        <p class="ag-field-hint" id="cfDocHint">Se valida en vivo con la regla SUNAT.</p></div>
+                </div>
+                <div class="ag-form-group"><label class="ag-form-label">Nombres y apellidos *</label><input class="ag-form-control" id="cfNombre"></div>
+                <div class="ag-grid ag-grid-2" id="cfRucExtra" hidden>
+                    <div class="ag-form-group"><label class="ag-form-label">Razón social *</label><input class="ag-form-control" id="cfRazon"></div>
+                    <div class="ag-form-group"><label class="ag-form-label">Dirección fiscal *</label><input class="ag-form-control" id="cfDireccion"></div>
+                </div>
+                <div class="ag-grid ag-grid-2">
+                    <div class="ag-form-group"><label class="ag-form-label">Celular</label><input class="ag-form-control" id="cfTelefono" maxlength="9" inputmode="numeric"></div>
+                    <div class="ag-form-group"><label class="ag-form-label">Email</label><input class="ag-form-control" id="cfEmail" type="email"></div>
+                </div>
+                <div class="ag-form-group"><label class="ag-form-label">Género</label>
+                    <select class="ag-form-control" id="cfGenero">
+                        <option value="">— No especificado —</option>
+                        <option value="MASCULINO">Masculino</option>
+                        <option value="FEMENINO">Femenino</option>
+                        <option value="OTROS">Otros</option>
+                    </select>
+                    <p class="ag-field-hint">Personaliza la vista del cliente (opcional).</p></div>
+                <p class="ag-field-error" id="cfError" hidden></p>
+            </div>
+            <div class="ag-modal-footer">
+                <button class="ag-btn ag-btn-outline" onclick="cerrarForm()">Cancelar</button>
+                <button class="ag-btn ag-btn-success" id="cfSaveBtn" onclick="guardarCliente()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="themeToggleWrap"></div>
+    <script src="/js/api.js?v=20261006"></script>
+    <script src="/js/animations.js?v=20261005"></script>
+    <script src="/js/ui-kit.js?v=20261005"></script>
+    <script src="/js/confirm-modal.js?v=20261005"></script>
+    <script src="/js/vehiculos.js?v=20261003b"></script>
+    <script src="/js/vehiculo3d.js?v=20261003b"></script>
+    <script>
+        if (!guardPage('clientes')) throw new Error('Acceso denegado');
+        document.getElementById('navbar').innerHTML = renderNavbar('clientes');
+        document.getElementById('themeToggleWrap').innerHTML = renderThemeToggle();
+        initTheme();
+
+        let cliPage = 0, editId = null;
+        const CLI_SIZE = 10;
+        function debounce(fn, ms) { let t = null; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+        async function loadClientes() {
+            const q = document.getElementById('cliFQ').value.trim();
+            const tipo = document.getElementById('cliFTipo').value;
+            const est = document.getElementById('cliFEstado').value;
+            try {
+                let url = `/clientes/buscar?q=${encodeURIComponent(q)}&page=${cliPage}&size=${CLI_SIZE}&sort=nombre,asc`;
+                const p = await apiFetch(url);
+                let items = p.content || [];
+                if (tipo) items = items.filter(c => (c.tipoDocumento || 'DNI') === tipo);
+                if (est !== '') items = items.filter(c => String(!!c.activo) === est);
+                document.getElementById('cliBody').innerHTML = items.map(c => `
+                    <tr>
+                        <td><b>${esc(c.razonSocial && c.tipoDocumento === 'RUC' ? c.razonSocial : c.nombre)}</b><br>
+                            <span class="ag-text-muted ag-text-sm">${esc(c.tipoDocumento || 'DNI')} ${esc(c.documento || '—')}</span></td>
+                        <td class="ag-text-sm">${esc(c.telefono || '—')}<br><span class="ag-text-muted">${esc(c.email || '')}</span></td>
+                        <td>${c.activo ? '<span class="ag-badge ag-badge-success">ACTIVO</span>' : '<span class="ag-badge ag-badge-danger">INACTIVO</span>'}</td>
+                        <td style="white-space:nowrap;">
+                            <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="verDetalle(${c.id})">Ver</button>
+                            <button class="ag-btn ag-btn-outline ag-btn-sm" onclick="abrirClienteModal(${c.id})">Editar</button>
+                            ${c.activo
+                                ? `<button class="ag-btn ag-btn-outline ag-btn-sm" onclick="cambiarActivoCli(${c.id}, false)">Desactivar</button>`
+                                : `<button class="ag-btn ag-btn-success ag-btn-sm" onclick="cambiarActivoCli(${c.id}, true)">Activar</button>`}
+                        </td>
+                    </tr>`).join('') || '<tr><td colspan="4" class="ag-text-center ag-text-muted">Sin resultados. Prueba otro texto o crea al cliente con el botón de arriba.</td></tr>';
+                document.getElementById('cliInfo').textContent = `Página ${p.number + 1} de ${Math.max(1, p.totalPages)} · ${p.totalElements} clientes`;
+                document.getElementById('cliPrev').disabled = p.first;
+                document.getElementById('cliNext').disabled = p.last;
+            } catch (e) { document.getElementById('cliBody').innerHTML = '<tr><td colspan="4" class="ag-text-center ag-text-muted">Error al cargar</td></tr>'; }
+        }
+        function cliGo(d) { cliPage = Math.max(0, cliPage + d); loadClientes(); }
+        function cliBuscar() { cliPage = 0; loadClientes(); }
+        async function exportarClientesCSV() {
+            try {
+                const lista = await apiFetch('/clientes');
+                const filas = [['tipo_doc', 'documento', 'nombre', 'razon_social', 'telefono', 'email', 'activo'],
+                    ...(lista || []).map(c => [c.tipoDocumento, c.documento, c.nombre, c.razonSocial || '', c.telefono || '', c.email || '', c.activo])];
+                const csv = filas.map(r => r.map(x => `"${String(x ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' }));
+                a.download = 'clientes.csv';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+                toast('Clientes exportados', 'success');
+            } catch (e) { toast('No se pudo exportar: ' + e.message, 'danger'); }
+        }
+        document.getElementById('cliFQ').addEventListener('input', debounce(cliBuscar, 300));
+
+        async function verDetalle(id) {
+            try {
+                const d = await apiFetch(`/clientes/${id}/resumen`);
+                document.getElementById('cliDetTitle').textContent = d.nombre;
+                document.getElementById('cliDetBody').innerHTML = `
+                    <div class="ag-grid ag-grid-2 ag-mb-2">
+                        <div><span class="ag-text-muted ag-text-sm">${d.tipoDocumento} ${d.documento || '—'}</span><br>
+                            <b>${d.razonSocial || ''}</b><br>
+                            <span class="ag-text-sm">${d.telefono || '—'} · ${d.email || '—'}<br>${d.direccion || ''}${d.genero ? '<br>' + ({ MASCULINO: 'Masculino', FEMENINO: 'Femenino', OTROS: 'Otros' }[d.genero] || d.genero) : ''}</span><br>
+                            ${d.activo ? '<span class="ag-badge ag-badge-success">ACTIVO</span>' : '<span class="ag-badge ag-badge-danger">INACTIVO</span>'}
+                            <span class="ag-badge ag-badge-info">${d.visitas} visitas</span></div>
+                        <div><div class="ag-section-title">Vehículos (${(d.vehiculos || []).length})</div>
+                            ${(d.vehiculos || []).map(v => (typeof vehMiniHTML === 'function' ? vehMiniHTML(Object.assign({}, v, { genero: d.genero || '' })) : `<div class="sc-meta"><b>${v.placa}</b> · ${[v.marca, v.modelo, v.anio].filter(Boolean).join(' ')}</div>`)).join('') || '<p class="ag-text-muted ag-text-sm">Sin vehículos</p>'}</div>
+                    </div>
+                    <div class="ag-section-title">Historial de recepciones</div>
+                    ${(d.recepciones || []).map(r => `<div class="ag-d-flex ag-justify-between ag-align-center" style="padding:0.3rem 0; border-bottom:1px solid var(--ag-border);">
+                        <span class="ag-text-sm">#${r.id} · ${r.placa} · ${r.problema ? r.problema.slice(0, 40) : ''}</span>${estadoBadge(r.estado)}</div>`).join('') || '<p class="ag-text-muted ag-text-sm">Sin visitas</p>'}
+                    <div class="ag-section-title" style="margin-top:0.8rem;">Comprobantes</div>
+                    ${(d.comprobantes || []).map(c => `<div class="ag-d-flex ag-justify-between ag-align-center" style="padding:0.3rem 0; border-bottom:1px solid var(--ag-border);">
+                        <span class="ag-text-sm">${c.tipo} ${c.folio} · ${formatDate(c.fechaEmision)}</span>
+                        <span><b>${formatCurrency(c.total)}</b> ${c.estado === 'EMITIDO' ? '<span class="ag-badge ag-badge-success">EMITIDO</span>' : '<span class="ag-badge ag-badge-danger">ANULADO</span>'}</span></div>`).join('') || '<p class="ag-text-muted ag-text-sm">Sin comprobantes</p>'}`;
+                document.getElementById('cliDetEditar').onclick = () => { cerrarDetalle(); abrirClienteModal(id); };
+                document.getElementById('cliDetRecep').onclick = () => { window.location.href = `recepcion.html?clienteId=${id}`; };
+                document.getElementById('cliDetalleModal').classList.add('show');
+            } catch (e) { toast('Error: ' + e.message, 'danger'); }
+        }
+        function cerrarDetalle() { document.getElementById('cliDetalleModal').classList.remove('show'); }
+
+        function abrirClienteModal(id) {
+            editId = id || null;
+            document.getElementById('cliFormTitle').textContent = id ? 'Editar cliente' : 'Nuevo cliente';
+            ['cfDoc', 'cfNombre', 'cfRazon', 'cfDireccion', 'cfTelefono', 'cfEmail'].forEach(x => document.getElementById(x).value = '');
+            document.getElementById('cfTipo').value = 'DNI';
+            document.getElementById('cfGenero').value = '';
+            document.getElementById('cfRucExtra').hidden = true;
+            document.getElementById('cfError').hidden = true;
+            cfAutoNombre = cfAutoRazon = cfAutoDir = false;
+            cfSeq++; cfDocConsultado = ''; cfDocOriginal = '';
+            if (id) {
+                apiFetch(`/clientes/${id}`).then(c => {
+                    document.getElementById('cfTipo').value = c.tipoDocumento || 'DNI';
+                    document.getElementById('cfDoc').value = c.documento || '';
+                    cfDocOriginal = c.documento || '';
+                    document.getElementById('cfNombre').value = c.nombre || '';
+                    document.getElementById('cfRazon').value = c.razonSocial || '';
+                    document.getElementById('cfDireccion').value = c.direccion || '';
+                    document.getElementById('cfTelefono').value = c.telefono || '';
+                    document.getElementById('cfEmail').value = c.email || '';
+                    document.getElementById('cfGenero').value = c.genero || '';
+                    document.getElementById('cfRucExtra').hidden = (c.tipoDocumento || 'DNI') !== 'RUC';
+                });
+            }
+            document.getElementById('cliFormModal').classList.add('show');
+        }
+        function cerrarForm() { document.getElementById('cliFormModal').classList.remove('show'); editId = null; cfSeq++; }
+        document.getElementById('cfTipo').addEventListener('change', () => {
+            document.getElementById('cfRucExtra').hidden = document.getElementById('cfTipo').value !== 'RUC';
+            validarCfDoc();
+        });
+        let cfAutoNombre = false, cfAutoRazon = false, cfAutoDir = false;
+        let cfSeq = 0, cfDocConsultado = '', cfDocOriginal = '';
+
+        function limpiarAutocompletadoCliente() {
+            if (cfAutoNombre) { document.getElementById('cfNombre').value = ''; cfAutoNombre = false; }
+            if (cfAutoRazon) { document.getElementById('cfRazon').value = ''; cfAutoRazon = false; }
+            if (cfAutoDir) { document.getElementById('cfDireccion').value = ''; cfAutoDir = false; }
+        }
+
+        ['cfNombre', 'cfRazon', 'cfDireccion'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                if (id === 'cfNombre') cfAutoNombre = false;
+                if (id === 'cfRazon') cfAutoRazon = false;
+                if (id === 'cfDireccion') cfAutoDir = false;
+            });
+        });
+
+        document.getElementById('cfDoc').addEventListener('input', debounce(validarCfDoc, 450));
+        async function validarCfDoc() {
+            const tipo = document.getElementById('cfTipo').value;
+            const num = document.getElementById('cfDoc').value.trim();
+            const hint = document.getElementById('cfDocHint');
+            if (!num) {
+                hint.textContent = 'Se valida en vivo con la regla SUNAT.';
+                hint.style.color = '';
+                limpiarAutocompletadoCliente();
+                cfDocConsultado = '';
+                cfDocOriginal = '';
+                return true;
+            }
+
+            // Si el documento cambió, el nombre anterior ya no corresponde.
+            const clave = tipo + ':' + num;
+            if (clave !== cfDocConsultado) {
+                if (num !== cfDocOriginal) limpiarAutocompletadoCliente();
+                cfDocConsultado = clave;
+            }
+
+            try {
+                const r = await apiFetch(`/documentos/validar?tipo=${tipo}&numero=${encodeURIComponent(num)}`);
+                hint.textContent = (r.valido ? '✔ ' : '✖ ') + r.mensaje;
+                hint.style.color = r.valido ? 'var(--ag-signal-go)' : 'var(--ag-signal-stop)';
+                if (!r.valido) { limpiarAutocompletadoCliente(); return false; }
+
+                // Formato válido: intentar traer nombres de una fuente configurada.
+                const seq = ++cfSeq;
+                hint.textContent = '✔ ' + r.mensaje + ' Consultando nombres...';
+                try {
+                    const d = await apiFetch(`/documentos/consultar?tipo=${tipo}&numero=${encodeURIComponent(num)}`);
+                    if (seq !== cfSeq || document.getElementById('cfDoc').value.trim() !== num) return true;
+                    if (d && d.verificado && (d.nombre || d.razonSocial)) {
+                        const nombre = d.razonSocial || d.nombre;
+                        if (!document.getElementById('cfNombre').value.trim() || cfAutoNombre) {
+                            document.getElementById('cfNombre').value = nombre || '';
+                            cfAutoNombre = !!nombre;
+                        }
+                        if (tipo === 'RUC') {
+                            if (!document.getElementById('cfRazon').value.trim() || cfAutoRazon) {
+                                document.getElementById('cfRazon').value = d.razonSocial || nombre || '';
+                                cfAutoRazon = true;
+                            }
+                            if (!document.getElementById('cfDireccion').value.trim() || cfAutoDir) {
+                                document.getElementById('cfDireccion').value = d.direccion || '';
+                                cfAutoDir = !!d.direccion;
+                            }
+                        }
+                        hint.textContent = '✔ ' + r.mensaje + ' · Datos de ' + (d.fuente || 'fuente externa');
+                    } else {
+                        hint.textContent = '✔ ' + r.mensaje + ' · ' +
+                            (d && d.motivo === 'SIN_FUENTE'
+                                ? 'Sin autocompletado configurado: escribe el nombre.'
+                                : 'No se encontró el nombre: escríbelo manualmente.');
+                    }
+                    hint.style.color = 'var(--ag-signal-go)';
+                } catch (_) {
+                    if (seq === cfSeq) {
+                        hint.textContent = '✔ ' + r.mensaje + ' · No se pudo consultar el nombre; escríbelo manualmente.';
+                        hint.style.color = 'var(--ag-signal-go)';
+                    }
+                }
+                return true;
+            } catch (_) { return true; }
+        }
+        function cfError(msg) {
+            const e = document.getElementById('cfError');
+            if (!msg) { e.hidden = true; return true; }
+            e.textContent = msg; e.hidden = false; return false;
+        }
+        async function guardarCliente() {
+            const body = {
+                tipoDocumento: document.getElementById('cfTipo').value,
+                documento: document.getElementById('cfDoc').value.trim(),
+                nombre: document.getElementById('cfNombre').value.trim(),
+                razonSocial: document.getElementById('cfRazon').value.trim(),
+                direccion: document.getElementById('cfDireccion').value.trim(),
+                telefono: document.getElementById('cfTelefono').value.trim(),
+                email: document.getElementById('cfEmail').value.trim(),
+                genero: document.getElementById('cfGenero').value
+            };
+            if (body.nombre.length < 2) { cfError('El nombre es obligatorio (mínimo 2 letras).'); return; }
+            if (!body.documento) { cfError('El documento es obligatorio en el panel de clientes.'); return; }
+            const btn = document.getElementById('cfSaveBtn');
+            btn.disabled = true;
+            try {
+                if (editId) await apiFetch(`/clientes/${editId}`, { method: 'PUT', body: JSON.stringify(agLimpia(body)) });
+                else await apiFetch('/clientes', { method: 'POST', body: JSON.stringify(agLimpia(body)) });
+                cerrarForm();
+                toast(editId ? 'Cliente actualizado' : 'Cliente creado', 'success');
+                loadClientes();
+            } catch (e) { cfError(e.message); }
+            finally { btn.disabled = false; }
+        }
+        async function cambiarActivoCli(id, activo) {
+            if (!(await confirmarAccion(activo ? '¿Activar a este cliente?' : '¿Desactivar a este cliente? No se borra nada: su historial se conserva.', { tipo: activo ? 'primary' : 'danger' }))) return;
+            try { await apiFetch(`/clientes/${id}/activo`, { method: 'PATCH', body: JSON.stringify({ activo }) }); toast(activo ? 'Cliente activado' : 'Cliente desactivado', 'success'); loadClientes(); }
+            catch (e) { toast('Error: ' + e.message, 'danger'); }
+        }
+        document.getElementById('cliDetalleModal').addEventListener('click', (e) => { if (e.target.id === 'cliDetalleModal') cerrarDetalle(); });
+        document.getElementById('cliFormModal').addEventListener('click', (e) => { if (e.target.id === 'cliFormModal') cerrarForm(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cerrarDetalle(); cerrarForm(); } });
+        loadClientes();
+    </script>
+</body>
+</html>

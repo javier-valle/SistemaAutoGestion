@@ -44,6 +44,19 @@ public class Cliente {
     @Column(nullable = false)
     private Boolean activo = true;
 
+    /**
+     * true = una fuente externa devolvió el nombre. No es una verificación
+     * oficial de identidad. Por defecto false: un cliente creado por el
+     * personal o por registro manual no está verificado.
+     */
+    @Builder.Default
+    @Column(name = "documento_verificado", nullable = false)
+    private Boolean documentoVerificado = false;
+
+    /** Nombre legible de la fuente que devolvió el nombre (NULL si fue declarado). */
+    @Column(name = "fuente_verificacion", length = 120)
+    private String fuenteVerificacion;
+
     @Builder.Default
     @Column(name = "creado_en", nullable = false)
     private java.time.LocalDateTime creadoEn = java.time.LocalDateTime.now();

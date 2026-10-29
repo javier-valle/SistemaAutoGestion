@@ -3,60 +3,428 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estado de mi vehículo — Portal del Cliente</title>
-<meta name="description" content="Estado actual de tu vehículo y orden de trabajo.">
-<link rel="stylesheet" href="../css/styles.css?v=2">
-<link rel="stylesheet" href="../css/redesign.css?v=2">
-<style>
-:root{--bg:#000;--card:#111;--text:#fff;--text-2:#a0a0a0;--border:rgba(255,255,255,.15);--border-strong:rgba(255,255,255,.50);--danger:#ff3b3b;--grad-surface:linear-gradient(135deg,#1a1a1a 0%,#000 100%);--r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:24px;--shadow-xl:0 20px 40px rgba(0,0,0,.6);--font-display:'Space Grotesk',sans-serif;--font-body:'Space Grotesk',sans-serif;--font-mono:'DM Mono',ui-monospace,monospace;}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;padding:var(--sp-5);margin:0;line-height:1.45;}
-.ag-wrap{max-width:960px;margin:0 auto;}
-h1{font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.4rem);font-weight:700;margin-bottom:.25rem;letter-spacing:-.02em;line-height:1.15;}
-.sub{color:var(--text-2);font-size:clamp(.85rem,2vw,1rem);margin-bottom:var(--sp-5);}
-.card{background:var(--grad-surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-5);margin-bottom:var(--sp-3);box-shadow:var(--shadow-xl);}
-.card h2{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:var(--sp-3);letter-spacing:-.01em;}
-.status-badge{display:inline-block;padding:.3rem .7rem;border-radius:var(--r-pill);border:1px solid var(--border);font-family:var(--font-mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin-bottom:var(--sp-3);}
-.timeline{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:var(--sp-3);}
-.timeline .step{flex:1 1 120px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--sp-3);font-size:.85rem;color:var(--text-2);}
-.timeline .step.active{border-color:var(--border-strong);color:var(--text);}
-.links{margin-top:var(--sp-6);font-size:.85rem;color:var(--text-muted);display:flex;gap:var(--sp-4);flex-wrap:wrap;}
-.links a{color:var(--text-2);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s ease;}
-.links a:hover{border-bottom-color:var(--text-2);}
-</style>
+<title>Mi panel — Portal del Cliente</title>
+<meta name="description" content="Resumen de tu cuenta, tus vehículos y el estado de tus órdenes de trabajo.">
+<meta name="theme-color" content="#0a1120">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/css/styles.css?v=3">
+<link rel="stylesheet" href="/css/portal-ui.css?v=3">
+<script src="/js/portal-ui.js?v=3" defer></script>
 </head>
 <body>
-<div class="ag-wrap">
-  <h1>Estado de tu vehículo</h1>
-  <p class="sub">Datos protegidos. Solo información autorizada.</p>
+<main class="ag-wrap" id="contenido">
+  <header class="pd-head">
+    <div>
+      <h1 id="saludo">Hola</h1>
+      <p class="sub" id="subtitulo">Estamos cargando tu información.</p>
+      <div class="pd-id" id="identidad" aria-live="polite"></div>
+    </div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <a class="pu-ghost" href="/portal/ayuda.html">¿Cómo funciona?</a>
+      <a class="pu-ghost" href="/portal/soporte.html">Soporte</a>
+    </div>
+  </header>
 
-  <div class="card" aria-label="Estado de la orden de trabajo">
-    <h2>Orden de trabajo</h2>
-    <span class="status-badge">Estado pendiente</span>
-    <p style="margin-top:.5rem;color:var(--text-2);font-size:.9rem;">No hay orden activa vinculada a esta consulta.</p>
-  </div>
+  <div class="pu-alert" id="alerta" role="status" aria-live="polite"></div>
 
-  <div class="card" aria-label="Estado del vehículo">
-    <h2>Vehículo</h2>
-    <p>Placa: <span style="font-family:var(--font-mono);color:var(--text);">ABC-123</span></p>
-    <p style="color:var(--text-muted);">Último servicio registrado: sin datos.</p>
-  </div>
-
-  <div class="card">
-    <h2>Flujo de estados</h2>
-    <div class="timeline" aria-label="Flujo de estados de la orden de trabajo">
-      <div class="step" aria-label="Pendiente">PENDIENTE</div>
-      <div class="step" aria-label="En proceso">EN PROCESO</div>
-      <div class="step" aria-label="En prueba">EN PRUEBA</div>
-      <div class="step active" aria-label="Finalizada">FINALIZADA</div>
-      <div class="step" aria-label="Cancelada">CANCELADA</div>
+  <div id="cargando" aria-hidden="true">
+    <div class="pu-stats">
+      <div class="pu-stat"><div class="pu-skel pu-skel-line" style="width:40%"></div><div class="pu-skel pu-skel-line" style="width:70%"></div></div>
+      <div class="pu-stat"><div class="pu-skel pu-skel-line" style="width:40%"></div><div class="pu-skel pu-skel-line" style="width:70%"></div></div>
+      <div class="pu-stat"><div class="pu-skel pu-skel-line" style="width:40%"></div><div class="pu-skel pu-skel-line" style="width:70%"></div></div>
+    </div>
+    <div class="pd-grid">
+      <div class="pd-stack">
+        <div class="pd-card"><div class="pu-skel" style="height:120px"></div></div>
+        <div class="pd-card"><div class="pu-skel" style="height:180px"></div></div>
+      </div>
+      <div class="pd-card"><div class="pu-skel" style="height:220px"></div></div>
     </div>
   </div>
 
-  <div class="links">
-    <a href="index.html">Volver a consultar</a>
-    <a href="cotizacion.html">Ver cotización</a>
-    <a href="comprobantes.html">Comprobantes</a>
+  <div id="panel" hidden>
+    <section class="pd-next" id="siguiente" aria-live="polite">
+      <small>¿Qué sigue ahora?</small>
+      <b id="sig-titulo">—</b>
+      <p id="sig-texto"></p>
+    </section>
+
+    <div class="pu-stats" aria-label="Resumen de tu cuenta">
+      <div class="pu-stat"><b id="n-abiertas">–</b><span>Órdenes activas</span></div>
+      <div class="pu-stat"><b id="n-vehiculos">–</b><span>Vehículos</span></div>
+      <div class="pu-stat"><b id="n-ordenes">–</b><span>Órdenes en total</span></div>
+    </div>
+
+    <div class="pd-grid">
+      <div class="pd-stack">
+        <section class="pd-card" aria-labelledby="titulo-ordenes">
+          <h2 id="titulo-ordenes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            Tus órdenes de trabajo
+          </h2>
+          <p class="card-sub" id="ordenes-sub">Solo se muestran las últimas 20.</p>
+          <div id="ordenes" class="pu-grid" aria-live="polite"></div>
+        </section>
+
+        <section class="pd-card" aria-labelledby="titulo-vehiculos">
+          <h2 id="titulo-vehiculos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14l-1.5-5.5A2 2 0 0 0 15.6 10H8.4a2 2 0 0 0-1.9 1.5L5 17z"/><circle cx="7.5" cy="18.5" r="1.5"/><circle cx="16.5" cy="18.5" r="1.5"/><path d="M5 17H3v-4l2-6h14l2 6v4h-2"/></svg>
+            Tus vehículos
+          </h2>
+          <div id="vehiculos" class="pu-grid" aria-live="polite"></div>
+        </section>
+
+        <section class="pd-card" aria-labelledby="titulo-flujo">
+          <h2 id="titulo-flujo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+            En qué paso va tu orden
+          </h2>
+          <div class="timeline" id="timeline" aria-label="Flujo de estados de la orden de trabajo">
+            <div class="step" data-e="PENDIENTE">Pendiente<small>En cola, esperando mecánico</small></div>
+            <div class="step" data-e="EN_PROCESO">En proceso<small>Un mecánico lo está reparando</small></div>
+            <div class="step" data-e="EN_PRUEBA">En prueba<small>Verificando que quedó bien</small></div>
+            <div class="step" data-e="FINALIZADA">Finalizada<small>Listo para recoger</small></div>
+          </div>
+          <p class="pu-time" style="margin:.8rem 0 0">El taller no fija un tiempo exacto: depende del daño y de los repuestos.</p>
+        </section>
+      </div>
+
+      <aside class="pd-stack">
+        <section class="pd-card" id="perfil" aria-labelledby="titulo-perfil">
+          <h2 id="titulo-perfil">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Mis datos
+          </h2>
+          <div class="pu-profile" id="perfil-datos"></div>
+          <p class="pu-time" id="perfil-nota" style="margin:.7rem 0 0"></p>
+          <button type="button" class="pu-btn pu-btn-secondary pu-btn-sm" id="btnEditarContacto" style="margin-top:.8rem;">Actualizar celular o correo</button>
+          <form class="pu-contact-form" id="formContacto" hidden novalidate>
+            <div class="pu-field">
+              <label for="contacto-tel">Celular</label>
+              <input id="contacto-tel" type="tel" inputmode="numeric" maxlength="9" autocomplete="tel" placeholder="912345678">
+            </div>
+            <div class="pu-field">
+              <label for="contacto-email">Correo</label>
+              <input id="contacto-email" type="email" maxlength="150" autocomplete="email" placeholder="tucorreo@ejemplo.com">
+            </div>
+            <p class="pu-status" id="contacto-error" role="alert"></p>
+            <div class="pu-btn-row">
+              <button type="button" class="pu-btn pu-btn-secondary" id="btnCancelarContacto">Cancelar</button>
+              <button type="submit" class="pu-btn" id="btnGuardarContacto">
+                <span class="pu-btn-label">Guardar</span>
+                <span class="pu-spinner" hidden aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="pd-card" aria-labelledby="titulo-acciones">
+          <h2 id="titulo-acciones">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Acciones rápidas
+          </h2>
+          <div class="pu-actions">
+            <a class="pu-action" href="/portal/historial.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 3 3 8 8 8"/><polyline points="12 7 12 12 15 14"/></svg>Historial</a>
+            <a class="pu-action" href="/portal/comprobantes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>Comprobantes</a>
+            <a class="pu-action" href="/portal/cita.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Pedir cita</a>
+            <a class="pu-action" href="/portal/cotizacion.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cotización</a>
+          </div>
+        </section>
+
+        <section class="pd-card" aria-labelledby="titulo-ayuda">
+          <h2 id="titulo-ayuda">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            ¿Necesitas una mano?
+          </h2>
+          <p class="pu-time" style="margin:0 0 .7rem">La guía explica cómo ingresar, qué hacer si tus datos no se autocompletan y cómo cerrar sesión de forma segura.</p>
+          <div class="pu-actions">
+            <a class="pu-action" href="/portal/ayuda.html">Guía de uso</a>
+            <a class="pu-action" href="/portal/soporte.html">Contactar soporte</a>
+          </div>
+        </section>
+      </aside>
+    </div>
   </div>
-</div>
+</main>
+
+<script src="/js/portal-api.js?v=3"></script>
+<script>
+(function () {
+  'use strict';
+  if (!portalGuard()) return;
+  const $ = id => document.getElementById(id);
+  const ORDEN = ['PENDIENTE', 'EN_PROCESO', 'EN_PRUEBA', 'FINALIZADA'];
+  const TEXTO = {
+    PENDIENTE: ['Tu vehículo está en cola', 'Ya ingresó al taller y espera que un mecánico lo tome. No tienes que hacer nada.'],
+    EN_PROCESO: ['Un mecánico está trabajando en tu vehículo', 'Estamos reparándolo. Si el taller necesita tu aprobación para algo extra, te avisará.'],
+    EN_PRUEBA: ['Ya casi: lo estamos probando', 'La reparación terminó y verificamos que todo funcione antes de entregártelo.'],
+    FINALIZADA: ['Tu vehículo está listo', 'Coordina el pago y el recojo con el taller. Luego cuéntanos cómo te fue en Encuesta.'],
+    CANCELADA: ['Esta orden fue cancelada', 'Si no esperabas esto, consulta directamente con el taller.']
+  };
+  const etiqueta = e => String(e || '').replace(/_/g, ' ');
+  let datos = null;
+
+  const fecha = v => {
+    if (!v) return null;
+    if (Array.isArray(v)) return new Date(v[0], v[1] - 1, v[2], v[3] || 0, v[4] || 0);
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  };
+  const fmtFecha = v => {
+    const d = fecha(v);
+    return d ? new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }).format(d) : '—';
+  };
+  const duracion = ms => {
+    const h = Math.max(0, ms) / 36e5;
+    if (h < 1) return 'menos de 1 hora';
+    if (h < 24) { const n = Math.round(h); return n + (n === 1 ? ' hora' : ' horas'); }
+    const d = Math.round(h / 24);
+    return d + (d === 1 ? ' día' : ' días');
+  };
+  const maskDoc = doc => {
+    const s = String(doc || '');
+    if (!s) return '—';
+    return '•'.repeat(Math.max(0, s.length - 3)) + s.slice(-3);
+  };
+  const inicial = nombre => String(nombre || 'AG').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+  const esc = portalEsc;
+
+  function alerta(tipo, titulo, detalle) {
+    const el = $('alerta');
+    el.className = 'pu-alert is-visible is-' + tipo;
+    el.replaceChildren();
+    const b = document.createElement('strong');
+    b.textContent = titulo;
+    el.appendChild(b);
+    if (detalle) {
+      const s = document.createElement('span');
+      s.textContent = detalle;
+      el.appendChild(s);
+    }
+  }
+  function limpiarAlerta() { $('alerta').className = 'pu-alert'; $('alerta').replaceChildren(); }
+
+  function toast(texto, error) {
+    const t = document.createElement('div');
+    t.className = 'pu-toast' + (error ? ' is-error' : '');
+    t.setAttribute('role', 'status');
+    t.textContent = texto;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4200);
+  }
+
+  function pintarIdentidad(d) {
+    $('saludo').textContent = 'Hola, ' + (d.nombre || 'cliente');
+    $('subtitulo').textContent = d.vehiculos && d.vehiculos.length
+      ? 'Este es el estado de tu cuenta y de ' + (d.vehiculos.length === 1 ? 'tu vehículo' : 'tus vehículos') + '.'
+      : 'Este es el estado de tu cuenta. Cuando registres un vehículo, aparecerá aquí.';
+
+    const id = $('identidad');
+    id.replaceChildren();
+    const tipo = document.createElement('span');
+    tipo.className = 'pu-badge no-dot';
+    tipo.textContent = (d.tipoDocumento || 'DOC') + ' ' + maskDoc(d.documento);
+    id.appendChild(tipo);
+
+    const fuente = String(d.fuenteVerificacion || '').trim();
+    const estado = document.createElement('span');
+    if (d.documentoVerificado && fuente) {
+      estado.className = 'pu-badge is-ok';
+      estado.textContent = 'Datos de fuente externa';
+      estado.title = 'Fuente: ' + fuente + '. No es una verificación oficial de identidad.';
+    } else if (d.documentoVerificado) {
+      estado.className = 'pu-badge is-warn';
+      estado.textContent = 'Origen no registrado';
+      estado.title = 'El registro figura como verificado, pero no se guardó la fuente. Consulta con el taller.';
+    } else {
+      estado.className = 'pu-badge is-warn';
+      estado.textContent = 'Datos declarados por ti';
+      estado.title = 'El nombre lo declaraste tú; el taller puede revisarlo al atenderte.';
+    }
+    id.appendChild(estado);
+
+    const desde = document.createElement('span');
+    desde.className = 'pu-badge no-dot';
+    desde.textContent = 'Cliente desde ' + fmtFecha(d.clienteDesde);
+    id.appendChild(desde);
+  }
+
+  function pintarPerfil(d) {
+    const box = $('perfil-datos');
+    box.replaceChildren();
+    const filas = [
+      ['Nombre', d.nombre || '—'],
+      ['Documento', (d.tipoDocumento || '—') + ' ' + maskDoc(d.documento)],
+      ['Celular', d.telefono || 'Sin registrar'],
+      ['Correo', d.email || 'Sin registrar']
+    ];
+    filas.forEach(([k, v]) => {
+      const row = document.createElement('div');
+      row.className = 'pu-profile-row';
+      const a = document.createElement('span'); a.textContent = k;
+      const b = document.createElement('b'); b.textContent = v;
+      row.append(a, b);
+      box.appendChild(row);
+    });
+    const fuente = String(d.fuenteVerificacion || '').trim();
+    $('perfil-nota').textContent = d.documentoVerificado && fuente
+      ? 'Nombre obtenido de: ' + fuente + '. No es una verificación oficial de identidad. El documento y el nombre solo los cambia el taller.'
+      : d.documentoVerificado
+        ? 'El registro figura como verificado, pero no se guardó la fuente. El documento y el nombre solo los cambia el taller.'
+        : 'Datos declarados por ti. El documento y el nombre solo los cambia el taller.';
+  }
+
+  function pintarOrdenes(ots) {
+    const box = $('ordenes');
+    if (!ots.length) {
+      box.innerHTML = '<div style="grid-column:1/-1"><p class="pu-empty-strong">Aún no tienes órdenes de trabajo.</p>' +
+        '<p class="pu-empty">Cuando lleves tu vehículo al taller y recepción lo registre, verás aquí el avance de la reparación.</p>' +
+        '<a class="pu-action" style="max-width:260px;margin-top:.4rem" href="/portal/ayuda.html#llegada">Cómo dejar mi vehículo en el taller</a></div>';
+      return;
+    }
+    box.innerHTML = ots.map(o => {
+      const ini = fecha(o.fechaCreacion), fin = fecha(o.fechaFin);
+      let tiempo = '';
+      if (ini && fin) tiempo = 'Se resolvió en ' + duracion(fin - ini);
+      else if (ini && o.estado !== 'CANCELADA') tiempo = 'Ingresó hace ' + duracion(Date.now() - ini);
+      return '<article class="pu-item">' +
+        '<span class="status-badge" data-e="' + esc(o.estado) + '">' + esc(etiqueta(o.estado)) + '</span>' +
+        '<b>Orden #' + esc(o.id) + ' · ' + esc(o.placa || 'sin placa') + '</b>' +
+        '<small>Creada el ' + esc(fmtFecha(o.fechaCreacion)) + (fin ? ' · cerrada el ' + esc(fmtFecha(o.fechaFin)) : '') + '</small>' +
+        (tiempo ? '<span class="pu-time">' + esc(tiempo) + '</span>' : '') +
+      '</article>';
+    }).join('');
+  }
+
+  function pintarVehiculos(veh) {
+    const box = $('vehiculos');
+    if (!veh.length) {
+      box.innerHTML = '<div style="grid-column:1/-1"><p class="pu-empty-strong">Sin vehículos registrados.</p>' +
+        '<p class="pu-empty">Puedes registrar tu placa al crear la cuenta o pedirle a recepción que la asocie a tu documento.</p></div>';
+      return;
+    }
+    box.innerHTML = veh.map(v => '<article class="pu-item">' +
+      '<span class="pu-plate">' + esc(v.placa || '—') + '</span>' +
+      '<b>' + esc([v.marca, v.modelo].filter(Boolean).join(' ') || 'Vehículo') + '</b>' +
+      '<small>' + esc(v.anio ? 'Año ' + v.anio : 'Año sin registrar') + '</small>' +
+    '</article>').join('');
+  }
+
+  function pintarSiguiente(ots) {
+    if (!ots.length) {
+      $('sig-titulo').textContent = 'Lleva tu vehículo al taller';
+      $('sig-texto').textContent = 'Recepción registrará tu placa y el problema. Apenas exista tu orden, podrás seguirla desde esta pantalla.';
+      return;
+    }
+    const actual = ots[0].estado;
+    const t = TEXTO[actual] || [etiqueta(actual), ''];
+    $('sig-titulo').textContent = t[0];
+    $('sig-texto').textContent = t[1];
+    const idx = ORDEN.indexOf(actual);
+    document.querySelectorAll('#timeline .step').forEach(el => {
+      const i = ORDEN.indexOf(el.dataset.e);
+      el.classList.toggle('active', i === idx);
+      el.classList.toggle('done', idx > -1 && i < idx);
+      el.classList.toggle('bad', actual === 'CANCELADA');
+    });
+  }
+
+  function abrirContacto() {
+    $('contacto-tel').value = datos && datos.telefono ? datos.telefono : '';
+    $('contacto-email').value = datos && datos.email ? datos.email : '';
+    $('contacto-error').textContent = '';
+    $('formContacto').hidden = false;
+    $('btnEditarContacto').hidden = true;
+    $('contacto-tel').focus();
+  }
+  function cerrarContacto() {
+    $('formContacto').hidden = true;
+    $('btnEditarContacto').hidden = false;
+  }
+
+  $('btnEditarContacto').addEventListener('click', abrirContacto);
+  $('btnCancelarContacto').addEventListener('click', cerrarContacto);
+  $('contacto-tel').addEventListener('input', e => {
+    e.target.value = String(e.target.value).replace(/\D/g, '').slice(0, 9);
+  });
+
+  $('formContacto').addEventListener('submit', async e => {
+    e.preventDefault();
+    const tel = $('contacto-tel').value.trim();
+    const email = $('contacto-email').value.trim();
+    const err = $('contacto-error');
+    err.textContent = '';
+    err.className = 'pu-status';
+    if (tel && !/^9\d{8}$/.test(tel)) {
+      err.textContent = 'El celular debe tener 9 dígitos y empezar con 9.';
+      err.className = 'pu-status is-error';
+      return;
+    }
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) {
+      err.textContent = 'El correo no tiene un formato válido.';
+      err.className = 'pu-status is-error';
+      return;
+    }
+    const btn = $('btnGuardarContacto');
+    btn.disabled = true;
+    btn.classList.add('is-loading');
+    btn.querySelector('.pu-spinner').hidden = false;
+    try {
+      datos = await portalFetch('/portal/me/contacto', {
+        method: 'PATCH',
+        body: JSON.stringify({ telefono: tel, email })
+      });
+      pintarPerfil(datos);
+      cerrarContacto();
+      toast('Datos de contacto actualizados.');
+    } catch (ex) {
+      err.textContent = (ex && (ex.detalle || ex.message)) || 'No pudimos guardar los cambios.';
+      err.className = 'pu-status is-error';
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('is-loading');
+      btn.querySelector('.pu-spinner').hidden = true;
+    }
+  });
+
+  async function cargar() {
+    limpiarAlerta();
+    $('cargando').hidden = false;
+    $('panel').hidden = true;
+    try {
+      const d = await portalFetch('/portal/me');
+      datos = d;
+      const veh = d.vehiculos || [];
+      const ots = d.ordenes || [];
+      pintarIdentidad(d);
+      pintarPerfil(d);
+      pintarVehiculos(veh);
+      pintarOrdenes(ots);
+      pintarSiguiente(ots);
+      $('n-vehiculos').textContent = veh.length;
+      $('n-ordenes').textContent = ots.length;
+      $('n-abiertas').textContent = ots.filter(o => o.estado === 'PENDIENTE' || o.estado === 'EN_PROCESO' || o.estado === 'EN_PRUEBA').length;
+      $('ordenes-sub').textContent = ots.length ? 'Últimas ' + ots.length + ' órdenes registradas.' : 'Aquí verás el avance de cada reparación.';
+      $('cargando').hidden = true;
+      $('panel').hidden = false;
+    } catch (e) {
+      $('cargando').hidden = true;
+      $('panel').hidden = true;
+      if (e && e.status === 401) return;
+      alerta('error', 'No pudimos cargar tu información', 'Recarga la página o vuelve a ingresar. Si el problema continúa, contacta a soporte.');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'pu-btn pu-btn-secondary pu-btn-sm';
+      btn.style.marginTop = '.6rem';
+      btn.textContent = 'Reintentar';
+      btn.addEventListener('click', cargar);
+      $('alerta').appendChild(btn);
+    }
+  }
+
+  cargar();
+})();
+</script>
 </body>
 </html>

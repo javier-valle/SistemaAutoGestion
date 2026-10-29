@@ -4,20 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mis comprobantes — Portal del Cliente</title>
-<link rel="stylesheet" href="../css/styles.css?v=2">
-<style>
-:root{--bg:#000;--text:#fff;--text-2:#a0a0a0;--border:rgba(255,255,255,.15);--grad-surface:linear-gradient(135deg,#1a1a1a 0%,#000 100%);--r-lg:16px;--shadow-xl:0 20px 40px rgba(0,0,0,.6);--font-display:'Space Grotesk',sans-serif;--font-body:'Space Grotesk',sans-serif;--font-mono:'DM Mono',ui-monospace,monospace;--sp-1:.5rem;--sp-2:.75rem;--sp-3:1rem;--sp-4:1.5rem;--sp-5:2rem;}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;padding:var(--sp-5);margin:0;}
-.ag-wrap{max-width:900px;margin:0 auto;}
-h1{font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.2rem);font-weight:700;margin-bottom:var(--sp-3);letter-spacing:-.02em;}
-.card{background:var(--grad-surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-5);margin-bottom:var(--sp-4);box-shadow:var(--shadow-xl);}
-.card h2{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:var(--sp-3);}
-</style>
+<meta name="description" content="Boletas y facturas de tus servicios.">
+<meta name="theme-color" content="#0a1120">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/css/styles.css?v=3">
+<link rel="stylesheet" href="/css/portal-ui.css?v=3">
+<script src="/js/portal-ui.js?v=3" defer></script>
 </head>
 <body>
-<div class="ag-wrap">
-  <h1>Mis comprobantes</h1>
-  <div class="card"><h2>Boletas y facturas</h2><p>Sin comprobantes registrados. Solo visibles con modo B.</p></div>
-</div>
+<main class="ag-wrap" id="contenido">
+  <header class="ph-hero">
+    <h1>Mis comprobantes</h1>
+    <p class="sub">Boletas y facturas emitidas por el taller.</p>
+  </header>
+
+  <section class="pd-card" aria-labelledby="comp-titulo">
+    <h2 id="comp-titulo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>
+      Descarga en línea
+    </h2>
+    <p class="pu-empty-strong">La consulta de comprobantes en el portal aún no está habilitada.</p>
+    <p class="pu-empty">Tu boleta o factura se entrega al registrar el pago en el taller. Si necesitas una copia, acércate a recepción con tu placa o el número de comprobante.</p>
+    <p class="pu-note" style="margin-top:1rem;">No inventamos comprobantes ni montos: en esta pantalla solo aparecerán documentos emitidos a tu nombre cuando el taller habilite la descarga.</p>
+    <div class="pu-btn-row" style="max-width:420px;margin-top:1rem;">
+      <a class="pu-btn pu-btn-secondary" href="/portal/estado.html">Volver al panel</a>
+      <a class="pu-btn" href="/portal/soporte.html">Pedir una copia</a>
+    </div>
+  </section>
+</main>
+<script src="/js/portal-api.js?v=3"></script>
+<script>portalGuard();</script>
 </body>
 </html>

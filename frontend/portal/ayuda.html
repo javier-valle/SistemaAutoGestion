@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de uso — Portal del Cliente</title>
+<meta name="description" content="Cómo ingresar, registrarte, seguir tu orden, validar tu DNI y resolver los problemas más comunes del portal.">
+<meta name="theme-color" content="#0a1120">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/css/styles.css?v=3">
+<link rel="stylesheet" href="/css/portal-ui.css?v=3">
+<script src="/js/portal-api.js?v=3" defer></script>
+<script src="/js/portal-ui.js?v=3" defer></script>
+</head>
+<body>
+<main class="ag-wrap">
+  <header class="ph-hero">
+    <h1>Guía de uso del portal</h1>
+    <p class="sub">Todo lo que necesitas para entrar, seguir tu reparación y mantener tus datos al día. Sin tecnicismos.</p>
+  </header>
+
+  <nav aria-label="Contenido de la guía">
+    <ul class="ph-toc">
+      <li><a href="#ingresar">Cómo iniciar sesión</a></li>
+      <li><a href="#cuenta">Cómo crear tu cuenta</a></li>
+      <li><a href="#panel">Cómo usar tu panel</a></li>
+      <li><a href="#datos">Completar o actualizar tus datos</a></li>
+      <li><a href="#dni">Ingresar y validar el DNI</a></li>
+      <li><a href="#sin-autocompletar">Si no se autocompletan tus datos</a></li>
+      <li><a href="#errores">Errores comunes</a></li>
+      <li><a href="#soporte">Contactar con soporte</a></li>
+      <li><a href="#salir">Cerrar sesión con seguridad</a></li>
+    </ul>
+  </nav>
+
+  <section class="pd-card ph-section" id="ingresar">
+    <h2><span class="n" aria-hidden="true">1</span> Cómo iniciar sesión</h2>
+    <p>Para entrar necesitas <strong>tu documento y la placa</strong> de un vehículo registrado <em>a tu nombre</em>. Escribe tu DNI (8 dígitos) o RUC (11), la placa y acepta las políticas. Si la placa pertenece a otra persona, el sistema no mostrará la orden.</p>
+    <p>La sesión dura <strong>30 minutos</strong> y se borra al cerrar la pestaña.</p>
+    <div class="ph-callout"><strong>Importante:</strong> si no recuerdas la placa, comunícate con el taller. No intentes adivinar documentos o placas de otras personas: el acceso queda registrado y puede bloquearse.</div>
+  </section>
+
+  <section class="pd-card ph-section" id="cuenta">
+    <h2><span class="n" aria-hidden="true">2</span> Cómo crear tu cuenta</h2>
+    <ol>
+      <li>Abre la pestaña <strong>Crear cuenta</strong>.</li>
+      <li>Elige el tipo de documento y escríbelo. Con DNI de 8 dígitos (o RUC de 11) el portal intenta traer tus datos automáticamente.</li>
+      <li>Revisa los datos encontrados. Si la fuente no responde, escribe tus nombres y apellidos tal como figuran en tu documento.</li>
+      <li>Agrega tu celular (obligatorio) y, si quieres, tu correo y la placa de tu vehículo.</li>
+      <li>Acepta las políticas y pulsa <strong>Crear mi cuenta</strong>.</li>
+    </ol>
+    <p>Un documento solo puede tener una cuenta. Si ya existe, ingresa con la pestaña <strong>Documento + placa</strong> o comunícate con el taller.</p>
+  </section>
+
+  <section class="pd-card ph-section" id="panel">
+    <h2><span class="n" aria-hidden="true">3</span> Cómo usar tu panel</h2>
+    <p>Al entrar verás tu nombre, el documento protegido y tu estado de cuenta. El panel se organiza así:</p>
+    <ul>
+      <li><strong>¿Qué sigue ahora?</strong> explica en una frase el paso actual de tu última orden.</li>
+      <li><strong>Órdenes de trabajo:</strong> muestra el estado (Pendiente, En proceso, En prueba, Finalizada o Cancelada) y las fechas.</li>
+      <li><strong>Tus vehículos:</strong> placas, marca, modelo y año registrados a tu nombre.</li>
+      <li><strong>Mis datos:</strong> documento, celular y correo. Puedes actualizar el celular y el correo; el nombre y el documento los cambia el taller.</li>
+      <li><strong>Acciones rápidas:</strong> historial, comprobantes, citas y cotización.</li>
+    </ul>
+    <p>Las secciones que todavía no tienen datos muestran un estado vacío explicativo; no verás cifras inventadas.</p>
+    <h3 id="cotizacion">¿Cómo se crea una cotización?</h3>
+    <p>La cotización con precios la prepara el taller; el cliente no inventa montos desde el portal. El flujo real es:</p>
+    <ol>
+      <li>Entra a <a href="/portal/cotizacion.html">Cotizaciones</a>, elige uno de tus vehículos y describe el problema. Eso crea una <strong>solicitud</strong> (no un cobro).</li>
+      <li>El taller revisa la solicitud y coordina la recepción del vehículo. Verás la solicitud como <strong>En revisión</strong>.</li>
+      <li>Un mecánico hace el diagnóstico y el taller arma la cotización con los servicios y repuestos necesarios.</li>
+      <li>Cuando la cotización esté lista, aparece en la misma página con su detalle y total. Ahí decides si la apruebas o la rechazas.</li>
+    </ol>
+    <p>Si el taller no puede atender tu solicitud, la verás como <strong>Rechazada</strong> con una respuesta. También puedes consultar el avance en tu panel o contactar a soporte. Si tu cuenta no tiene vehículos, pide en recepción que asocien tu placa a tu documento.</p>
+  </section>
+
+  <section class="pd-card ph-section" id="datos">
+    <h2><span class="n" aria-hidden="true">4</span> Completar o actualizar tus datos personales</h2>
+    <p>En <strong>Mis datos</strong> puedes pulsar <strong>Actualizar celular o correo</strong>. Los cambios se guardan al instante y se usan para contactarte.</p>
+    <ul>
+      <li>Celular: 9 dígitos, debe empezar con 9.</li>
+      <li>Correo: formato <code>nombre@dominio.com</code> (opcional).</li>
+      <li>Nombre y documento: no se editan desde el portal. Si están mal, contacta al taller con una foto de tu documento; se corrigen en recepción.</li>
+      <li>Vehículos: los asocia recepción al registrar la recepción del auto.</li>
+    </ul>
+  </section>
+
+  <section class="pd-card ph-section" id="dni">
+    <h2><span class="n" aria-hidden="true">5</span> Ingresar y validar el DNI</h2>
+    <p>Hay tres cosas distintas y conviene no confundirlas:</p>
+    <ul>
+      <li><strong>Formato válido:</strong> el DNI tiene 8 dígitos. El portal revisa esto en tu navegador y en el servidor.</li>
+      <li><strong>Documento existente:</strong> el número puede existir aunque no haya una fuente pública que devuelva el nombre.</li>
+      <li><strong>Identidad verificada:</strong> demostrar que eres esa persona requiere un trámite oficial (por ejemplo, verificación presencial o biométrica). El autocompletado <em>no</em> hace eso.</li>
+    </ul>
+    <p>Cuando escribes 8 dígitos, el portal consulta la fuente configurada por el taller. Si responde, muestra los nombres y apellidos encontrados y su origen. Mientras el DNI esté incompleto no se hace ninguna consulta.</p>
+    <div class="ph-callout is-info"><strong>Sin datos de ejemplo:</strong> el portal nunca rellena nombres inventados ni reutiliza el nombre de otra persona. Si no hay fuente, el registro continúa en modo manual y queda marcado como <em>datos declarados</em>.</div>
+  </section>
+
+  <section class="pd-card ph-section" id="sin-autocompletar">
+    <h2><span class="n" aria-hidden="true">6</span> Si los datos no se completan automáticamente</h2>
+    <p>El portal intenta primero con el <strong>padrón público de SUNAT</strong>, si el taller lo cargó; luego con una <strong>API de consulta configurada por el taller</strong> (por ejemplo, el plan gratuito de Scrall) y, si existe, con un <strong>proveedor autorizado de RENIEC</strong>. RENIEC no ofrece una consulta pública gratuita: su servicio requiere convenio y pago por consulta. SUNAT solo puede resolver a personas que tengan RUC 10, así que no todos los DNI se completan.</p>
+    <p>No usamos webs no oficiales que prohíben las consultas automatizadas ni enviamos tu DNI a sitios sin autorización.</p>
+    <ol>
+      <li>Verifica que el DNI tenga exactamente 8 dígitos y que el tipo de documento sea DNI.</li>
+      <li>Espera unos segundos: puede haber un límite temporal de consultas por seguridad.</li>
+      <li>Si aparece el aviso, elige <strong>Continuar sin autocompletar</strong> y escribe tus nombres y apellidos tal como figuran en tu documento.</li>
+      <li>El registro se crea igual. En tu panel verás la etiqueta <strong>Datos declarados por ti</strong>.</li>
+    </ol>
+    <p>El taller puede revisar tu documento en la primera visita. Eso no bloquea tu acceso al portal.</p>
+  </section>
+
+  <section class="pd-card ph-section" id="errores">
+    <h2><span class="n" aria-hidden="true">7</span> Errores comunes</h2>
+    <div class="ph-faq">
+      <details>
+        <summary>«No encontramos coincidencia con los datos ingresados»</summary>
+        <div class="faq-body">Revisa que la placa sea de un vehículo registrado a tu nombre y que el documento coincida. Si el auto lo registró otra persona, pide en recepción que lo asocien a tu documento.</div>
+      </details>
+      <details>
+        <summary>«Demasiadas consultas» o «Demasiados intentos»</summary>
+        <div class="faq-body">El portal limita los intentos para proteger tu cuenta y evitar que alguien enumere documentos. Espera unos minutos y vuelve a intentar. Si persiste, contacta a soporte.</div>
+      </details>
+      <details>
+        <summary>Mi sesión se cerró sola</summary>
+        <div class="faq-body">La sesión dura 30 minutos y se guarda solo en la pestaña. Si cierras la pestaña o el navegador, deberás ingresar otra vez. Es una medida de seguridad.</div>
+      </details>
+      <details>
+        <summary>Veo una orden o un vehículo que no es mío</summary>
+        <div class="faq-body">No modifiques nada: escribe a soporte con la placa y el número de orden, sin adjuntar contraseñas ni códigos. El taller revisará la asociación.</div>
+      </details>
+      <details>
+        <summary>El panel no carga y aparece un error</summary>
+        <div class="faq-body">Pulsa <strong>Reintentar</strong>. Si continúa, cierra sesión, vuelve a entrar y, si es necesario, contacta a soporte indicando la hora y la pantalla donde ocurrió.</div>
+      </details>
+      <details>
+        <summary>¿El autocompletado confirma mi identidad?</summary>
+        <div class="faq-body">No. Solo indica que una fuente externa devolvió un nombre para ese documento. La verificación oficial de identidad es un trámite aparte y no se realiza en el portal.</div>
+      </details>
+      <details>
+        <summary>¿Puedo cambiar mi DNI o mi nombre desde el portal?</summary>
+        <div class="faq-body">No. Son datos que identifican la cuenta. Solicita la corrección en el taller con tu documento original.</div>
+      </details>
+    </div>
+  </section>
+
+  <section class="pd-card ph-section" id="soporte">
+    <h2><span class="n" aria-hidden="true">8</span> Contactar con soporte</h2>
+    <p>El <a href="/portal/soporte.html">centro de soporte</a> muestra los canales que el taller tiene configurados (correo, teléfono o WhatsApp). Si un canal no aparece, es porque aún no se configuró.</p>
+    <p>Para que te ayuden más rápido, incluye:</p>
+    <ul>
+      <li>Qué querías hacer y qué mensaje apareció.</li>
+      <li>La placa o el número de orden, si el problema está relacionado con un vehículo.</li>
+      <li>La hora aproximada y el navegador que usas.</li>
+    </ul>
+    <div class="ph-callout"><strong>Nunca envíes</strong> tu contraseña, códigos de acceso, número completo de tarjeta ni una foto completa de tu documento. Con la placa y el número de orden basta para ubicar el caso.</div>
+  </section>
+
+  <section class="pd-card ph-section" id="salir">
+    <h2><span class="n" aria-hidden="true">9</span> Cerrar sesión con seguridad</h2>
+    <p>Abre el menú de tu cuenta (arriba a la derecha) y elige <strong>Cerrar sesión</strong>. Confirma la acción. El token se borra del navegador y volverás a la pantalla de acceso.</p>
+    <p>Si usas una computadora compartida, cierra también la pestaña y el navegador. No guardes tu código de acceso en notas ni lo compartas por mensaje.</p>
+  </section>
+
+  <div class="pu-btn-row" style="max-width:440px;margin:1.2rem auto 0;">
+    <a class="pu-btn pu-btn-secondary" href="/">Volver al acceso</a>
+    <a class="pu-btn" href="/portal/soporte.html">Ir a soporte</a>
+  </div>
+
+  <footer class="links">
+    <a href="/portal/politicas.html">Políticas de privacidad</a>
+    <a href="/portal/estado.html">Mi panel</a>
+    <a href="/portal/soporte.html">Soporte</a>
+    <a href="/admin/" rel="nofollow">Acceso del personal</a>
+  </footer>
+</main>
+</body>
+</html>

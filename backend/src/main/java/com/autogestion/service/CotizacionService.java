@@ -310,6 +310,37 @@ public class CotizacionService {
         return cotizaciones.stream().map(this::toResponseDTO).collect(Collectors.toList());
     }
 
+    /** Lista solo las cotizaciones del cliente autenticado (el id sale del token). */
+    @Transactional(readOnly = true)
+    public List<CotizacionResponseDTO> listarPorCliente(Long clienteId) {
+        if (clienteId == null) return List.of();
+        return cotizacionRepository.findByClienteId(clienteId).stream()
+                .map(this::toResponseDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CotizacionResponseDTO obtenerDeCliente(Long clienteId, Long id) {
+        Cotizacion cotizacion = cotizacionRepository.findByIdAndClienteId(id, clienteId)
+                .orElseThrow(() -> new BusinessException("Cotización no encontrada", org.springframework.http.HttpStatus.NOT_FOUND));
+        return toResponseDTO(cotizacion);
+    }
+
+    /** El cliente aprueba su propia cotización; la recepción pasa a COTIZADA como en el panel del taller. */
+    @Transactional
+    public CotizacionResponseDTO aprobarDeCliente(Long clienteId, Long id) {
+        Cotizacion cotizacion = cotizacionRepository.findByIdAndClienteId(id, clienteId)
+                .orElseThrow(() -> new BusinessException("Cotización no encontrada", org.springframework.http.HttpStatus.NOT_FOUND));
+        return aprobar(cotizacion.getId());
+    }
+
+    @Transactional
+    public CotizacionResponseDTO rechazarDeCliente(Long clienteId, Long id) {
+        Cotizacion cotizacion = cotizacionRepository.findByIdAndClienteId(id, clienteId)
+                .orElseThrow(() -> new BusinessException("Cotización no encontrada", org.springframework.http.HttpStatus.NOT_FOUND));
+        return rechazar(cotizacion.getId());
+    }
+
     @Transactional(readOnly = true)
     public List<CotizacionResponseDTO.CotizacionServicioDTO> listarServicios(Long cotizacionId) {
         return cotizacionServicioRepository.findByCotizacionId(cotizacionId).stream()
