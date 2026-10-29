@@ -71,16 +71,14 @@ public class ResolutorAdquirente {
             return new AdquirenteResuelto(null, "SIN_DOC", "-", "CLIENTES VARIOS", null);
         }
         TipoDocumento td = TipoDocumento.desde(tipoDoc);
-        if (td != null && DocumentoValidator.valido(td, numDoc)) {
-
-        } else if (DocumentoValidator.rucValido(numDoc)) {
-
-
-            td = TipoDocumento.RUC;
-        } else {
-            TipoDocumento inferido = inferirTipoDocumento(numDoc, cliente);
-            if (inferido != null && DocumentoValidator.valido(inferido, numDoc)) {
-                td = inferido;
+        if (td == null || !DocumentoValidator.valido(td, numDoc)) {
+            if (DocumentoValidator.rucValido(numDoc)) {
+                td = TipoDocumento.RUC;
+            } else {
+                TipoDocumento inferido = inferirTipoDocumento(numDoc, cliente);
+                if (inferido != null && DocumentoValidator.valido(inferido, numDoc)) {
+                    td = inferido;
+                }
             }
         }
         if (td == null || !DocumentoValidator.valido(td, numDoc)) {

@@ -5,7 +5,6 @@ import com.autogestion.dto.MovimientoResponseDTO;
 import com.autogestion.dto.ReporteDTOs;
 import com.autogestion.entity.EstadoComprobante;
 import com.autogestion.entity.EstadoOT;
-import com.autogestion.entity.TipoMovimiento;
 import com.autogestion.entity.CategoriaGasto;
 import com.autogestion.entity.OrdenTrabajo;
 import com.autogestion.entity.TipoMovimiento;
