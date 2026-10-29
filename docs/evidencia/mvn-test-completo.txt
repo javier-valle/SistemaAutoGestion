@@ -1,0 +1,190 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------< com.autogestion:autogestion-backend >-----------------
+[INFO] Building AutoGestion Backend 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ autogestion-backend ---
+[INFO] Copying 2 resources from src/main/resources to target/classes
+[INFO] Copying 10 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ autogestion-backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 187 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ autogestion-backend ---
+[INFO] skip non existing resourceDirectory /app/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ autogestion-backend ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 24 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ autogestion-backend ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.autogestion.ComprobanteListadoTest
+Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+13:30:55.808 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.autogestion.ComprobanteListadoTest]: ComprobanteListadoTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+13:30:56.996 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.autogestion.AutogestionApplication for test class com.autogestion.ComprobanteListadoTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.5)
+
+2026-10-29 13:31:00.896 INFO  [main] c.autogestion.ComprobanteListadoTest - Starting ComprobanteListadoTest using Java 21.0.12.1 with PID 178 (started by root in /app)
+2026-10-29 13:31:00.901 INFO  [main] c.autogestion.ComprobanteListadoTest - No active profile set, falling back to 1 default profile: "default"
+2026-10-29 13:31:12.010 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-10-29 13:31:14.066 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 1998 ms. Found 25 JPA repository interfaces.
+2026-10-29 13:31:17.794 INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-10-29 13:31:19.330 INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:autogestion user=SA
+2026-10-29 13:31:19.347 INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-10-29 13:31:19.605 INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:h2:mem:autogestion (H2 2.2)
+2026-10-29 13:31:19.637 WARN  [main] o.f.c.i.database.base.Database - Flyway upgrade recommended: H2 2.2.224 is newer than this version of Flyway and support has not been tested. The latest supported version of H2 is 2.2.220.
+2026-10-29 13:31:19.986 INFO  [main] o.f.c.i.s.JdbcTableSchemaHistory - Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+2026-10-29 13:31:20.001 INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 9 migrations (execution time 00:00.298s)
+2026-10-29 13:31:20.043 INFO  [main] o.f.c.i.s.JdbcTableSchemaHistory - Creating Schema History table "PUBLIC"."flyway_schema_history" ...
+2026-10-29 13:31:20.187 INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "PUBLIC": << Empty Schema >>
+2026-10-29 13:31:20.263 INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "PUBLIC" to version "1 - esquema inicial"
+2026-10-29 13:31:20.420 INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "PUBLIC" to version "2 - fiscal comprobantes equipo taller"
+2026-10-29 13:31:20.695 INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "PUBLIC" to version "3 - cotizacion estado check unificado"
+2026-10-29 13:31:20.729 INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "PUBLIC" to version "4 - cliente genero"
+2026-10-29 13:31:20.779 INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "PUBLIC" to version "5 - portal cliente"
+2026-10-29 13:31:20.813 INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "PUBLIC" to version "6 - padron ruc documento verificado"
+2026-10-29 13:31:20.875 INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "PUBLIC" to version "7 - cliente fuente verificacion"
+2026-10-29 13:31:20.958 INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "PUBLIC" to version "8 - normalizar documento verificado"
+2026-10-29 13:31:21.032 INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "PUBLIC" to version "9 - solicitud cotizacion cliente"
+2026-10-29 13:31:21.047 INFO  [main] o.f.core.internal.command.DbMigrate - Successfully applied 9 migrations to schema "PUBLIC", now at version v9 (execution time 00:00.351s)
+2026-10-29 13:31:22.047 INFO  [main] o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-10-29 13:31:22.663 INFO  [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 6.5.3.Final
+2026-10-29 13:31:22.974 INFO  [main] o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-10-29 13:31:25.680 INFO  [main] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-10-29 13:31:35.206 INFO  [main] o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-10-29 13:31:35.229 INFO  [main] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-10-29 13:31:36.891 INFO  [main] o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-10-29 13:31:41.233 INFO  [main] c.a.provider.DniPeruProvider - Proveedor DNI dniperu.com habilitado (fuente gratuita)
+2026-10-29 13:31:41.388 INFO  [main] c.a.provider.OpenRucProvider - Proveedor RUC openruc.com habilitado (fuente gratuita)
+2026-10-29 13:31:41.423 INFO  [main] c.a.provider.ScrallDniProvider - Proveedor DNI Scrall deshabilitado: falta SCRALL_API_KEY
+2026-10-29 13:31:43.004 WARN  [main] o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 487422b7-413a-4aaa-8814-85eb9de1341a
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-10-29 13:31:43.070 INFO  [main] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-10-29 13:31:45.186 INFO  [main] c.autogestion.ComprobanteListadoTest - Started ComprobanteListadoTest in 46.924 seconds (process running for 55.964)
+2026-10-29 13:31:46.102 INFO  [main] c.autogestion.config.DataInitializer - Admin de arranque creado (admin@sanmartin.pe)
+2026-10-29 13:31:46.245 INFO  [main] c.autogestion.config.DataInitializer - Insertando datos semilla de demostración...
+2026-10-29 13:31:46.630 INFO  [main] c.autogestion.config.DataInitializer - ✅ Datos semilla insertados correctamente
+2026-10-29 13:31:46.632 INFO  [main] c.autogestion.config.DataInitializer -    Clientes: 5 (3 DNI + 2 RUC) | Vehículos: 4
+2026-10-29 13:31:46.633 INFO  [main] c.autogestion.config.DataInitializer -    Servicios: 8 | Productos: 12
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (/root/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.19/byte-buddy-agent-1.14.19.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 54.44 s -- in com.autogestion.ComprobanteListadoTest
+[INFO] Running com.autogestion.PortalContextTest
+2026-10-29 13:31:49.165 INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autogestion.PortalContextTest]: PortalContextTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-29 13:31:49.172 INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autogestion.AutogestionApplication for test class com.autogestion.PortalContextTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s -- in com.autogestion.PortalContextTest
+[INFO] Running com.autogestion.provider.DniPeruProviderTest
+2026-10-29 13:31:49.241 INFO  [main] c.a.provider.DniPeruProvider - Proveedor DNI dniperu.com habilitado (fuente gratuita)
+2026-10-29 13:31:49.453 INFO  [main] c.a.provider.DniPeruProvider - Proveedor DNI dniperu.com habilitado (fuente gratuita)
+2026-10-29 13:31:49.508 WARN  [main] c.a.provider.DniPeruProvider - dniperu respondió sin nombres reconocibles para 000****
+2026-10-29 13:31:49.518 INFO  [main] c.a.provider.DniPeruProvider - Proveedor DNI dniperu.com habilitado (fuente gratuita)
+2026-10-29 13:31:49.527 INFO  [main] c.a.provider.DniPeruProvider - Proveedor DNI dniperu.com habilitado (fuente gratuita)
+2026-10-29 13:31:49.592 INFO  [main] c.a.provider.DniPeruProvider - Proveedor DNI dniperu.com habilitado (fuente gratuita)
+2026-10-29 13:31:49.736 INFO  [main] c.a.provider.DniPeruProvider - Proveedor DNI dniperu.com deshabilitado
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.542 s -- in com.autogestion.provider.DniPeruProviderTest
+[INFO] Running com.autogestion.provider.OpenRucProviderTest
+2026-10-29 13:31:49.760 INFO  [main] c.a.provider.OpenRucProvider - Proveedor RUC openruc.com deshabilitado
+2026-10-29 13:31:49.771 INFO  [main] c.a.provider.OpenRucProvider - Proveedor RUC openruc.com habilitado (fuente gratuita)
+2026-10-29 13:31:49.781 INFO  [main] c.a.provider.OpenRucProvider - Proveedor RUC openruc.com habilitado (fuente gratuita)
+2026-10-29 13:31:50.107 INFO  [main] c.a.provider.OpenRucProvider - Proveedor RUC openruc.com habilitado (fuente gratuita)
+2026-10-29 13:31:50.180 INFO  [main] c.a.provider.OpenRucProvider - Proveedor RUC openruc.com habilitado (fuente gratuita)
+2026-10-29 13:31:50.196 INFO  [main] c.a.provider.OpenRucProvider - Proveedor RUC openruc.com habilitado (fuente gratuita)
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.466 s -- in com.autogestion.provider.OpenRucProviderTest
+[INFO] Running com.autogestion.provider.ScrallDniProviderTest
+2026-10-29 13:31:50.219 INFO  [main] c.a.provider.ScrallDniProvider - Proveedor DNI Scrall deshabilitado: falta SCRALL_API_KEY
+2026-10-29 13:31:50.231 INFO  [main] c.a.provider.ScrallDniProvider - Proveedor DNI Scrall habilitado (plan API Básico)
+2026-10-29 13:31:50.243 INFO  [main] c.a.provider.ScrallDniProvider - Proveedor DNI Scrall habilitado (plan API Básico)
+2026-10-29 13:31:50.388 INFO  [main] c.a.provider.ScrallDniProvider - Proveedor DNI Scrall habilitado (plan API Básico)
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.191 s -- in com.autogestion.provider.ScrallDniProviderTest
+[INFO] Running com.autogestion.provider.SunatDniProviderTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.693 s -- in com.autogestion.provider.SunatDniProviderTest
+[INFO] Running com.autogestion.ReporteControllerSecurityTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s -- in com.autogestion.ReporteControllerSecurityTest
+[INFO] Running com.autogestion.ReporteFlujoIT
+2026-10-29 13:31:52.171 INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autogestion.ReporteFlujoIT]: ReporteFlujoIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-29 13:31:52.200 INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autogestion.AutogestionApplication for test class com.autogestion.ReporteFlujoIT
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.950 s -- in com.autogestion.ReporteFlujoIT
+[INFO] Running com.autogestion.SchemaSmokeTest
+2026-10-29 13:31:53.110 INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autogestion.SchemaSmokeTest]: SchemaSmokeTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-29 13:31:53.128 INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autogestion.AutogestionApplication for test class com.autogestion.SchemaSmokeTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.095 s -- in com.autogestion.SchemaSmokeTest
+[INFO] Running com.autogestion.service.ClienteServiceTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.122 s -- in com.autogestion.service.ClienteServiceTest
+[INFO] Running com.autogestion.service.ConsultaDocumentoRateLimitTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.186 s -- in com.autogestion.service.ConsultaDocumentoRateLimitTest
+[INFO] Running com.autogestion.service.ConsultaDocumentoServiceTest
+2026-10-29 13:31:54.548 INFO  [main] c.a.service.ConsultaDocumentoService - Documento 201**** resuelto por Stub
+2026-10-29 13:31:54.553 INFO  [main] c.a.service.ConsultaDocumentoService - Documento 201**** sin datos (NO_ENCONTRADO); el usuario deberá declararlos
+2026-10-29 13:31:54.561 WARN  [main] c.a.service.ConsultaDocumentoService - Proveedor Stub falló con documento 201****: fuente caída
+2026-10-29 13:31:54.562 INFO  [main] c.a.service.ConsultaDocumentoService - Documento 201**** resuelto por Stub
+2026-10-29 13:31:54.570 INFO  [main] c.a.service.ConsultaDocumentoService - Documento 876****: no hay fuente configurada para DNI (modo manual)
+2026-10-29 13:31:54.577 INFO  [main] c.a.service.ConsultaDocumentoService - Documento 876****: no hay fuente configurada para DNI (modo manual)
+2026-10-29 13:31:54.583 INFO  [main] c.a.service.ConsultaDocumentoService - Documento 876****: no hay fuente configurada para DNI (modo manual)
+2026-10-29 13:31:54.594 WARN  [main] c.a.service.ConsultaDocumentoService - Proveedor Stub falló con documento 201****: fuente caída
+2026-10-29 13:31:54.596 INFO  [main] c.a.service.ConsultaDocumentoService - Documento 201**** sin datos (ERROR); el usuario deberá declararlos
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.069 s -- in com.autogestion.service.ConsultaDocumentoServiceTest
+[INFO] Running com.autogestion.service.CotizacionPortalTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.816 s -- in com.autogestion.service.CotizacionPortalTest
+[INFO] Running com.autogestion.service.InventarioServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.574 s -- in com.autogestion.service.InventarioServiceTest
+[INFO] Running com.autogestion.service.OrdenTrabajoServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.035 s -- in com.autogestion.service.OrdenTrabajoServiceTest
+[INFO] Running com.autogestion.service.RecepcionServiceTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.122 s -- in com.autogestion.service.RecepcionServiceTest
+[INFO] Running com.autogestion.service.ReporteServiceTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in com.autogestion.service.ReporteServiceTest
+[INFO] Running com.autogestion.service.SolicitudCotizacionServiceTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.290 s -- in com.autogestion.service.SolicitudCotizacionServiceTest
+[INFO] Running com.autogestion.service.UsuarioServiceTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.221 s -- in com.autogestion.service.UsuarioServiceTest
+[INFO] Running com.autogestion.util.DocumentoValidatorTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s -- in com.autogestion.util.DocumentoValidatorTest
+[INFO] Running com.autogestion.util.NumeroALetrasTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in com.autogestion.util.NumeroALetrasTest
+[INFO] Running com.autogestion.util.ReporteExcelGeneratorTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.098 s -- in com.autogestion.util.ReporteExcelGeneratorTest
+[INFO] Running com.autogestion.util.ReportePdfGeneratorTest
+2026-10-29 13:32:03.455 WARN  [main] o.a.p.p.font.FileSystemFontProvider - 8 new fonts found, font cache will be re-built
+2026-10-29 13:32:03.457 WARN  [main] o.a.p.p.font.FileSystemFontProvider - Building on-disk font cache, this may take a while
+2026-10-29 13:32:03.504 WARN  [main] o.a.p.p.font.FileSystemFontProvider - Finished building on-disk font cache, found 8 fonts
+2026-10-29 13:32:03.509 WARN  [main] o.a.pdfbox.pdmodel.font.PDType1Font - Using fallback font LiberationSans for base font Helvetica-Bold
+2026-10-29 13:32:03.517 WARN  [main] o.a.pdfbox.pdmodel.font.PDType1Font - Using fallback font LiberationSans for base font Helvetica
+2026-10-29 13:32:03.940 WARN  [main] o.a.pdfbox.pdmodel.font.PDType1Font - Using fallback font LiberationSans for Helvetica-Bold
+2026-10-29 13:32:03.952 WARN  [main] o.a.pdfbox.pdmodel.font.PDType1Font - Using fallback font LiberationSans for Helvetica
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.115 s -- in com.autogestion.util.ReportePdfGeneratorTest
+[INFO] Running com.autogestion.util.TicketPdfTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.070 s -- in com.autogestion.util.TicketPdfTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 98, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  02:44 min
+[INFO] Finished at: 2026-10-29T13:32:04Z
+[INFO] ------------------------------------------------------------------------
