@@ -57,7 +57,7 @@ public class ReporteExportService {
         String[] enc = {"Indicador", "Valor"};
         List<String[]> datos = new ArrayList<>();
         datos.add(new String[]{"OT completadas (mes)", String.valueOf(ind.getOtCompletadasMes())});
-        datos.add(new String[]{"Ingresos del mes (cobrado)", "S/ " + ind.getIngresosMes()});
+        datos.add(new String[]{"Ingresos del mes (cobrado)", money(ind.getIngresosMes())});
         datos.add(new String[]{"Productos bajo stock", String.valueOf(ind.getProductosBajoStock())});
         datos.add(new String[]{"Clientes atendidos (rango)", String.valueOf(cli.stream().mapToLong(ReporteDTOs.DiaClientes::clientesAtendidos).sum())});
         pdf.add(new ReportePdfGenerator.Seccion("Resumen - Indicadores", datos, enc, "Valores del mes actual y rango seleccionado."));
@@ -100,7 +100,7 @@ public class ReporteExportService {
         List<String[]> datos = new ArrayList<>();
         List<Object[]> datosX = new ArrayList<>();
         for (var p : pts) {
-            datos.add(new String[]{p.periodo(), "S/ " + p.total()});
+            datos.add(new String[]{p.periodo(), money(p.total())});
             datosX.add(new Object[]{p.periodo(), p.total()});
         }
         pdf.add(new ReportePdfGenerator.Seccion("Ingresos por período", datos, enc, "Solo comprobantes EMITIDO (cobrado)."));
@@ -114,10 +114,10 @@ public class ReporteExportService {
         var resumen = reporteService.inventarioResumen(rango[0], rango[1]);
         String[] enc = {"Concepto", "Valor"};
         List<String[]> datos = new ArrayList<>();
-        datos.add(new String[]{"Total comprado", "S/ " + resumen.totalComprado()});
-        datos.add(new String[]{"Total consumido al costo", "S/ " + resumen.totalConsumidoAlCosto()});
-        datos.add(new String[]{"Total mermas", "S/ " + resumen.totalMermas()});
-        datos.add(new String[]{"Valor inventario actual", "S/ " + resumen.valorInventarioActual()});
+        datos.add(new String[]{"Total comprado", money(resumen.totalComprado())});
+        datos.add(new String[]{"Total consumido al costo", money(resumen.totalConsumidoAlCosto())});
+        datos.add(new String[]{"Total mermas", money(resumen.totalMermas())});
+        datos.add(new String[]{"Valor inventario actual", money(resumen.valorInventarioActual())});
         datos.add(new String[]{"Productos bajo stock", String.valueOf(resumen.productosBajoStock())});
         pdf.add(new ReportePdfGenerator.Seccion("Inventario - Resumen", datos, enc, "Valores monetarios en soles (PEN)."));
 
@@ -140,7 +140,7 @@ public class ReporteExportService {
         List<String[]> datos = new ArrayList<>();
         List<Object[]> datosX = new ArrayList<>();
         for (var g : grupos) {
-            datos.add(new String[]{g.categoria(), g.etiqueta(), String.valueOf(g.cantidad()), "S/ " + g.total()});
+            datos.add(new String[]{g.categoria(), g.etiqueta(), String.valueOf(g.cantidad()), money(g.total())});
             datosX.add(new Object[]{g.categoria(), g.etiqueta(), g.cantidad(), g.total()});
         }
         pdf.add(new ReportePdfGenerator.Seccion("Gastos por categoría", datos, enc, "Gastos operativos registrados en el rango."));
@@ -154,12 +154,12 @@ public class ReporteExportService {
         var r = reporteService.resultado(rango[0], rango[1]);
         String[] enc = {"Concepto", "Monto (S/)"};
         List<String[]> datos = new ArrayList<>();
-        datos.add(new String[]{"Ingresos (con IGV)", "S/ " + r.ingresos()});
-        datos.add(new String[]{"Ingresos sin IGV", "S/ " + r.ingresosSinIgv()});
-        datos.add(new String[]{"Compras a proveedores", "S/ " + r.compras()});
-        datos.add(new String[]{"Costo consumido", "S/ " + r.costoConsumido()});
-        datos.add(new String[]{"Gastos operativos", "S/ " + r.gastosOperativos()});
-        datos.add(new String[]{"Utilidad estimada", "S/ " + r.utilidadEstimada()});
+        datos.add(new String[]{"Ingresos (con IGV)", money(r.ingresos())});
+        datos.add(new String[]{"Ingresos sin IGV", money(r.ingresosSinIgv())});
+        datos.add(new String[]{"Compras a proveedores", money(r.compras())});
+        datos.add(new String[]{"Costo consumido", money(r.costoConsumido())});
+        datos.add(new String[]{"Gastos operativos", money(r.gastosOperativos())});
+        datos.add(new String[]{"Utilidad estimada", money(r.utilidadEstimada())});
         pdf.add(new ReportePdfGenerator.Seccion("Resultado estimado", datos, enc, "Estimación académica, no es estado financiero contable."));
 
         List<Object[]> datosX = new ArrayList<>();
@@ -187,14 +187,21 @@ public class ReporteExportService {
                     String.valueOf(m.enProceso()),
                     String.valueOf(m.finalizadas()),
                     m.horasPromedio() != null ? String.format(Locale.ROOT, "%.1f", m.horasPromedio()) : "—",
-                    "S/ " + m.consumoCosto(),
-                    "S/ " + m.ingresos()
+                    money(m.consumoCosto()),
+                    money(m.ingresos())
             });
             datosX.add(new Object[]{m.nombre(), m.asignadas(), m.enProceso(), m.finalizadas(),
                     m.horasPromedio(), m.consumoCosto(), m.ingresos()});
         }
         pdf.add(new ReportePdfGenerator.Seccion("Rendimiento de mecánicos", datos, enc, "Datos del rango seleccionado."));
         xlsx.add(new ReporteExcelGenerator.Seccion("Rendimiento de mecánicos", enc, datosX, "Datos del rango seleccionado."));
+    }
+
+
+    private static String money(Object valor) {
+        if (valor == null) return "S/ 0.00";
+        BigDecimal v = valor instanceof BigDecimal b ? b : new BigDecimal(valor.toString());
+        return "S/ " + new java.text.DecimalFormat("#,##0.00").format(v);
     }
 
     private LocalDate[] rango(LocalDate desde, LocalDate hasta) {

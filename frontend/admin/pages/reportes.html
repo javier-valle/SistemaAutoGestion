@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="/css/redesign.css?v=20261005">
     <link rel="stylesheet" href="/css/polish.css?v=20261005">
     <link rel="stylesheet" href="/css/panels-premium.css?v=20261002">
+    <link rel="stylesheet" href="/css/refresh.css?v=20261029">
     <script>
         (function(){var t=localStorage.getItem('ag-theme')||'system';if(t==='system')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',t);})();
     </script>
@@ -188,14 +189,30 @@
                 <tbody>${rows || '<tr><td colspan="9" class="ag-text-center ag-text-muted">Sin datos en este rango</td></tr>'}</tbody></table></div>
                 ${csv ? `<div class="ag-d-flex ag-gap-3 ag-mt-2"><button class="ag-btn ag-btn-outline ag-btn-sm" onclick="descargarCSV('${id}')">Exportar CSV</button><button class="ag-btn ag-btn-outline ag-btn-sm" onclick="imprimirTabla('${id}')">PDF</button></div>` : ''}`;
         }
+        function tituloCsv(t) {
+            return String(t ?? '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+        function celdaCsv(v) {
+            if (v === null || v === undefined) return '';
+            if (typeof v === 'number' && Number.isFinite(v)) {
+                return Number.isInteger(v) ? String(v) : v.toFixed(2).replace('.', ',');
+            }
+            let s = String(v).replace(/\r?\n/g, ' ').trim();
+            if (/^[a-z][a-z0-9_]*$/.test(s)) s = tituloCsv(s);
+            return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        }
         function csvDescargar(nombre, filas) {
-            const csv = filas.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
+            if (!Array.isArray(filas) || !filas.length) return;
+            const csv = filas.map(r => r.map(celdaCsv).join(';')).join('\r\n');
+            const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' }));
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' }));
+            a.href = url;
             a.download = nombre;
+            a.rel = 'noopener';
+            a.style.display = 'none';
             document.body.appendChild(a);
             a.click();
-            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+            setTimeout(() => { try { a.remove(); URL.revokeObjectURL(url); } catch (_) {  } }, 1200);
         }
         window.descargarCSV = function(id) {
             const { nombre, filas } = window[id];
@@ -204,22 +221,57 @@
         };
         
 
+        const PRINT_CSS = `
+            @page{size:A4 landscape;margin:11mm}
+            *{box-sizing:border-box}
+            body{font-family:'Segoe UI',Arial,Helvetica,sans-serif;color:#1f2937;margin:0;padding:16px 20px;font-size:11px}
+            .doc-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #b45309;padding-bottom:10px;margin-bottom:14px}
+            .doc-brand{font-size:21px;font-weight:700;letter-spacing:-.5px;color:#16233a}
+            .doc-brand b{color:#b45309}
+            .doc-sub{font-size:10px;color:#64748b;margin-top:3px}
+            .doc-meta{text-align:right;font-size:9px;color:#64748b;line-height:1.65}
+            h1{font-size:15px;margin:0 0 3px;color:#16233a}
+            h3{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#b45309;margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid #e2e8f0}
+            table{width:100%;border-collapse:collapse;font-size:9.5px;margin:0 0 12px}
+            thead{display:table-header-group}
+            th{background:#16233a;color:#fff;font-weight:600;text-align:left;padding:7px 8px;border:1px solid #16233a;font-size:8.5px;text-transform:uppercase;letter-spacing:.05em}
+            td{padding:6px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top}
+            tbody tr:nth-child(even) td{background:#fbf7f2}
+            tfoot td{font-weight:700;border-top:2px solid #b45309}
+            .kpi{display:inline-block;border:1px solid #e2e8f0;border-left:3px solid #b45309;border-radius:6px;padding:8px 12px;margin:0 8px 8px 0;font-size:10px;min-width:140px}
+            .ag-leer,.ag-formula{border:1px solid #e2e8f0;border-left:3px solid #16233a;background:#f8fafc;border-radius:6px;padding:8px 12px;font-size:9.5px;margin-bottom:10px}
+            .ag-indicator{display:inline-block;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;margin:0 8px 8px 0}
+            .ag-indicator-icon,.ag-chart,button,.ag-btn,svg,.ag-table-actions{display:none!important}
+            .doc-foot{margin-top:16px;border-top:1px solid #e2e8f0;padding-top:6px;font-size:8px;color:#94a3b8;display:flex;justify-content:space-between}
+            th,tbody tr:nth-child(even) td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        `;
+        function docHead(subtitulo) {
+            const desde = document.getElementById('fDesde').value || '—';
+            const hasta = document.getElementById('fHasta').value || '—';
+            return `<div class="doc-head"><div><div class="doc-brand">Auto<b>Gestion</b></div>
+                <div class="doc-sub">Sistema de gestion para taller automotriz</div></div>
+                <div class="doc-meta"><b style="color:#16233a;font-size:11px;">${esc(subtitulo)}</b><br>
+                Del ${esc(desde)} al ${esc(hasta)} · Zona America/Lima<br>
+                Generado ${esc(new Date().toLocaleString('es-PE'))} · Rol ${esc(ROL)}</div></div>`;
+        }
+        function docFoot() {
+            return `<div class="doc-foot"><span>AutoGestion · Documento generado automaticamente</span><span>${esc(new Date().toLocaleString('es-PE'))}</span></div>`;
+        }
         window.imprimirTabla = function(id) {
             const data = window[id];
             if (!data) return;
-            const { nombre, filas } = data;
+            const { filas } = data;
             const [head, ...body] = filas;
             const tabLabel = (TABS.find(t => t.id === tabActiva) || {}).label || tabActiva;
-            const desde = document.getElementById('fDesde').value || '—';
-            const hasta = document.getElementById('fHasta').value || '—';
-            const w = window.open('', '_blank', 'width=900,height=700');
+            const w = window.open('', '_blank', 'width=1000,height=760');
             if (!w) { toast('Permite ventanas emergentes para generar el PDF', 'warning'); return; }
-            w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${nombre}</title>
-                <style>body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px;}h1{font-size:18px;margin:0;}p.meta{font-size:12px;color:#444;margin:4px 0 16px;}table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border:1px solid #999;padding:6px 8px;text-align:left;}th{background:#eee;}tr:nth-child(even) td{background:#f7f7f7;}tfoot td{font-weight:bold;}</style>
-                </head><body><h1>AutoGestion · ${tabLabel}</h1>
-                <p class="meta">Rango ${desde} al ${hasta} · Zona América/Lima · Generado ${new Date().toLocaleString('es-PE')}</p>
-                <table><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-                <tbody>${body.map(r => `<tr>${r.map(c => `<td>${String(c ?? '')}</td>`).join('')}</tr>`).join('') || '<tr><td>Sin datos</td></tr>'}</tbody></table>
+            w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>AutoGestion - ${esc(tabLabel)}</title>
+                <style>${PRINT_CSS}</style></head><body>
+                ${docHead('Reporte de ' + tabLabel)}
+                <h3>Detalle</h3>
+                <table><thead><tr>${head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead>
+                <tbody>${body.map(r => `<tr>${r.map(c => `<td>${esc(c ?? '')}</td>`).join('')}</tr>`).join('') || '<tr><td>Sin datos</td></tr>'}</tbody></table>
+                ${docFoot()}
                 <script>window.onload=function(){window.print();}<\/script></body></html>`);
             w.document.close();
         };
@@ -232,14 +284,14 @@
             if (!host || !host.innerHTML.trim()) { toast('Nada que imprimir todavía', 'warning'); return; }
             
             const clon = host.cloneNode(true);
-            clon.querySelectorAll('button, .ag-chart, svg').forEach(n => n.remove());
+            clon.querySelectorAll('button, .ag-btn, .ag-chart, svg, .ag-indicator-icon').forEach(n => n.remove());
             const w = window.open('', '_blank', 'width=1000,height=800');
             if (!w) { toast('Permite ventanas emergentes para generar el PDF', 'warning'); return; }
-            w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Reporte ${tabLabel}</title>
-                <style>body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px;}h1{font-size:20px;margin:0;}h3{font-size:14px;margin:18px 0 8px;border-bottom:2px solid #111;padding-bottom:4px;}p.meta{font-size:12px;color:#444;margin:4px 0 12px;}.kpi{display:inline-block;border:1px solid #999;border-radius:8px;padding:8px 14px;margin:0 8px 8px 0;font-size:12px;}table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;}th,td{border:1px solid #999;padding:6px 8px;text-align:left;}th{background:#eee;}tr:nth-child(even) td{background:#f7f7f7;}.ag-leer,.ag-formula{border:1px solid #999;border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:12px;}</style>
-                </head><body><h1>AutoGestion · Reporte de ${tabLabel}</h1>
-                <p class="meta">Rango ${desde} al ${hasta} · Zona América/Lima · Generado ${new Date().toLocaleString('es-PE')} · Rol ${ROL}</p>
+            w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>AutoGestion - ${esc(tabLabel)}</title>
+                <style>${PRINT_CSS}</style></head><body>
+                ${docHead('Reporte de ' + tabLabel)}
                 ${clon.innerHTML}
+                ${docFoot()}
                 <script>window.onload=function(){window.print();}<\/script></body></html>`);
             w.document.close();
             toast('Abriendo vista de impresión (guarda como PDF)', 'success');
@@ -685,12 +737,20 @@
             const hasta = document.getElementById('fHasta').value;
             if (seleccionados.length === 0) { toast('Selecciona al menos un reporte', 'warning'); return; }
             const qs = `reportes=${seleccionados.join(',')}&formato=${fmt}${desde ? `&desde=${desde}` : ''}${hasta ? `&hasta=${hasta}` : ''}`;
+            const boton = document.querySelector('#exportModal .ag-btn-primary');
+            const texto = boton ? boton.textContent : '';
+            if (boton) { boton.disabled = true; boton.textContent = 'Generando...'; }
             try {
                 toast('Generando reporte consolidado...', 'info', 3000);
+                await new Promise(r => setTimeout(r, 60));
                 await apiDescargar(`/reportes/export/consolidado?${qs}`, `reporte-consolidado.${fmt === 'excel' ? 'xlsx' : fmt === 'ambos' ? 'pdf' : fmt}`);
                 toast('Reporte descargado', 'success');
+            } catch (e) {
+                toast('Error: ' + e.message, 'danger');
+            } finally {
                 closeExportModal();
-            } catch (e) { toast('Error: ' + e.message, 'danger'); }
+                if (boton) { boton.disabled = false; boton.textContent = texto || 'Generar y descargar'; }
+            }
         }
         
         pintarTabs();

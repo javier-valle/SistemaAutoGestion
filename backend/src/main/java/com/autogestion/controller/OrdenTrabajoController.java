@@ -5,12 +5,6 @@ import com.autogestion.dto.OrdenTrabajoRequest;
 import com.autogestion.dto.OrdenTrabajoResponseDTO;
 import com.autogestion.dto.OtProductoUsadoResponseDTO;
 import com.autogestion.dto.ProductoUsadoRequest;
-import com.autogestion.entity.Cotizacion;
-import com.autogestion.entity.Cliente;
-import com.autogestion.entity.Diagnostico;
-import com.autogestion.entity.Recepcion;
-import com.autogestion.entity.Usuario;
-import com.autogestion.entity.Vehiculo;
 import com.autogestion.entity.OrdenTrabajo;
 import com.autogestion.service.OrdenTrabajoService;
 import jakarta.annotation.security.RolesAllowed;
@@ -35,14 +29,14 @@ public class OrdenTrabajoController {
     @PostMapping
     public ResponseEntity<OrdenTrabajoResponseDTO> crear(@Valid @RequestBody OrdenTrabajoRequest request) {
         OrdenTrabajo ot = ordenTrabajoService.crear(request);
-        return ResponseEntity.ok(mapToDTO(ot));
+        return ResponseEntity.ok(ordenTrabajoService.obtenerPorId(ot.getId()));
     }
 
     @RolesAllowed({"ADMIN", "RECEPCIONISTA"})
     @PostMapping("/completa")
     public ResponseEntity<OrdenTrabajoResponseDTO> crearCompleta(@Valid @RequestBody OrdenTrabajoCompletaRequest request) {
         OrdenTrabajo ot = ordenTrabajoService.crearCompleta(request);
-        return ResponseEntity.ok(mapToDTO(ot));
+        return ResponseEntity.ok(ordenTrabajoService.obtenerPorId(ot.getId()));
     }
 
     @RolesAllowed({"ADMIN", "MECANICO"})
@@ -51,7 +45,7 @@ public class OrdenTrabajoController {
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
         OrdenTrabajo ot = ordenTrabajoService.cambiarEstado(id, body.get("estado"));
-        return ResponseEntity.ok(mapToDTO(ot));
+        return ResponseEntity.ok(ordenTrabajoService.obtenerPorId(ot.getId()));
     }
 
     @RolesAllowed({"ADMIN", "MECANICO"})
@@ -90,28 +84,5 @@ public class OrdenTrabajoController {
     @GetMapping("/{id}/productos-usados")
     public ResponseEntity<List<OtProductoUsadoResponseDTO>> listarProductosUsados(@PathVariable Long id) {
         return ResponseEntity.ok(ordenTrabajoService.listarProductosUsados(id));
-    }
-
-    private OrdenTrabajoResponseDTO mapToDTO(OrdenTrabajo ot) {
-        Cotizacion cotizacion = ot.getCotizacion();
-        Diagnostico diagnostico = cotizacion.getDiagnostico();
-        Recepcion recepcion = diagnostico.getRecepcion();
-        Vehiculo vehiculo = recepcion.getVehiculo();
-        Cliente cliente = vehiculo.getCliente();
-        Usuario mecanico = ot.getMecanico();
-
-        return OrdenTrabajoResponseDTO.builder()
-                .id(ot.getId())
-                .cotizacionId(cotizacion.getId())
-                .mecanicoId(ot.getMecanico().getId())
-                .mecanicoNombre(mecanico.getNombreCompleto())
-                .estado(ot.getEstado().name())
-                .fechaCreacion(ot.getFechaCreacion())
-                .fechaFin(ot.getFechaFin())
-                .vehiculoPlaca(recepcion.getVehiculo().getPlaca())
-                .clienteNombre(recepcion.getVehiculo().getCliente().getNombre())
-                .recepcionId(recepcion.getId())
-                .problemaReportado(recepcion.getProblemaReportado())
-                .build();
     }
 }

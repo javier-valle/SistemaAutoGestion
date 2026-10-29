@@ -67,15 +67,16 @@ public class ReporteController {
             return ResponseEntity.badRequest().build();
         }
         LocalDate[] r = rango(desde, hasta);
-        StringBuilder csv = new StringBuilder("dia;clientes_atendidos;recepciones;entregas\n");
+        StringBuilder csv = new StringBuilder("Día;Clientes atendidos;Recepciones;Entregas\n");
         for (var f : reporteService.clientesPorDia(r[0], r[1])) {
             csv.append(f.dia()).append(';').append(f.clientesAtendidos()).append(';')
                     .append(f.recepciones()).append(';').append(f.entregas()).append('\n');
         }
+        byte[] contenido = ("\uFEFF" + csv).getBytes(StandardCharsets.UTF_8);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=clientes-por-dia.csv")
                 .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
-                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+                .body(contenido);
     }
 
     @RolesAllowed({"ADMIN", "RECEPCIONISTA"})
@@ -228,7 +229,10 @@ public class ReporteController {
         }
         LocalDate[] r = rango(desde, hasta);
         byte[] archivo = reporteExportService.exportarConsolidado(seleccionados, formato, r[0], r[1],
-                SecurityContextHolder.getContext().getAuthentication() != null ? SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().findFirst().map(Object::toString).orElse("ADMIN") : "ADMIN");
+                SecurityContextHolder.getContext().getAuthentication() != null
+                        ? SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                                .findFirst().map(Object::toString).map(a -> a.replace("ROLE_", "")).orElse("ADMIN")
+                        : "ADMIN");
         String ext = formato.equalsIgnoreCase("pdf") ? "pdf" : "xlsx";
         String mime = formato.equalsIgnoreCase("pdf") ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
         return ResponseEntity.ok()

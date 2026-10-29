@@ -1,8 +1,8 @@
 package com.autogestion.util;
 
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,11 +11,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- * Generador de reportes Excel (.xlsx) profesional con Apache POI.
- * Formato empresarial: encabezados con estilo, columnas ajustadas,
- * fechas y números con formato, totales resaltados, hojas por sección.
+ * Generador de reportes Excel (.xlsx) con Apache POI.
+ * Portada de marca, una hoja por sección, encabezados fijos, filas alternas,
+ * formato monetario, totales y áreas de impresión listas para A4 horizontal.
  */
 public final class ReporteExcelGenerator {
+
+    private static final String NAVY = "16233A";
+    private static final String NAVY_SOFT = "22334F";
+    private static final String AMBER = "B45309";
+    private static final String CREAM = "FFF7ED";
+    private static final String BORDER = "E2E8F0";
+    private static final String TEXT = "1F2937";
+    private static final String MUTED = "64748B";
 
     private ReporteExcelGenerator() { }
 
@@ -23,266 +31,543 @@ public final class ReporteExcelGenerator {
 
     public static byte[] generar(List<Seccion> secciones, String tituloGeneral,
                                   LocalDate desde, LocalDate hasta, String rol) {
-        XSSFWorkbook wb = new XSSFWorkbook();
-        CellStyle headerStyle = crearHeaderStyle(wb);
-        CellStyle bodyStyle = crearBodyStyle(wb);
-        CellStyle numberStyle = crearNumberStyle(wb);
-        CellStyle intStyle = crearIntStyle(wb);
-        CellStyle dateCellStyle = crearDateCellStyle(wb);
-        CellStyle totalStyle = crearTotalStyle(wb);
-        CellStyle titleStyle = crearTitleStyle(wb);
-        CellStyle metaStyle = crearMetaStyle(wb);
-        CellStyle noteStyle = crearNoteStyle(wb);
-
-        Sheet portada = wb.createSheet("Portada");
-        portada.setDefaultColumnWidth(30);
-
-        int rowPort = 0;
-        Row rTitle = portada.createRow(rowPort++);
-        Cell cTitle = rTitle.createCell(0);
-        cTitle.setCellValue(tituloGeneral);
-        cTitle.setCellStyle(titleStyle);
-        portada.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(rowPort - 1, rowPort - 1, 0, 3));
-
-        rowPort += 2;
-        String rango = (desde != null && hasta != null)
-                ? "Del " + fmtFecha(desde) + " al " + fmtFecha(hasta)
-                : "Sin rango definido";
-        Row rMeta = portada.createRow(rowPort++);
-        Cell cMeta = rMeta.createCell(0);
-        cMeta.setCellValue("Zona América/Lima  ·  Rol: " + rol + "  ·  " + rango);
-        cMeta.setCellStyle(metaStyle);
-        portada.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(rowPort - 1, rowPort - 1, 0, 3));
-
-        rowPort += 2;
-        Row rGen = portada.createRow(rowPort++);
-        Cell cGen = rGen.createCell(0);
-        cGen.setCellValue("AutoGestión — Sistema de gestión para taller automotriz");
-        cGen.setCellStyle(noteStyle);
-        portada.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(rowPort - 1, rowPort - 1, 0, 3));
-
-        rowPort += 2;
-        Row rFecha = portada.createRow(rowPort++);
-        Cell cFecha = rFecha.createCell(0);
-        cFecha.setCellValue("Generado el: " + fmtFechaHora(LocalDateTime.now()));
-        cFecha.setCellStyle(metaStyle);
-        portada.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(rowPort - 1, rowPort - 1, 0, 3));
-
-        rowPort += 2;
-        Row rSecciones = portada.createRow(rowPort++);
-        Cell cSecc = rSecciones.createCell(0);
-        cSecc.setCellValue("Secciones incluidas en este reporte:");
-        cSecc.setCellStyle(metaStyle);
-        portada.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(rowPort - 1, rowPort - 1, 0, 3));
-
-        for (Seccion sec : secciones) {
-            Row rItem = portada.createRow(rowPort++);
-            Cell cItem = rItem.createCell(0);
-            cItem.setCellValue("•  " + sec.titulo);
-            cItem.setCellStyle(bodyStyle);
-        }
-
-
-        for (Seccion sec : secciones) {
-            String nombreHoja = sanitizeSheetName(sec.titulo);
-            Sheet sh = wb.createSheet(nombreHoja);
-            sh.setDefaultColumnWidth(16);
-
-            int r = 0;
-            Row rh = sh.createRow(r++);
-            Cell ch = rh.createCell(0);
-            ch.setCellValue(sec.titulo);
-            ch.setCellStyle(titleStyle);
-            sh.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(r - 1, r - 1, 0, sec.encabezados != null ? sec.encabezados.length - 1 : 3));
-
-            r++;
-            if (sec.encabezados != null && sec.encabezados.length > 0) {
-                Row hRow = sh.createRow(r++);
-                for (int i = 0; i < sec.encabezados.length; i++) {
-                    Cell c = hRow.createCell(i);
-                    c.setCellValue(sec.encabezados[i]);
-                    c.setCellStyle(headerStyle);
-                }
+        try (XSSFWorkbook wb = new XSSFWorkbook()) {
+            Estilos st = new Estilos(wb);
+            crearPortada(wb, st, secciones, tituloGeneral, desde, hasta, rol);
+            for (Seccion sec : secciones) {
+                crearHoja(wb, st, sec, desde, hasta, rol);
             }
+            wb.setActiveSheet(0);
 
-            if (sec.datos != null && !sec.datos.isEmpty()) {
-                for (Object[] fila : sec.datos) {
-                    Row row = sh.createRow(r++);
-                    for (int i = 0; i < fila.length; i++) {
-                        Cell cell = row.createCell(i);
-                        Object val = fila[i];
-                        if (val == null || val.toString().isEmpty()) {
-                            cell.setCellValue("—");
-                            cell.setCellStyle(bodyStyle);
-                        } else if (val instanceof Number n) {
-                            boolean esEntero = val instanceof Integer || val instanceof Long || val instanceof Short || val instanceof Byte;
-                            if (val instanceof BigDecimal bd) {
-                                cell.setCellValue(bd.setScale(2, java.math.RoundingMode.HALF_UP).doubleValue());
-                                cell.setCellStyle(numberStyle);
-                            } else if (esEntero) {
-                                cell.setCellValue(n.longValue());
-                                cell.setCellStyle(intStyle);
-                            } else {
-                                cell.setCellValue(n.doubleValue());
-                                cell.setCellStyle(numberStyle);
-                            }
-                            if (!esEntero && i == fila.length - 1) {
-                                cell.setCellStyle(totalStyle);
-                            }
-                        } else if (val instanceof java.time.LocalDate ld) {
-                            cell.setCellValue(java.util.Date.from(ld.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()));
-                            cell.setCellStyle(dateCellStyle);
-                        } else if (val instanceof java.time.LocalDateTime ldt) {
-                            cell.setCellValue(java.util.Date.from(ldt.atZone(java.time.ZoneId.systemDefault()).toInstant()));
-                            cell.setCellStyle(dateCellStyle);
-                        } else {
-                            cell.setCellValue(val.toString());
-                            cell.setCellStyle(bodyStyle);
-                        }
-                    }
-                }
-            } else {
-                Row emptyRow = sh.createRow(r++);
-                Cell emptyCell = emptyRow.createCell(0);
-                emptyCell.setCellValue("Sin datos en este rango.");
-                emptyCell.setCellStyle(noteStyle);
-            }
-
-            if (sec.nota != null && !sec.nota.isBlank()) {
-                r++;
-                Row noteRow = sh.createRow(r++);
-                Cell noteCell = noteRow.createCell(0);
-                noteCell.setCellValue(sec.nota);
-                noteCell.setCellStyle(noteStyle);
-                sh.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(r - 1, r - 1, 0, sec.encabezados != null ? sec.encabezados.length - 1 : 3));
-            }
-
-            if (sec.encabezados != null && sec.encabezados.length > 0) {
-                sh.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(1, 1 + (sec.datos != null ? sec.datos.size() : 0), 0, sec.encabezados.length - 1));
-                sh.createFreezePane(0, 2);
-            }
-            for (int i = 0; i < (sec.encabezados != null ? sec.encabezados.length : 4); i++) {
-                sh.autoSizeColumn(i);
-            }
-        }
-
-        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-        try {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             wb.write(out);
-            wb.close();
+            return out.toByteArray();
         } catch (java.io.IOException e) {
             throw new RuntimeException("Error generando archivo Excel: " + e.getMessage(), e);
         }
-        return out.toByteArray();
     }
 
+    private static void crearPortada(XSSFWorkbook wb, Estilos st, List<Seccion> secciones,
+                                     String tituloGeneral, LocalDate desde, LocalDate hasta, String rol) {
+        XSSFSheet sh = wb.createSheet("Portada");
+        sh.setDefaultColumnWidth(26);
+        sh.setColumnWidth(0, 30 * 256);
+        sh.setColumnWidth(1, 30 * 256);
+        sh.setColumnWidth(2, 14 * 256);
+        sh.setColumnWidth(3, 14 * 256);
+        sh.setDisplayGridlines(false);
 
-    private static CellStyle crearHeaderStyle(XSSFWorkbook wb) {
-        CellStyle s = wb.createCellStyle();
-        XSSFFont f = wb.createFont();
-        f.setBold(true);
-        f.setColor(IndexedColors.WHITE.getIndex());
-        f.setFontHeightInPoints((short) 10);
-        s.setFont(f);
-        s.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
-        s.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        s.setBorderBottom(BorderStyle.THIN);
-        s.setBorderTop(BorderStyle.THIN);
-        s.setBorderLeft(BorderStyle.THIN);
-        s.setBorderRight(BorderStyle.THIN);
-        s.setAlignment(HorizontalAlignment.CENTER);
-        return s;
+        Row banda = sh.createRow(0);
+        banda.setHeightInPoints(46);
+        for (int i = 0; i < 4; i++) {
+            Cell c = banda.createCell(i);
+            c.setCellStyle(st.banda);
+        }
+        sh.addMergedRegion(new CellRangeAddress(0, 0, 0, 3));
+
+        Cell marca = banda.getCell(0);
+        marca.setCellValue("AutoGestion");
+        marca.setCellStyle(st.marca);
+
+        Row sub = sh.createRow(1);
+        sub.setHeightInPoints(26);
+        Cell csub = sub.createCell(0);
+        csub.setCellValue("Reporte consolidado del taller");
+        csub.setCellStyle(st.bandaSub);
+        sh.addMergedRegion(new CellRangeAddress(1, 1, 0, 3));
+
+        Row titulo = sh.createRow(3);
+        titulo.setHeightInPoints(24);
+        Cell ct = titulo.createCell(0);
+        ct.setCellValue(tituloGeneral == null || tituloGeneral.isBlank()
+                ? "Reporte consolidado" : tituloGeneral);
+        ct.setCellStyle(st.tituloPortada);
+        sh.addMergedRegion(new CellRangeAddress(3, 3, 0, 3));
+
+        Row rango = sh.createRow(5);
+        Cell cr = rango.createCell(0);
+        cr.setCellValue(rangoTexto(desde, hasta));
+        cr.setCellStyle(st.destacado);
+        sh.addMergedRegion(new CellRangeAddress(5, 5, 0, 3));
+
+        Row meta = sh.createRow(6);
+        Cell cm = meta.createCell(0);
+        cm.setCellValue("Rol: " + (rol == null ? "ADMIN" : rol)
+                + "   |   Zona: America/Lima   |   Generado: " + fmtFechaHora(LocalDateTime.now()));
+        cm.setCellStyle(st.meta);
+        sh.addMergedRegion(new CellRangeAddress(6, 6, 0, 3));
+
+        Row separador = sh.createRow(8);
+        Cell cs = separador.createCell(0);
+        cs.setCellValue("Contenido del reporte");
+        cs.setCellStyle(st.seccionTitulo);
+        sh.addMergedRegion(new CellRangeAddress(8, 8, 0, 3));
+
+        int r = 9;
+        for (int i = 0; i < secciones.size(); i++) {
+            Seccion sec = secciones.get(i);
+            Row fila = sh.createRow(r++);
+            fila.setHeightInPoints(20);
+            Cell num = fila.createCell(0);
+            num.setCellValue(String.format("%02d", i + 1));
+            num.setCellStyle(st.numeroPortada);
+            Cell nom = fila.createCell(1);
+            nom.setCellValue(sec.titulo());
+            nom.setCellStyle(st.nombrePortada);
+            Cell hoja = fila.createCell(2);
+            hoja.setCellValue("Hoja " + (i + 2));
+            hoja.setCellStyle(st.meta);
+            Cell filas = fila.createCell(3);
+            filas.setCellValue((sec.datos() == null ? 0 : sec.datos().size()) + " fila(s)");
+            filas.setCellStyle(st.meta);
+        }
+
+        Row pie = sh.createRow(r + 2);
+        Cell cp = pie.createCell(0);
+        cp.setCellValue("Generado por AutoGestion: sistema de gestion para taller automotriz.");
+        cp.setCellStyle(st.pie);
+        sh.addMergedRegion(new CellRangeAddress(r + 2, r + 2, 0, 3));
+
+        wb.setPrintArea(wb.getSheetIndex(sh), 0, 3, 0, Math.max(1, r + 2));
+        sh.getPrintSetup().setPaperSize(PrintSetup.A4_PAPERSIZE);
+        sh.getPrintSetup().setLandscape(true);
     }
 
-    private static CellStyle crearBodyStyle(XSSFWorkbook wb) {
-        CellStyle s = wb.createCellStyle();
-        s.setBorderBottom(BorderStyle.DOTTED);
-        s.setBorderTop(BorderStyle.THIN);
-        s.setBorderLeft(BorderStyle.THIN);
-        s.setBorderRight(BorderStyle.THIN);
-        s.setWrapText(true);
-        return s;
+    private static void crearHoja(XSSFWorkbook wb, Estilos st, Seccion sec,
+                                  LocalDate desde, LocalDate hasta, String rol) {
+        XSSFSheet sh = wb.createSheet(nombreHoja(sec.titulo()));
+        sh.setDisplayGridlines(false);
+        sh.setDefaultRowHeightInPoints(18);
+
+        int nCols = Math.max(1, sec.encabezados() == null ? 4 : sec.encabezados().length);
+
+        Row banda = sh.createRow(0);
+        banda.setHeightInPoints(30);
+        for (int i = 0; i < nCols; i++) banda.createCell(i).setCellStyle(st.bandaHoja);
+        sh.addMergedRegion(new CellRangeAddress(0, 0, 0, nCols - 1));
+        Cell titulo = banda.getCell(0);
+        titulo.setCellValue(sec.titulo());
+        titulo.setCellStyle(st.tituloHoja);
+
+        Row sub = sh.createRow(1);
+        sh.addMergedRegion(new CellRangeAddress(1, 1, 0, nCols - 1));
+        Cell csub = sub.createCell(0);
+        csub.setCellValue(rangoTexto(desde, hasta) + "   |   Rol: " + (rol == null ? "ADMIN" : rol));
+        csub.setCellStyle(st.subHoja);
+
+        if (sec.encabezados() != null && sec.encabezados().length > 0) {
+            Row h = sh.createRow(2);
+            h.setHeightInPoints(24);
+            for (int i = 0; i < sec.encabezados().length; i++) {
+                Cell c = h.createCell(i);
+                c.setCellValue(sec.encabezados()[i]);
+                c.setCellStyle(st.encabezado);
+            }
+        }
+
+        List<Object[]> filas = sec.datos() == null ? List.of() : sec.datos();
+        boolean esResumen = esResumen(sec);
+        boolean[] numerica = new boolean[nCols];
+        boolean[] monetaria = new boolean[nCols];
+        boolean[] dinero = new boolean[nCols];
+        BigDecimal[] totales = new BigDecimal[nCols];
+        if (sec.encabezados() != null) {
+            for (int i = 0; i < sec.encabezados().length && i < nCols; i++) {
+                dinero[i] = esDinero(sec.encabezados()[i]);
+            }
+        }
+
+        int r = 3;
+        for (int idx = 0; idx < filas.size(); idx++) {
+            Object[] datos = filas.get(idx);
+            Row row = sh.createRow(r++);
+            row.setHeightInPoints(19);
+            for (int i = 0; i < nCols; i++) {
+                Object val = i < datos.length ? datos[i] : null;
+                Cell cell = row.createCell(i);
+                boolean dineroFila = dinero[i] || (esResumen && datos.length > 0
+                        && esDinero(String.valueOf(datos[0])));
+                pintarValor(cell, val, i == 0, idx, st, dineroFila);
+                if (val instanceof Number n) {
+                    numerica[i] = true;
+                    if (val instanceof BigDecimal || dinero[i]) monetaria[i] = true;
+                    totales[i] = (totales[i] == null ? BigDecimal.ZERO : totales[i]).add(new BigDecimal(n.toString()));
+                }
+            }
+        }
+
+        int ultimaFilaDatos = r - 1;
+        boolean hayTotales = filas.size() > 1 && tieneNumericas(numerica) && !esResumen;
+        if (hayTotales) {
+            Row total = sh.createRow(r);
+            total.setHeightInPoints(22);
+            for (int i = 0; i < nCols; i++) {
+                Cell c = total.createCell(i);
+                c.setCellStyle(st.total);
+                if (i == 0) {
+                    c.setCellValue("TOTAL");
+                } else if (numerica[i] && totales[i] != null) {
+                    c.setCellStyle(monetaria[i] ? st.totalNumero : st.totalEntero);
+                    escribirNumero(c, totales[i], monetaria[i] ? st.totalNumero : st.totalEntero);
+                }
+            }
+        }
+
+        if (filas.isEmpty()) {
+            Row vacio = sh.createRow(3);
+            sh.addMergedRegion(new CellRangeAddress(3, 3, 0, nCols - 1));
+            Cell c = vacio.createCell(0);
+            c.setCellValue("Sin datos en este rango.");
+            c.setCellStyle(st.vacio);
+        }
+
+        int filaNota = -1;
+        if (sec.nota() != null && !sec.nota().isBlank()) {
+            int nr = Math.max(r, 4) + 1;
+            sh.addMergedRegion(new CellRangeAddress(nr, nr, 0, nCols - 1));
+            Cell c = sh.createRow(nr).createCell(0);
+            c.setCellValue("Nota: " + sec.nota());
+            c.setCellStyle(st.nota);
+            filaNota = nr;
+        }
+
+        ajustarColumnas(sh, sec, filas, nCols, dinero);
+        if (sec.encabezados() != null && sec.encabezados().length > 0) {
+            int fin = Math.max(2, ultimaFilaDatos);
+            sh.setAutoFilter(new CellRangeAddress(2, fin, 0, Math.min(nCols, sec.encabezados().length) - 1));
+            sh.createFreezePane(0, 3);
+            sh.setRepeatingRows(new CellRangeAddress(2, 2, 0, nCols - 1));
+        }
+        wb.setPrintArea(wb.getSheetIndex(sh), 0, nCols - 1, 0, Math.max(Math.max(3, r), filaNota));
+        PrintSetup ps = sh.getPrintSetup();
+        ps.setPaperSize(PrintSetup.A4_PAPERSIZE);
+        ps.setLandscape(true);
+        ps.setFitWidth((short) 1);
+        ps.setFitHeight((short) 0);
+        sh.setFitToPage(true);
+        sh.setHorizontallyCenter(true);
+        sh.setMargin(org.apache.poi.ss.usermodel.PageMargin.LEFT, 0.4);
+        sh.setMargin(org.apache.poi.ss.usermodel.PageMargin.RIGHT, 0.4);
+        sh.setMargin(org.apache.poi.ss.usermodel.PageMargin.TOP, 0.5);
+        sh.setMargin(org.apache.poi.ss.usermodel.PageMargin.BOTTOM, 0.5);
     }
 
-    private static CellStyle crearNumberStyle(XSSFWorkbook wb) {
-        CellStyle s = wb.createCellStyle();
-        s.cloneStyleFrom(crearBodyStyle(wb));
-        s.setDataFormat(wb.createDataFormat().getFormat("#,##0.00"));
-        s.setAlignment(HorizontalAlignment.RIGHT);
-        return s;
+    private static boolean esDinero(String encabezado) {
+        if (encabezado == null) return false;
+        String h = encabezado.toLowerCase(Locale.ROOT);
+        return h.contains("s/") || h.contains("monto") || h.contains("total") || h.contains("ingreso")
+                || h.contains("costo") || h.contains("precio") || h.contains("utilidad")
+                || h.contains("compra") || h.contains("gasto") || h.contains("inventario")
+                || h.contains("margen") || h.contains("consumo");
     }
 
-    private static CellStyle crearTotalStyle(XSSFWorkbook wb) {
-        CellStyle s = wb.createCellStyle();
-        s.cloneStyleFrom(crearNumberStyle(wb));
-        XSSFFont f = wb.createFont();
-        f.setBold(true);
-        f.setColor(IndexedColors.DARK_BLUE.getIndex());
-        f.setFontHeightInPoints((short) 10);
-        s.setFont(f);
-        s.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
-        s.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return s;
+    private static void pintarValor(Cell cell, Object val, boolean primera, int idx, Estilos st, boolean dinero) {
+        if (val == null || val.toString().isBlank()) {
+            cell.setCellValue("-");
+            cell.setCellStyle(primera ? st.celdaFuerte(idx) : st.celda(idx));
+            return;
+        }
+        if (val instanceof BigDecimal bd) {
+            escribirNumero(cell, bd, st.moneda(idx));
+            return;
+        }
+        if (val instanceof Number n) {
+            if (dinero) {
+                escribirNumero(cell, new BigDecimal(n.toString()), st.moneda(idx));
+            } else if (val instanceof Double || val instanceof Float) {
+                cell.setCellValue(n.doubleValue());
+                cell.setCellStyle(st.decimal(idx));
+            } else {
+                cell.setCellValue(n.longValue());
+                cell.setCellStyle(st.entero(idx));
+            }
+            return;
+        }
+        if (val instanceof LocalDate ld) {
+            cell.setCellValue(java.util.Date.from(ld.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()));
+            cell.setCellStyle(st.fecha(idx));
+            return;
+        }
+        if (val instanceof LocalDateTime ldt) {
+            cell.setCellValue(java.util.Date.from(ldt.atZone(java.time.ZoneId.systemDefault()).toInstant()));
+            cell.setCellStyle(st.fecha(idx));
+            return;
+        }
+        cell.setCellValue(val.toString());
+        cell.setCellStyle(primera ? st.celdaFuerte(idx) : st.celda(idx));
     }
 
-    private static CellStyle crearTitleStyle(XSSFWorkbook wb) {
-        CellStyle s = wb.createCellStyle();
-        XSSFFont f = wb.createFont();
-        f.setBold(true);
-        f.setColor(IndexedColors.DARK_BLUE.getIndex());
-        f.setFontHeightInPoints((short) 16);
-        s.setFont(f);
-        s.setBorderBottom(BorderStyle.MEDIUM);
-        return s;
+    private static void escribirNumero(Cell cell, BigDecimal valor, CellStyle estilo) {
+        cell.setCellValue(valor.setScale(2, java.math.RoundingMode.HALF_UP).doubleValue());
+        cell.setCellStyle(estilo);
     }
 
-    private static CellStyle crearMetaStyle(XSSFWorkbook wb) {
-        CellStyle s = wb.createCellStyle();
-        XSSFFont f = wb.createFont();
-        f.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
-        f.setFontHeightInPoints((short) 9);
-        s.setFont(f);
-        return s;
+    private static boolean tieneNumericas(boolean[] numerica) {
+        for (boolean b : numerica) if (b) return true;
+        return false;
     }
 
-    private static CellStyle crearNoteStyle(XSSFWorkbook wb) {
-        CellStyle s = wb.createCellStyle();
-        XSSFFont f = wb.createFont();
-        f.setItalic(true);
-        f.setColor(IndexedColors.BLUE.getIndex());
-        f.setFontHeightInPoints((short) 9);
-        s.setFont(f);
-        return s;
+    private static boolean esResumen(Seccion sec) {
+        String t = sec.titulo() == null ? "" : sec.titulo().toLowerCase(Locale.ROOT);
+        if (t.contains("resumen") || t.contains("resultado")) return true;
+        if (sec.encabezados() == null || sec.encabezados().length == 0) return false;
+        String primera = sec.encabezados()[0].toLowerCase(Locale.ROOT);
+        return primera.equals("concepto") || primera.equals("indicador");
     }
 
-    private static CellStyle crearIntStyle(XSSFWorkbook wb) {
-        CellStyle s = wb.createCellStyle();
-        s.cloneStyleFrom(crearBodyStyle(wb));
-        s.setDataFormat(wb.createDataFormat().getFormat("#,##0"));
-        s.setAlignment(HorizontalAlignment.RIGHT);
-        return s;
+    private static void ajustarColumnas(Sheet sh, Seccion sec, List<Object[]> filas, int nCols, boolean[] dinero) {
+        for (int i = 0; i < nCols; i++) {
+            int max = sec.encabezados() != null && i < sec.encabezados().length
+                    ? largo(sec.encabezados()[i]) : 8;
+            for (Object[] fila : filas) {
+                if (i < fila.length) {
+                    Object v = fila[i];
+                    String t = (dinero[i] && v instanceof Number n)
+                            ? "S/ " + new BigDecimal(n.toString()).setScale(2, java.math.RoundingMode.HALF_UP)
+                            : textoCelda(v);
+                    max = Math.max(max, largo(t));
+                }
+            }
+            int ancho = Math.min(48, Math.max(10, max + 3));
+            sh.setColumnWidth(i, ancho * 256);
+        }
     }
 
-    private static CellStyle crearDateCellStyle(XSSFWorkbook wb) {
-        CellStyle s = wb.createCellStyle();
-        s.cloneStyleFrom(crearBodyStyle(wb));
-        s.setDataFormat(wb.createDataFormat().getFormat("yyyy-mm-dd"));
-        return s;
+    private static int largo(String s) {
+        if (s == null) return 0;
+        int n = 0;
+        for (char c : s.toCharArray()) n += c > 127 ? 2 : 1;
+        return n;
     }
 
-    private static String sanitizeSheetName(String name) {
+    private static String textoCelda(Object v) {
+        if (v == null) return "-";
+        if (v instanceof BigDecimal bd) return "S/ " + bd.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
+        if (v instanceof LocalDate ld) return ld.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (v instanceof LocalDateTime ldt) return ldt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        return v.toString();
+    }
 
-        String s = name.replaceAll("[\\\\/\\?\\*\\[\\]\\:]", "");
-        s = s.trim();
+    private static String nombreHoja(String nombre) {
+        String s = nombre == null ? "Hoja" : nombre.replaceAll("[\\\\/?*\\[\\]:]", "").trim();
         if (s.isEmpty()) s = "Hoja";
-        s = s.substring(0, Math.min(s.length(), 31));
-        return s;
+        return s.substring(0, Math.min(s.length(), 31));
+    }
+
+    private static String rangoTexto(LocalDate desde, LocalDate hasta) {
+        if (desde == null || hasta == null) return "Sin rango definido";
+        return "Del " + fmtFecha(desde) + " al " + fmtFecha(hasta);
     }
 
     private static String fmtFecha(LocalDate d) {
         return d.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
+
     private static String fmtFechaHora(LocalDateTime dt) {
         return dt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    private static XSSFColor color(String hex) {
+        XSSFColor c = new XSSFColor();
+        byte[] rgb = new byte[]{
+                (byte) Integer.parseInt(hex.substring(0, 2), 16),
+                (byte) Integer.parseInt(hex.substring(2, 4), 16),
+                (byte) Integer.parseInt(hex.substring(4, 6), 16)
+        };
+        c.setRGB(rgb);
+        return c;
+    }
+
+    private static XSSFFont fuente(XSSFWorkbook wb, int tamano, boolean negrita, String hex) {
+        XSSFFont f = wb.createFont();
+        f.setFontName("Calibri");
+        f.setFontHeightInPoints((short) tamano);
+        f.setBold(negrita);
+        f.setColor(color(hex));
+        return f;
+    }
+
+    private static final class Estilos {
+        final XSSFWorkbook wb;
+        final CellStyle banda, bandaSub, marca, tituloPortada, destacado, meta, numeroPortada,
+                pie, bandaHoja, tituloHoja, vacio, nota;
+        final XSSFCellStyle seccionTitulo, nombrePortada, subHoja, encabezado,
+                total, totalNumero, totalEntero;
+        final CellStyle[] clara, alterna, claraFuerte, alternaFuerte, monedaClara, monedaAlterna,
+                enteroClara, enteroAlterna, decimalClara, decimalAlterna, fechaClara, fechaAlterna;
+
+        Estilos(XSSFWorkbook wb) {
+            this.wb = wb;
+            banda = wb.createCellStyle();
+            banda.setFillForegroundColor(color(NAVY));
+            banda.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            bandaSub = wb.createCellStyle();
+            bandaSub.setFillForegroundColor(color(NAVY_SOFT));
+            bandaSub.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            bandaSub.setFont(fuente(wb, 11, false, "C7D2E5"));
+            bandaSub.setAlignment(HorizontalAlignment.CENTER);
+            bandaSub.setVerticalAlignment(VerticalAlignment.CENTER);
+
+            marca = wb.createCellStyle();
+            marca.cloneStyleFrom(banda);
+            marca.setFont(fuente(wb, 24, true, "FFFFFF"));
+            marca.setAlignment(HorizontalAlignment.CENTER);
+            marca.setVerticalAlignment(VerticalAlignment.CENTER);
+
+            tituloPortada = wb.createCellStyle();
+            tituloPortada.setFont(fuente(wb, 15, true, TEXT));
+            tituloPortada.setAlignment(HorizontalAlignment.CENTER);
+
+            destacado = wb.createCellStyle();
+            destacado.setFont(fuente(wb, 12, true, AMBER));
+            destacado.setAlignment(HorizontalAlignment.CENTER);
+
+            meta = wb.createCellStyle();
+            meta.setFont(fuente(wb, 9, false, MUTED));
+            meta.setAlignment(HorizontalAlignment.CENTER);
+
+            seccionTitulo = wb.createCellStyle();
+            seccionTitulo.setFont(fuente(wb, 11, true, TEXT));
+            seccionTitulo.setBorderBottom(BorderStyle.THIN);
+            seccionTitulo.setBottomBorderColor(color(BORDER));
+
+            numeroPortada = wb.createCellStyle();
+            numeroPortada.setFont(fuente(wb, 10, true, AMBER));
+            numeroPortada.setAlignment(HorizontalAlignment.CENTER);
+
+            nombrePortada = wb.createCellStyle();
+            nombrePortada.setFont(fuente(wb, 10, false, TEXT));
+            nombrePortada.setBorderBottom(BorderStyle.HAIR);
+            nombrePortada.setBottomBorderColor(color(BORDER));
+
+            pie = wb.createCellStyle();
+            pie.setFont(fuente(wb, 8, false, MUTED));
+            pie.setAlignment(HorizontalAlignment.CENTER);
+
+            bandaHoja = wb.createCellStyle();
+            bandaHoja.setFillForegroundColor(color(NAVY));
+            bandaHoja.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            bandaHoja.setBorderBottom(BorderStyle.NONE);
+
+            tituloHoja = wb.createCellStyle();
+            tituloHoja.cloneStyleFrom(bandaHoja);
+            tituloHoja.setFont(fuente(wb, 13, true, "FFFFFF"));
+            tituloHoja.setAlignment(HorizontalAlignment.LEFT);
+            tituloHoja.setVerticalAlignment(VerticalAlignment.CENTER);
+            tituloHoja.setIndention((short) 1);
+
+            subHoja = wb.createCellStyle();
+            subHoja.setFont(fuente(wb, 8, false, MUTED));
+            subHoja.setAlignment(HorizontalAlignment.LEFT);
+            subHoja.setIndention((short) 1);
+            subHoja.setBorderBottom(BorderStyle.THIN);
+            subHoja.setBottomBorderColor(color(BORDER));
+
+            encabezado = wb.createCellStyle();
+            encabezado.setFillForegroundColor(color(AMBER));
+            encabezado.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            encabezado.setFont(fuente(wb, 9, true, "FFFFFF"));
+            encabezado.setAlignment(HorizontalAlignment.CENTER);
+            encabezado.setVerticalAlignment(VerticalAlignment.CENTER);
+            borde(encabezado, AMBER);
+            encabezado.setWrapText(true);
+
+            total = wb.createCellStyle();
+            total.setFillForegroundColor(color(CREAM));
+            total.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            total.setFont(fuente(wb, 9, true, TEXT));
+            total.setAlignment(HorizontalAlignment.LEFT);
+            total.setVerticalAlignment(VerticalAlignment.CENTER);
+            borde(total, BORDER);
+            total.setBorderTop(BorderStyle.DOUBLE);
+            total.setTopBorderColor(color(AMBER));
+
+            totalNumero = wb.createCellStyle();
+            totalNumero.cloneStyleFrom(total);
+            totalNumero.setAlignment(HorizontalAlignment.RIGHT);
+            totalNumero.setDataFormat(wb.createDataFormat().getFormat("\"S/ \"#,##0.00"));
+
+            totalEntero = wb.createCellStyle();
+            totalEntero.cloneStyleFrom(total);
+            totalEntero.setAlignment(HorizontalAlignment.RIGHT);
+            totalEntero.setDataFormat(wb.createDataFormat().getFormat("#,##0"));
+
+            vacio = wb.createCellStyle();
+            vacio.setFont(fuente(wb, 9, false, MUTED));
+            vacio.setAlignment(HorizontalAlignment.CENTER);
+            vacio.setVerticalAlignment(VerticalAlignment.CENTER);
+
+            nota = wb.createCellStyle();
+            nota.setFont(fuente(wb, 8, false, MUTED));
+            nota.setAlignment(HorizontalAlignment.LEFT);
+            nota.setWrapText(true);
+
+            clara = new CellStyle[2];
+            alterna = new CellStyle[2];
+            claraFuerte = new CellStyle[2];
+            alternaFuerte = new CellStyle[2];
+            monedaClara = new CellStyle[2];
+            monedaAlterna = new CellStyle[2];
+            enteroClara = new CellStyle[2];
+            enteroAlterna = new CellStyle[2];
+            decimalClara = new CellStyle[2];
+            decimalAlterna = new CellStyle[2];
+            fechaClara = new CellStyle[2];
+            fechaAlterna = new CellStyle[2];
+            for (int k = 0; k < 2; k++) {
+                String fondo = k == 1 ? CREAM : "FFFFFF";
+                clara[k] = base(fondo, false, false, false);
+                alterna[k] = clara[k];
+                claraFuerte[k] = base(fondo, true, false, false);
+                alternaFuerte[k] = claraFuerte[k];
+                monedaClara[k] = base(fondo, false, true, false);
+                monedaAlterna[k] = monedaClara[k];
+                enteroClara[k] = base(fondo, false, false, false);
+                enteroAlterna[k] = enteroClara[k];
+                decimalClara[k] = base(fondo, false, false, false);
+                decimalAlterna[k] = decimalClara[k];
+                enteroClara[k].setDataFormat(wb.createDataFormat().getFormat("#,##0"));
+                enteroAlterna[k] = enteroClara[k];
+                decimalClara[k].setDataFormat(wb.createDataFormat().getFormat("#,##0.00"));
+                decimalAlterna[k] = decimalClara[k];
+                monedaClara[k].setDataFormat(wb.createDataFormat().getFormat("\"S/ \"#,##0.00"));
+                monedaAlterna[k] = monedaClara[k];
+                fechaClara[k] = base(fondo, false, false, false);
+                fechaClara[k].setDataFormat(wb.createDataFormat().getFormat("dd/mm/yyyy"));
+                fechaAlterna[k] = fechaClara[k];
+            }
+        }
+
+        private XSSFCellStyle base(String fondo, boolean negrita, boolean derecha, boolean centrado) {
+            XSSFCellStyle s = wb.createCellStyle();
+            s.setFillForegroundColor(color(fondo));
+            s.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            s.setFont(fuente(wb, 9, negrita, TEXT));
+            s.setAlignment(derecha ? HorizontalAlignment.RIGHT
+                    : centrado ? HorizontalAlignment.CENTER : HorizontalAlignment.LEFT);
+            s.setVerticalAlignment(VerticalAlignment.CENTER);
+            s.setWrapText(true);
+            borde(s, BORDER);
+            return s;
+        }
+
+        private void borde(XSSFCellStyle s, String hex) {
+            s.setBorderBottom(BorderStyle.HAIR);
+            s.setBorderTop(BorderStyle.HAIR);
+            s.setBorderLeft(BorderStyle.HAIR);
+            s.setBorderRight(BorderStyle.HAIR);
+            s.setBottomBorderColor(color(hex));
+            s.setTopBorderColor(color(hex));
+            s.setLeftBorderColor(color(hex));
+            s.setRightBorderColor(color(hex));
+        }
+
+        CellStyle celda(int idx) { return clara[idx % 2]; }
+        CellStyle celdaFuerte(int idx) { return claraFuerte[idx % 2]; }
+        CellStyle moneda(int idx) { return monedaClara[idx % 2]; }
+        CellStyle entero(int idx) { return enteroClara[idx % 2]; }
+        CellStyle decimal(int idx) { return decimalClara[idx % 2]; }
+        CellStyle fecha(int idx) { return fechaClara[idx % 2]; }
     }
 }
