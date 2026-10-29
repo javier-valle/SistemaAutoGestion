@@ -92,7 +92,17 @@
             <scope>runtime</scope>
         </dependency>
 
-        
+        <!-- Librerías de apoyo a la codificación (Avance 3) -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.3.1-jre</version>
+        </dependency>
+        <dependency>
+            <!-- versión administrada por el BOM de Spring Boot -->
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
@@ -151,6 +161,16 @@
                         <include>**/*Tests.java</include>
                         <include>**/*IT.java</include>
                     </includes>
+                </configuration>
+            </plugin>
+            <!-- Javadoc: mvn javadoc:javadoc genera target/site/apidocs (Anexo del Avance 3) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <doclint>none</doclint>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
         </plugins>
