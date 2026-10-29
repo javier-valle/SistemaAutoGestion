@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,6 +47,10 @@ public interface CotizacionRepository extends JpaRepository<Cotizacion, Long> {
         WHERE c.id = :id AND cl.id = :clienteId
         """)
     Optional<Cotizacion> findByIdAndClienteId(@Param("id") Long id, @Param("clienteId") Long clienteId);
+
+    /** ¿El diagnóstico ya tiene una cotización viva? (rechazada o convertida ya no cuenta). */
+    boolean existsByDiagnosticoIdAndEstadoIn(Long diagnosticoId,
+                                             Collection<com.autogestion.entity.EstadoCotizacion> estados);
 
     /** Fila bloqueada: quien convierte una cotización en OT espera su turno (anti doble OT). */
     @Lock(LockModeType.PESSIMISTIC_WRITE)

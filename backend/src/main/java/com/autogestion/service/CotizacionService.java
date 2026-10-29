@@ -28,6 +28,10 @@ public class CotizacionService {
     private final ProductoRepository productoRepository;
     private final RecepcionRepository recepcionRepository;
 
+    /** Estados que ocupan el diagnóstico: mientras exista uno, no se crea otra cotización. */
+    private static final List<EstadoCotizacion> VIGENTES = List.of(
+            EstadoCotizacion.PENDIENTE, EstadoCotizacion.EN_DIAGNOSTICO, EstadoCotizacion.APROBADA);
+
     @Transactional
     public CotizacionResponseDTO crear(CotizacionRequest request) {
         try {
@@ -35,8 +39,10 @@ public class CotizacionService {
                     .orElseThrow(() -> new BusinessException("Diagnóstico no encontrado: " + request.getDiagnosticoId()));
 
         
+        exigirCotizacionUnica(diagnostico.getId());
         Cotizacion cotizacion = Cotizacion.builder()
                 .diagnostico(diagnostico)
+                .diagnosticoVigenteId(diagnostico.getId())
                 .total(BigDecimal.ZERO)
                 .estado(EstadoCotizacion.PENDIENTE)
                 .fecha(AppTime.ahora())
@@ -135,6 +141,9 @@ public class CotizacionService {
             .build();
         } catch (BusinessException e) {
             throw e;
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new BusinessException("Este diagnóstico ya tiene una cotización vigente.", "diagnosticoId",
+                    "Recházala o conviértela antes de crear otra.", org.springframework.http.HttpStatus.CONFLICT);
         } catch (Exception e) {
             throw new BusinessException("Error al crear cotización: " + e.getMessage(),
                     org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
@@ -147,8 +156,10 @@ public class CotizacionService {
             Diagnostico diagnostico = diagnosticoRepository.findById(request.getDiagnosticoId())
                     .orElseThrow(() -> new BusinessException("Diagnóstico no encontrado: " + request.getDiagnosticoId()));
 
+        exigirCotizacionUnica(diagnostico.getId());
         Cotizacion cotizacion = Cotizacion.builder()
                 .diagnostico(diagnostico)
+                .diagnosticoVigenteId(diagnostico.getId())
                 .total(BigDecimal.ZERO)
                 .estado(EstadoCotizacion.PENDIENTE)
                 .fecha(AppTime.ahora())
@@ -244,6 +255,9 @@ public class CotizacionService {
             .build();
         } catch (BusinessException e) {
             throw e;
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new BusinessException("Este diagnóstico ya tiene una cotización vigente.", "diagnosticoId",
+                    "Recházala o conviértela antes de crear otra.", org.springframework.http.HttpStatus.CONFLICT);
         } catch (Exception e) {
             throw new BusinessException("Error al crear cotización completa: " + e.getMessage(),
                     org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
@@ -284,6 +298,7 @@ public class CotizacionService {
         }
 
         cotizacion.setEstado(EstadoCotizacion.RECHAZADA);
+        cotizacion.setDiagnosticoVigenteId(null);
         cotizacion = cotizacionRepository.save(cotizacion);
 
         Cotizacion saved = cotizacionRepository.findById(cotizacion.getId())
@@ -362,6 +377,14 @@ public class CotizacionService {
                         .precioUnitario(cp.getPrecioUnitario())
                         .build())
                 .toList();
+    }
+
+    /** Un diagnóstico puede renegociarse, pero solo con una cotización viva a la vez. */
+    private void exigirCotizacionUnica(Long diagnosticoId) {
+        if (cotizacionRepository.existsByDiagnosticoIdAndEstadoIn(diagnosticoId, VIGENTES)) {
+            throw new BusinessException("Este diagnóstico ya tiene una cotización vigente.", "diagnosticoId",
+                    "Recházala o conviértela antes de crear otra.", org.springframework.http.HttpStatus.CONFLICT);
+        }
     }
 
     private CotizacionResponseDTO toResponseDTO(Cotizacion cotizacion) {

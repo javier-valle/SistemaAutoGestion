@@ -47,6 +47,7 @@ public class OrdenTrabajoService {
         OrdenTrabajo ot = abrirOrden(cotizacion, mecanico);
 
         cotizacion.setEstado(EstadoCotizacion.CONVERTIDA);
+        cotizacion.setDiagnosticoVigenteId(null);
         cotizacionRepository.save(cotizacion);
 
         return ot;
@@ -73,6 +74,7 @@ public class OrdenTrabajoService {
         }
 
         cotizacion.setEstado(EstadoCotizacion.CONVERTIDA);
+        cotizacion.setDiagnosticoVigenteId(null);
         cotizacionRepository.save(cotizacion);
 
         return ordenTrabajoRepository.save(ot);
