@@ -195,7 +195,10 @@
                     heads.some(h => normal(h) === normal(c))));
             const cuerpo = (filas || []).filter((f, i) => i !== 0 || !esFilaDeTitulos(f));
             return {
-                columnas: heads.map((h, j) => ({ titulo: h, tipo: tipoColumna(h, cuerpo.map(f => f[j])) })),
+                columnas: heads.map((h, j) => {
+                    const tipo = tipoColumna(h, cuerpo.map(f => f[j]));
+                    return { titulo: h, tipo, totaliza: tipo === 'dinero' };
+                }),
                 filas: cuerpo
             };
         }
