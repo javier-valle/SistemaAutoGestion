@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="/css/redesign.css">
     <link rel="stylesheet" href="/css/polish.css?v=20261005">
     <link rel="stylesheet" href="/css/panels-premium.css?v=20261002">
+    <link rel="stylesheet" href="/css/refresh.css?v=20261029">
     <script>
         (function(){var t=localStorage.getItem('ag-theme')||'system';if(t==='system')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',t);})();
     </script>
@@ -266,7 +267,18 @@
             document.getElementById('cotizacionSection').style.opacity = locked ? '0.55' : '1';
             document.getElementById('cotLockHint').textContent = locked
                 ? 'Primero registra el diagnóstico (paso 1)'
-                : 'Diagnóstico listo — agrega items y genera';
+                : cotStep === 3
+                    ? 'Cotización generada — apruébala abajo para crear la OT'
+                    : 'Diagnóstico listo — agrega items y genera';
+        }
+        function marcarFlujoCompleto() {
+            document.querySelectorAll('#cotWizard .ag-wz-step').forEach(s => {
+                s.classList.remove('now');
+                s.classList.add('done');
+                s.querySelector('.ag-wz-dot').textContent = '✓';
+            });
+            document.getElementById('cotizacionSection').style.opacity = '1';
+            document.getElementById('cotLockHint').textContent = 'Cotización aprobada — continúa en Órdenes de Trabajo';
         }
         async function loadData() {
             try {
@@ -463,8 +475,12 @@
         }
         window.aprobarCotizacion = async function(id) {
             if (!(await confirmarAccion(`Aprobar la cotización #${id}? Con eso podrá crearse la Orden de Trabajo y la recepción pasa a COTIZADA.`, { tipo: 'primary' }))) return;
-            try { await apiFetch(`/cotizaciones/${id}/aprobar`, { method: 'PUT' }); toast('Cotización aprobada. Siguiente: crea la OT en Órdenes de Trabajo.', 'success'); loadCotizaciones(); }
-            catch (e) { toast('Error: ' + e.message, 'danger'); }
+            try {
+                await apiFetch(`/cotizaciones/${id}/aprobar`, { method: 'PUT' });
+                marcarFlujoCompleto();
+                toast('Cotización aprobada. Siguiente: crea la OT en Órdenes de Trabajo.', 'success');
+                loadCotizaciones();
+            } catch (e) { toast('Error: ' + e.message, 'danger'); }
         };
         window.rechazarCotizacion = async function(id) { try { await apiFetch(`/cotizaciones/${id}/rechazar`, { method: 'PUT' }); showSuccess('alertContainer', 'Cotizacion rechazada'); loadCotizaciones(); } catch (e) { showError('alertContainer', e.message); } };
         
