@@ -4,6 +4,7 @@ import com.autogestion.dto.IndicadoresResponse;
 import com.autogestion.dto.ReporteDTOs;
 import com.autogestion.service.ReporteService;
 import com.autogestion.service.ReporteExportService;
+import com.autogestion.util.Rangos;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -32,15 +33,6 @@ public class ReporteController {
     private final ReporteService reporteService;
     private final ReporteExportService reporteExportService;
 
-    private LocalDate[] rango(LocalDate desde, LocalDate hasta) {
-        LocalDate h = hasta != null ? hasta.plusDays(1) : LocalDate.now(ReporteService.ZONA).plusMonths(1).withDayOfMonth(1);
-        LocalDate d = desde != null ? desde : h.minusMonths(1).withDayOfMonth(1);
-        if (desde == null && hasta == null) {
-            var mes = reporteService.mesActual();
-            return new LocalDate[]{mes[0].toLocalDate(), mes[1].toLocalDate()};
-        }
-        return new LocalDate[]{d, h};
-    }
 
     @RolesAllowed({"ADMIN", "ALMACENERO"})
     @GetMapping("/indicadores")
@@ -53,7 +45,7 @@ public class ReporteController {
     public ResponseEntity<List<ReporteDTOs.DiaClientes>> clientesPorDia(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         return ResponseEntity.ok(reporteService.clientesPorDia(r[0], r[1]));
     }
 
@@ -66,7 +58,7 @@ public class ReporteController {
         if (!"csv".equalsIgnoreCase(formato)) {
             return ResponseEntity.badRequest().build();
         }
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         StringBuilder csv = new StringBuilder("Día;Clientes atendidos;Recepciones;Entregas\n");
         for (var f : reporteService.clientesPorDia(r[0], r[1])) {
             csv.append(f.dia()).append(';').append(f.clientesAtendidos()).append(';')
@@ -90,7 +82,7 @@ public class ReporteController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
             @RequestParam(defaultValue = "dia") String agrupar) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         return ResponseEntity.ok(reporteService.ingresos(r[0], r[1], agrupar));
     }
 
@@ -98,7 +90,7 @@ public class ReporteController {
     public ResponseEntity<List<ReporteDTOs.ComprobanteResumen>> comprobantesResumen(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         return ResponseEntity.ok(reporteService.comprobantesResumen(r[0], r[1]));
     }
 
@@ -107,7 +99,7 @@ public class ReporteController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
             @RequestParam(defaultValue = "10") int top) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         return ResponseEntity.ok(reporteService.serviciosMasPedidos(r[0], r[1], Math.min(50, Math.max(1, top))));
     }
 
@@ -115,7 +107,7 @@ public class ReporteController {
     public ResponseEntity<List<ReporteDTOs.MecanicoRendimiento>> rendimientoMecanicos(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         return ResponseEntity.ok(reporteService.rendimientoMecanicos(r[0], r[1]));
     }
 
@@ -130,7 +122,7 @@ public class ReporteController {
     public ResponseEntity<ReporteDTOs.InventarioResumen> inventarioResumen(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         return ResponseEntity.ok(reporteService.inventarioResumen(r[0], r[1]));
     }
 
@@ -141,7 +133,7 @@ public class ReporteController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
             @RequestParam(defaultValue = "producto") String agrupar,
             @RequestParam(defaultValue = "10") int top) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         return ResponseEntity.ok(reporteService.consumo(r[0], r[1], agrupar, Math.min(50, Math.max(1, top))));
     }
 
@@ -151,7 +143,7 @@ public class ReporteController {
             @PathVariable Long productoId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         return ResponseEntity.ok(reporteService.kardex(productoId, r[0], r[1]));
     }
 
@@ -163,7 +155,7 @@ public class ReporteController {
             @RequestParam(required = false) Long proveedorId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         return ResponseEntity.ok(reporteService.entradas(r[0], r[1], proveedorId, page, size));
     }
 
@@ -171,7 +163,7 @@ public class ReporteController {
     public ResponseEntity<List<ReporteDTOs.GastoGrupo>> gastos(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
 
         return ResponseEntity.ok(reporteService.gastosPorCategoria(r[0], r[1].minusDays(1)));
     }
@@ -180,7 +172,7 @@ public class ReporteController {
     public ResponseEntity<ReporteDTOs.ResultadoDTO> resultado(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         return ResponseEntity.ok(reporteService.resultado(r[0], r[1]));
     }
 
@@ -190,7 +182,7 @@ public class ReporteController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
             @RequestParam(defaultValue = "10") int top) {
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         return ResponseEntity.ok(reporteService.productosMasUsados(r[0], r[1], Math.min(50, Math.max(1, top))));
     }
 
@@ -227,7 +219,7 @@ public class ReporteController {
         if (seleccionados.isEmpty()) {
             return ResponseEntity.badRequest().body("No se seleccionó ningún reporte.".getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
-        LocalDate[] r = rango(desde, hasta);
+        LocalDate[] r = Rangos.rangoReporte(desde, hasta);
         byte[] archivo = reporteExportService.exportarConsolidado(seleccionados, formato, r[0], r[1],
                 SecurityContextHolder.getContext().getAuthentication() != null
                         ? SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()

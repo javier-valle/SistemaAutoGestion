@@ -1,6 +1,7 @@
 package com.autogestion.service;
 
 import com.autogestion.dto.ReporteDTOs;
+import com.autogestion.util.Rangos;
 import com.autogestion.util.ReportePdfGenerator;
 import com.autogestion.util.ReporteExcelGenerator;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,7 @@ public class ReporteExportService {
     private void agregarResumen(List<ReportePdfGenerator.Seccion> pdf,
                                  List<ReporteExcelGenerator.Seccion> xlsx,
                                  LocalDate desde, LocalDate hasta) {
-        var rango = rango(desde, hasta);
+        var rango = Rangos.rangoReporte(desde, hasta);
         var ind = reporteService.obtenerIndicadores();
         var cli = reporteService.clientesPorDia(rango[0], rango[1]);
         var comp = reporteService.comprobantesResumen(rango[0], rango[1]);
@@ -73,7 +74,7 @@ public class ReporteExportService {
     private void agregarClientes(List<ReportePdfGenerator.Seccion> pdf,
                                   List<ReporteExcelGenerator.Seccion> xlsx,
                                   LocalDate desde, LocalDate hasta) {
-        var rango = rango(desde, hasta);
+        var rango = Rangos.rangoReporte(desde, hasta);
         var dias = reporteService.clientesPorDia(rango[0], rango[1]);
         var estados = reporteService.recepcionesPorEstado();
 
@@ -94,7 +95,7 @@ public class ReporteExportService {
     private void agregarIngresos(List<ReportePdfGenerator.Seccion> pdf,
                                   List<ReporteExcelGenerator.Seccion> xlsx,
                                   LocalDate desde, LocalDate hasta) {
-        var rango = rango(desde, hasta);
+        var rango = Rangos.rangoReporte(desde, hasta);
         var pts = reporteService.ingresos(rango[0], rango[1], "dia");
         String[] enc = {"Periodo", "Total (S/)"};
         List<String[]> datos = new ArrayList<>();
@@ -110,7 +111,7 @@ public class ReporteExportService {
     private void agregarInventario(List<ReportePdfGenerator.Seccion> pdf,
                                     List<ReporteExcelGenerator.Seccion> xlsx,
                                     LocalDate desde, LocalDate hasta) {
-        var rango = rango(desde, hasta);
+        var rango = Rangos.rangoReporte(desde, hasta);
         var resumen = reporteService.inventarioResumen(rango[0], rango[1]);
         String[] enc = {"Concepto", "Valor"};
         List<String[]> datos = new ArrayList<>();
@@ -133,7 +134,7 @@ public class ReporteExportService {
     private void agregarGastos(List<ReportePdfGenerator.Seccion> pdf,
                                 List<ReporteExcelGenerator.Seccion> xlsx,
                                 LocalDate desde, LocalDate hasta) {
-        var rango = rango(desde, hasta);
+        var rango = Rangos.rangoReporte(desde, hasta);
 
         var grupos = reporteService.gastosPorCategoria(rango[0], rango[1].minusDays(1));
         String[] enc = {"Categoría", "Etiqueta", "Veces", "Total (S/)"};
@@ -150,7 +151,7 @@ public class ReporteExportService {
     private void agregarResultado(List<ReportePdfGenerator.Seccion> pdf,
                                    List<ReporteExcelGenerator.Seccion> xlsx,
                                    LocalDate desde, LocalDate hasta) {
-        var rango = rango(desde, hasta);
+        var rango = Rangos.rangoReporte(desde, hasta);
         var r = reporteService.resultado(rango[0], rango[1]);
         String[] enc = {"Concepto", "Monto (S/)"};
         List<String[]> datos = new ArrayList<>();
@@ -175,7 +176,7 @@ public class ReporteExportService {
     private void agregarMecanicos(List<ReportePdfGenerator.Seccion> pdf,
                                    List<ReporteExcelGenerator.Seccion> xlsx,
                                    LocalDate desde, LocalDate hasta) {
-        var rango = rango(desde, hasta);
+        var rango = Rangos.rangoReporte(desde, hasta);
         var filas = reporteService.rendimientoMecanicos(rango[0], rango[1]);
         String[] enc = {"Mecánico", "Asignadas", "En proceso", "Finalizadas", "Horas prom", "Consumo (S/)", "Ingresos (S/)"};
         List<String[]> datos = new ArrayList<>();
@@ -204,13 +205,4 @@ public class ReporteExportService {
         return "S/ " + new java.text.DecimalFormat("#,##0.00").format(v);
     }
 
-    private LocalDate[] rango(LocalDate desde, LocalDate hasta) {
-        LocalDate h = hasta != null ? hasta.plusDays(1) : LocalDate.now(ReporteService.ZONA).plusMonths(1).withDayOfMonth(1);
-        LocalDate d = desde != null ? desde : h.minusMonths(1).withDayOfMonth(1);
-        if (desde == null && hasta == null) {
-            var mes = reporteService.mesActual();
-            return new LocalDate[]{mes[0].toLocalDate(), mes[1].toLocalDate()};
-        }
-        return new LocalDate[]{d, h};
-    }
 }
