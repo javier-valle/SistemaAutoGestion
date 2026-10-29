@@ -1,7 +1,8 @@
 # Documentación — AutoGestión
 
-Esta carpeta reúne la documentación de apoyo del sistema. El informe académico y su
-evidencia viven aparte, en `docs/` y `docs/evidencia/`.
+Esta carpeta reúne la documentación de apoyo del sistema y el informe del Avance de
+Proyecto Final 3. Las capturas, diagramas y registros que lo respaldan están en
+`evidencia/`.
 
 | Documento | Para qué sirve | A quién está dirigido |
 | :-- | :-- | :-- |
