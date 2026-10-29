@@ -8,7 +8,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 <br>
 
-<img src="https://img.shields.io/badge/version-2.19.0-orange?style=for-the-badge" />
+<img src="https://img.shields.io/badge/version-2.20.0-orange?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
 <img src="https://img.shields.io/badge/Spring_Boot-3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
 
@@ -20,6 +20,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 | Version | Fecha | Lo destacado |
 | :-- | :-- | :-- |
+| [2.20.0](#-2200---2026-10-29) | 2026-10-29 | 💬 Comentarios de los clientes en el panel del personal · Baja de cuenta desde el portal con confirmación · Descargas sin pantalla en negro y con nombre legible |
 | [2.19.0](#-2190---2026-10-29) | 2026-10-29 | 🌐 Portal con comprobantes, historial y encuesta reales · QR vectorial en el PDF · Exportación por tabla a Excel/PDF sin CSV crudo |
 | [2.18.0](#-2180---2026-10-29) | 2026-10-29 | 🛡️ Un solo camino de pago/entrega · una cotización vigente por diagnóstico (V10) · anular suelta el pago · refactor de cotización, rangos y Excel |
 | [2.17.0](#-2170---2026-10-29) | 2026-10-29 | 🧾 Boleta y factura en A4 con el formato de representación impresa: recuadro del emisor, tabla por columnas, importes y texto legal |
@@ -47,6 +48,16 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 | [1.0.0](#-100---2026-09-14) | 2026-09-14 | 🐛 Correccion de errores fundacionales (DTOs, pagos, cache) |
 
 <img src="./readme-assets/divider.svg" width="100%" height="6" alt="" />
+
+## 💬 2.20.0 — 2026-10-29
+
+### Comentarios a la vista y cuenta que se puede cerrar
+- **Comentarios de los clientes en el panel (`comentarios.html`):** hasta ahora la encuesta del portal se guardaba pero el taller no tenía dónde leerla. La nueva pantalla de **Gestión → Comentarios** (ADMIN y RECEPCIONISTA) muestra promedio de estrellas, encuestas recibidas y cuántas traen texto, con cada opinión acompañada de cliente, documento, OT, placa, vehículo, fecha y nota de 1 a 5. Incluye filtros por puntuación, búsqueda libre y "solo con comentario". Se alimenta de `GET /api/encuestas`, que ordena de la más reciente a la más antigua.
+- **Baja de cuenta desde el portal (`cuenta.html`):** el menú de la cuenta ahora tiene **Mi cuenta y privacidad**. Ahí se ven los datos y una zona de riesgo con **Eliminar mi cuenta**, que abre una confirmación donde hay que escribir `ELIMINAR` (el botón sigue deshabilitado hasta que coincide). `DELETE /api/portal/cuenta` exige esa misma palabra en el cuerpo y responde `400` con el campo `confirmacion` si falta o no coincide.
+- **Qué se borra y qué se conserva:** se eliminan encuestas, consentimientos, citas, solicitudes de cotización y el historial de accesos del cliente; los vehículos sin visitas registradas también se borran. La ficha del cliente queda anonimizada (`Cliente dado de baja`, sin documento, correo, teléfono ni dirección) y desactivada, así que ya no puede entrar con documento y placa. Los comprobantes y órdenes ya emitidos se mantienen sin datos personales: la FK de `comprobante` es `NO ACTION` y la información contable no se destruye. La pantalla confirma la baja y cierra la sesión.
+- **Descargas que ya no rompen la vista:** el manejador de transiciones de `animations.js` interceptaba también los enlaces `blob:` con atributo `download`, anulaba la descarga, desvanecía la página (pantalla en negro hasta recargar) y guardaba el archivo con el UUID del blob. Ahora ignora `download`, `blob:`, `data:` y `javascript:`, así que el PDF del comprobante y los Excel/PDF de reportes conservan su nombre (`BOLETA-B001-00000001.pdf`, `autogestion-stock-del-inventario.xlsx`) y la vista sigue intacta.
+- **Exportar solo cuando hay datos:** las tablas de reportes sin filas ya no muestran los botones Excel/PDF, que respondían `400` al enviar cero filas.
+- **Verificación:** `mvn -B test` → **142 pruebas, 0 fallos** (7 nuevas: baja con y sin confirmación, borrado de vehículos sin historial y listado de encuestas con y sin OT). Probado en el navegador: la encuesta enviada desde el portal aparece en Comentarios con sus estrellas y filtros, y una cuenta de prueba se eliminó de punta a punta (ficha anonimizada, vehículo y consentimiento borrados, reintento de acceso con `401`).
 
 ## 🔌 2.19.0 — 2026-10-29
 
