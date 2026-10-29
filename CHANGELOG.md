@@ -8,7 +8,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 <br>
 
-<img src="https://img.shields.io/badge/version-2.18.0-orange?style=for-the-badge" />
+<img src="https://img.shields.io/badge/version-2.19.0-orange?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
 <img src="https://img.shields.io/badge/Spring_Boot-3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
 
@@ -20,6 +20,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 | Version | Fecha | Lo destacado |
 | :-- | :-- | :-- |
+| [2.19.0](#-2190---2026-10-29) | 2026-10-29 | 🌐 Portal con comprobantes, historial y encuesta reales · QR vectorial en el PDF · Exportación por tabla a Excel/PDF sin CSV crudo |
 | [2.18.0](#-2180---2026-10-29) | 2026-10-29 | 🛡️ Un solo camino de pago/entrega · una cotización vigente por diagnóstico (V10) · anular suelta el pago · refactor de cotización, rangos y Excel |
 | [2.17.0](#-2170---2026-10-29) | 2026-10-29 | 🧾 Boleta y factura en A4 con el formato de representación impresa: recuadro del emisor, tabla por columnas, importes y texto legal |
 | [2.16.0](#-2160---2026-10-29) | 2026-10-29 | 📊 Excel y PDF con portada, tablas paginadas y totales · CSV legible en Excel · Descarga sin bloqueos · Fix `no Session` en órdenes y aprobación de cotización |
@@ -46,6 +47,18 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 | [1.0.0](#-100---2026-09-14) | 2026-09-14 | 🐛 Correccion de errores fundacionales (DTOs, pagos, cache) |
 
 <img src="./readme-assets/divider.svg" width="100%" height="6" alt="" />
+
+## 🔌 2.19.0 — 2026-10-29
+
+### Portal conectado, QR real y exportaciones prolijas
+- **Comprobantes en el portal (`comprobantes.html`):** el cliente ve sus boletas y facturas con fecha, placa, total y estado, y descarga el mismo PDF A4 que emite el taller. `GET /api/portal/comprobantes/{id}/pdf` comprueba que el documento sea del cliente del token: uno ajeno responde `404`, sin revelar si existe.
+- **Historial por vehículo (`historial.html`):** visitas ya entregadas agrupadas por placa, con fecha de ingreso y cierre, servicios de la cotización, total y folio del comprobante cuando se emitió. Solo se listan órdenes `FINALIZADA` del cliente autenticado.
+- **Encuesta ligada a la OT (`encuesta.html`):** el portal ofrece únicamente visitas entregadas sin encuesta, guarda una calificación de 1 a 5 con comentario y luego muestra la respuesta. Repetirla o calificar una orden abierta o ajena se rechaza con `409`/`404` explicados.
+- **QR real en el comprobante:** se agrega ZXing (`core`) y el código se dibuja como **módulos vectoriales** dentro del PDF, sin imagen incrustada: queda nítido a cualquier zoom y el archivo no engorda. Reemplaza al texto `QR: ...` que se imprimía antes; la hoja invita a escanearlo.
+- **Exportación por tabla (`POST /api/reportes/export/tabla`):** cada tabla de la pantalla se exporta con el diseño de los reportes: Excel de una hoja con banda de título, encabezado fijo, filtro, panel congelado, moneda con formato y área A4 horizontal; o PDF A4. El backend recibe el tipo de cada columna (texto, entero, dinero, decimal o promedio), así que los importes siguen siendo números y no texto.
+- **Se acabó el CSV crudo:** se retira la descarga `dato;dato;;` que armaba el navegador y los botones pasan a **Excel** y **PDF** por tabla; el consolidado sigue disponible para varias pestañas. Los avisos ahora dicen que la exportación trae todas las filas, no solo las cien visibles.
+- **Gráficos accesibles:** cada gráfico de barras lleva `title` y `desc` con la serie completa, además de su etiqueta, para que un lector de pantalla anuncie qué muestra.
+- **Verificación:** `mvn -B test` → **134 pruebas, 0 fallos** (15 nuevas: historial, comprobante ajeno, encuesta duplicada/ajena/abierta, Excel y PDF de una tabla, contrato del endpoint de exportación, su rol y el QR presente/ausente).
 
 ## 🛡️ 2.18.0 — 2026-10-29
 

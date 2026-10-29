@@ -69,7 +69,7 @@ Incluye todo lo anterior y además:
 - **Resultado**: utilidad estimada con la fórmula a la vista.
 - **Anulación de comprobantes**: exige motivo, deja rastro de auditoría y el número no se
   reutiliza.
-- **Reportes**: todas las pestañas, con exportación a CSV, Excel y PDF.
+- **Reportes**: todas las pestañas, con exportación por tabla a Excel y PDF, y consolidado de varias pestañas.
 
 ## 6. Módulo de reportes
 
@@ -96,9 +96,17 @@ calculan con la zona `America/Lima`. Sin filtro, el sistema toma el mes en curso
 
 ### Exportación
 
-Cada pestaña ofrece su menú de descarga en CSV, Excel o PDF. La opción **consolidado** reúne
-las pestañas seleccionadas en un solo archivo con portada, y es la que se entrega cuando se
-pide el reporte del periodo completo.
+Cada tabla ofrece dos botones: **Excel** y **PDF**. El archivo sale con el mismo diseño de los
+reportes (encabezado fijo, importes con formato de moneda, cifras numéricas de verdad y
+área de impresión A4), y la exportación trae todas las filas aunque en pantalla se muestren
+solo las primeras cien.
+
+La opción **Exportar consolidado** reúne las pestañas seleccionadas en un solo archivo con
+portada, y es la que se entrega cuando se pide el reporte del periodo completo. El botón
+**PDF / Imprimir** de la cabecera genera una vista de impresión de la pestaña activa.
+
+Los gráficos llevan título y descripción accesibles, así que un lector de pantalla puede
+anunciar qué muestra cada uno.
 
 ### Lectura de los resultados
 
