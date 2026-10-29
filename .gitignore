@@ -101,3 +101,6 @@ frontend/build/
 # Padron Reducido RUC de SUNAT (~394 MB): se descarga y se monta en Docker, no se versiona.
 /padron/
 logs/
+
+# Archivos temporales de Word (~$doc.docx)
+~$*
