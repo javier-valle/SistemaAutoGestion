@@ -1,4 +1,4 @@
-// frontend/js/reportes/tablas.js?v=1
+
 function renderTabla(config) {
     const { columnas, filas, formato = 'text', id } = config || {};
     const safeId = id || 'tbl_' + Math.random().toString(36).slice(2, 8);

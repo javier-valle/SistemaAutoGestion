@@ -59,7 +59,7 @@ class InventarioServiceTest {
     void compraActualizaStockCostoYProveedor() {
         Producto p = producto();
         Proveedor prov = Proveedor.builder().id(7L).nombre("Repuestos Sol").build();
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(p));
+        when(productoRepository.bloquearPorId(1L)).thenReturn(Optional.of(p));
         when(proveedorRepository.findById(7L)).thenReturn(Optional.of(prov));
         when(usuarioRepository.findById(3L)).thenReturn(Optional.of(
                 Usuario.builder().id(3L).nombre("Pedro Quispe").build()));
@@ -82,7 +82,7 @@ class InventarioServiceTest {
 
     @Test
     void entradaSinCostoSeRechaza() {
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(producto()));
+        when(productoRepository.bloquearPorId(1L)).thenReturn(Optional.of(producto()));
         assertThrows(BusinessException.class,
                 () -> inventarioService.registrarMovimiento(req("ENTRADA", 5), 3L));
         verify(inventarioMovimientoRepository, never()).save(any());
@@ -90,7 +90,7 @@ class InventarioServiceTest {
 
     @Test
     void mermaSinMotivoSeRechaza() {
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(producto()));
+        when(productoRepository.bloquearPorId(1L)).thenReturn(Optional.of(producto()));
         assertThrows(BusinessException.class,
                 () -> inventarioService.registrarMovimiento(req("MERMA", 2), 3L));
         verify(inventarioMovimientoRepository, never()).save(any());
@@ -99,7 +99,7 @@ class InventarioServiceTest {
     @Test
     void mermaConMotivoDescuentaYAudita() {
         Producto p = producto();
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(p));
+        when(productoRepository.bloquearPorId(1L)).thenReturn(Optional.of(p));
         when(usuarioRepository.findById(3L)).thenReturn(Optional.of(
                 Usuario.builder().id(3L).nombre("Pedro Quispe").build()));
         when(inventarioMovimientoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -111,14 +111,14 @@ class InventarioServiceTest {
         assertEquals(8, p.getStockActual());
         assertEquals(TipoMovimiento.MERMA.name(), dto.getTipo());
         assertEquals("Vencido en almacén", dto.getMotivo());
-        assertEquals(new BigDecimal("15.00"), dto.getCostoUnitario()); // costo del momento
+        assertEquals(new BigDecimal("15.00"), dto.getCostoUnitario());
     }
 
     @Test
     void consumoGuardaOTCostoYUsuario() {
         Producto p = producto();
         OrdenTrabajo ot = OrdenTrabajo.builder().id(9L).build();
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(p));
+        when(productoRepository.bloquearPorId(1L)).thenReturn(Optional.of(p));
         when(ordenTrabajoRepository.findById(9L)).thenReturn(Optional.of(ot));
         when(usuarioRepository.findById(3L)).thenReturn(Optional.of(
                 Usuario.builder().id(3L).nombre("Luis Ramírez").build()));
@@ -137,7 +137,7 @@ class InventarioServiceTest {
 
     @Test
     void consumoSinStockSeRechazaSinTocarNada() {
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(producto()));
+        when(productoRepository.bloquearPorId(1L)).thenReturn(Optional.of(producto()));
         when(ordenTrabajoRepository.findById(9L)).thenReturn(Optional.of(OrdenTrabajo.builder().id(9L).build()));
         assertThrows(BusinessException.class,
                 () -> inventarioService.registrarConsumoOT(9L, 1L, 99, 3L));

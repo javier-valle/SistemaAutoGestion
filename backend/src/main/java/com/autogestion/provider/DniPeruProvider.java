@@ -117,8 +117,8 @@ public class DniPeruProvider implements ProveedorDocumento {
 
         String mensaje = texto(respuesta.path("data"), "message");
         if (!respuesta.path("success").asBoolean(false)) {
-            // "No encontrado" no es una caída técnica: el servicio sigue con la
-            // siguiente fuente y, si no hay ninguna, el portal pasa a modo manual.
+
+
             if (pareceNoEncontrado(mensaje) || mensaje.isBlank()) return Optional.empty();
             throw new IllegalStateException("dniperu respondió success=false");
         }
@@ -183,7 +183,7 @@ public class DniPeruProvider implements ProveedorDocumento {
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             int status = response.statusCode();
             if (status == 403 || status == 429 || status == 503) {
-                // Reto/cookie vencida: la próxima consulta vuelve a calentar la sesión.
+
                 sesionLista = false;
                 throw new IllegalStateException("dniperu HTTP " + status);
             }

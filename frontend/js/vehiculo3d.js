@@ -1,34 +1,34 @@
-/* =========================================================
-   AutoGestion - Visor 3D de vehículos
-   ---------------------------------------------------------
-   · Extruye la MISMA silueta que el render 2D (vehPerfil),
-     así el 2D y el 3D comparten proporciones exactas.
-   · three.js se importa bajo demanda desde /js/vendor
-     (bundle local, sin CDN). Si falla o no hay WebGL,
-     se cae al render SVG con un aviso.
-   · Controles: arrastrar (orbit), rueda/pellizco (zoom),
-     reset, auto-rotación opcional, pausa cuando no se ve.
-   · El contexto WebGL y el entorno de estudio se reutilizan
-     entre aperturas (sin reciclar contextos GPU, que provoca
-     cuelgues de frames); al cerrar se liberan geometrías,
-     materiales y texturas del vehículo y se retira el grupo.
-   ========================================================= */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
   if (window.__agVeh3D) return;
   window.__agVeh3D = true;
 
-  /* ---------- ¿Hay WebGL? ---------- */
+
   function hayWebGL() {
     try {
       const c = document.createElement('canvas');
       return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl', { failIfMajorPerformanceCaveat: false })));
     } catch (e) { return false; }
   }
-  if (!hayWebGL()) return;                 // sin WebGL: el botón 3D no aparece
+  if (!hayWebGL()) return;
   document.documentElement.classList.add('ag-veh3d-on');
 
-  /* ---------- URL base del script (para import relativo) ---------- */
+
   const SCRIPTO = (document.currentScript && document.currentScript.src)
     || (document.querySelector('script[src*="vehiculo3d"]') || {}).src
     || location.href;
@@ -36,11 +36,11 @@
 
   let threeP = null;
   function cargarThree() {
-    if (!threeP) threeP = import(/* webpackIgnore */ BASE + 'vendor/three.module.min.js');
+    if (!threeP) threeP = import( BASE + 'vendor/three.module.min.js');
     return threeP;
   }
 
-  /* ---------- Delegación de clics en botones .ag-veh-3d ---------- */
+
   document.addEventListener('click', function (e) {
     const btn = e.target && e.target.closest ? e.target.closest('.ag-veh-3d') : null;
     if (!btn) return;
@@ -55,11 +55,11 @@
   });
   window.vehAbrir3D = abrir;
 
-  /* =======================================================
-     MODAL
-     ======================================================= */
+
+
+
   let ACTIVO = null;
-  let GL = null;   // { canvas, renderer, scene, shared } compartidos entre aperturas
+  let GL = null;
 
   function icono(nombre) {
     const s = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"';
@@ -78,7 +78,7 @@
   }
 
   async function abrir(v) {
-    if (ACTIVO) cerrar();                       // una sola instancia WebGL
+    if (ACTIVO) cerrar();
     const ov = document.createElement('div');
     ov.className = 'ag-3d-overlay';
     ov.innerHTML = `
@@ -146,8 +146,8 @@
     ctx.cerrado = true;
     if (ctx.raf) cancelAnimationFrame(ctx.raf);
     ctx.listeners.forEach(([el, t, f, o]) => el.removeEventListener(t, f, o));
-    ctx.observers.forEach(o => { try { o.disconnect(); } catch (e) { /**/ } });
-    ctx.disposables.forEach(d => { try { d && d.dispose && d.dispose(); } catch (e) { /**/ } });
+    ctx.observers.forEach(o => { try { o.disconnect(); } catch (e) {  } });
+    ctx.disposables.forEach(d => { try { d && d.dispose && d.dispose(); } catch (e) {  } });
     if (ctx.auto && ctx.auto.parent) ctx.auto.parent.remove(ctx.auto);
     ctx.ov.remove();
     document.body.classList.remove('ag-3d-lock');
@@ -155,9 +155,9 @@
   }
   window.vehCerrar3D = cerrar;
 
-  /* =======================================================
-     ESCENA
-     ======================================================= */
+
+
+
   function montar(THREE, ctx, canvas, stage) {
     const perf = {
       movil: matchMedia('(max-width: 700px), (pointer: coarse)').matches,
@@ -166,7 +166,7 @@
     if (perf.movil) perf.dprCap = 1.5;
     if ((navigator.deviceMemory || 8) <= 4) perf.dprCap = 1.25;
 
-    /* --- contexto y escena compartidos entre aperturas --- */
+
     if (GL && GL.canvas && GL.canvas !== canvas) { canvas.replaceWith(GL.canvas); canvas = GL.canvas; }
     else if (!GL) {
       GL = { canvas: canvas, shared: [] };
@@ -197,12 +197,12 @@
       scn.background = new THREE.Color('#101a2b');
       scn.fog = new THREE.Fog('#101a2b', 620, 1400);
 
-      /* --- entorno (estudio) para reflejos PBR --- */
+
       const env = entorno(THREE, renderer);
       scn.environment = env;
       GL.shared.push(env);
 
-      /* --- luces --- */
+
       scn.add(new THREE.HemisphereLight(0xcfe0ff, 0x223046, 0.5));
       const key = new THREE.DirectionalLight(0xffffff, 1.55);
       key.position.set(160, 240, 190);
@@ -218,7 +218,7 @@
       fill.position.set(-220, 120, -160);
       scn.add(fill);
 
-      /* --- suelo con sombra --- */
+
       const sueloTex = degradadoCircular(THREE, '#1a2740', '#0d1526');
       const piso = new THREE.Mesh(
         new THREE.CircleGeometry(460, 48),
@@ -229,7 +229,7 @@
       scn.add(piso);
       GL.shared.push(sueloTex, piso.geometry, piso.material);
 
-      /* sombra de contacto suave (garantiza el apoyo visual) */
+
       const contactoSombra = degradadoSombra(THREE);
       const sombraMesh = new THREE.Mesh(
         new THREE.CircleGeometry(160, 40),
@@ -244,20 +244,20 @@
       GL.scene = scene = scn;
     }
 
-    /* --- vehículo --- */
+
     const perfil = window.vehPerfil ? window.vehPerfil(ctx.v) : null;
     if (!perfil) throw new Error('sin perfil');
     const auto = construirVehiculo(THREE, perfil, perf, ctx);
     scene.add(auto);
     ctx.auto = auto;
 
-    /* --- encuadre --- */
+
     const bb = new THREE.Box3().setFromObject(auto);
     const size = bb.getSize(new THREE.Vector3());
     const centro = bb.getCenter(new THREE.Vector3());
     const radio = Math.max(size.x, size.z * 1.6, size.y) * 0.62;
 
-    /* vista frontal 3/4 del lado del conductor: se ven placa y persona */
+
     const vistaIni = { theta: Math.PI - 0.95, phi: 1.36, r: radio * 1.8 };
     const objetivo = new THREE.Vector3(0, size.y * 0.42, 0);
 
@@ -276,7 +276,7 @@
 
     const clampR = () => { estado.r = Math.max(radio * 1.35, Math.min(radio * 4.6, estado.r)); };
 
-    /* ---------- controles (orbit + zoom + táctil) ---------- */
+
     const punteros = new Map();
     let pinch = 0;
     const marcar = () => { estado.sucio = true; estado.ultimo = performance.now(); if (ctx.kick) ctx.kick(); };
@@ -324,7 +324,7 @@
       e.preventDefault(); marcar();
     });
 
-    /* ---------- resize ---------- */
+
     function medir() {
       const w = stage.clientWidth || 320, h = stage.clientHeight || 220;
       renderer.setSize(w, h, false);
@@ -338,7 +338,7 @@
     } else ctx.on(window, 'resize', medir);
     medir();
 
-    /* ---------- pausa cuando no se ve ---------- */
+
     let visible = true, pagVisible = !document.hidden;
     if (window.IntersectionObserver) {
       const io = new IntersectionObserver(es => { visible = es[0].isIntersecting; estado.sucio = true; if (ctx.kick) ctx.kick(); }, { threshold: 0.02 });
@@ -346,7 +346,7 @@
     }
     ctx.on(document, 'visibilitychange', () => { pagVisible = !document.hidden; estado.sucio = true; if (ctx.kick) ctx.kick(); });
 
-    /* ---------- bucle con render bajo demanda ---------- */
+
     const marco = () => {
       ctx.raf = 0;
       if (ctx.cerrado) return;
@@ -383,7 +383,7 @@
     ctx.estado = estado;
   }
 
-  /* ---------- entorno de estudio (equirect -> PMREM) ---------- */
+
   function entorno(THREE, renderer) {
     const c = document.createElement('canvas');
     c.width = 512; c.height = 256;
@@ -398,9 +398,9 @@
       g.save(); g.globalAlpha = a; g.fillStyle = '#ffffff';
       g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); g.fill(); g.restore();
     };
-    bola(140, 56, 74, 24, 0.95);      // softbox principal
-    bola(370, 48, 92, 28, 0.85);      // softbox lateral
-    bola(255, 96, 46, 16, 0.55);      // relleno
+    bola(140, 56, 74, 24, 0.95);
+    bola(370, 48, 92, 28, 0.85);
+    bola(255, 96, 46, 16, 0.55);
     g.save(); g.globalAlpha = 0.5; g.fillStyle = '#ffdcae';
     g.beginPath(); g.ellipse(60, 132, 66, 26, 0, 0, Math.PI * 2); g.fill(); g.restore();
 
@@ -425,7 +425,7 @@
     return t;
   }
 
-  /** Mancha oscura de contacto bajo el vehículo. */
+
   function degradadoSombra(THREE) {
     const c = document.createElement('canvas');
     c.width = c.height = 256;
@@ -440,24 +440,24 @@
     return t;
   }
 
-  /* =======================================================
-     CONSTRUCCIÓN DEL VEHÍCULO
-     ======================================================= */
+
+
+
   function construirVehiculo(THREE, perfil, perf, ctx) {
     const suelo = perfil.suelo;
     const cont = perfil.contorno;
     let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
     cont.forEach(p => { minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]); minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]); });
     const cx = (minX + maxX) / 2;
-    const altura = suelo - minY;                    // altura total
+    const altura = suelo - minY;
     const mitadLargo = (maxX - minX) / 2;
     const ancho = perfil.ancho, HW = ancho / 2;
     const cinturaY = perfil.cinturaY != null ? (suelo - perfil.cinturaY) : altura * 0.62;
 
-    /* puntos del contorno en coordenadas 3D (Y arriba, suelo = 0) */
+
     const P = cont.map(p => [p[0] - cx, suelo - p[1]]);
 
-    /* estrechamiento lateral: menos ancho bajo el cinturón y en morro/cola */
+
     function taper(x, y) {
       let fy = 1;
       const yb = altura * 0.2;
@@ -483,7 +483,7 @@
 
     const grupo = new THREE.Group();
 
-    /* ---------- carrocería (extrusión del perfil 2D) ---------- */
+
     const shape = new THREE.Shape();
     let area = 0;
     P.forEach((p, i) => { if (i === 0) shape.moveTo(p[0], p[1]); else shape.lineTo(p[0], p[1]); });
@@ -514,7 +514,7 @@
     grupo.add(cuerpo);
     ctx.disposables.push(geoCuerpo, paint);
 
-    /* ---------- cristales laterales ---------- */
+
     const vidrioMat = new THREE.MeshPhysicalMaterial({
       color: 0x0d1626, metalness: 0, roughness: 0.06,
       transparent: true, opacity: 0.86, envMapIntensity: 1.5,
@@ -537,7 +537,7 @@
       });
     });
 
-    /* ---------- líneas de puertas y cintura sobre los laterales ---------- */
+
     const gapMat = new THREE.MeshStandardMaterial({
       color: 0x0b111c, roughness: 0.75, metalness: 0.15, side: THREE.DoubleSide
     });
@@ -555,7 +555,7 @@
     (perfil.puertas || []).forEach(p => lateral(p, 1.15, gapMat));
     lateral(perfil.cintura, 1.2, trimMat);
 
-    /* ---------- parabrisas y luneta (cintas a través del ancho) ---------- */
+
     const ref = [0, altura * 0.45];    const cristalExt = new THREE.MeshPhysicalMaterial({
       color: 0x16273d, metalness: 0, roughness: 0.05, transparent: true,
       opacity: 0.9, envMapIntensity: 1.6, clearcoat: 1, side: THREE.DoubleSide
@@ -568,7 +568,7 @@
       grupo.add(new THREE.Mesh(g, cristalExt)); ctx.disposables.push(g);
     });
 
-    /* ---------- faros, traseros y parrilla (bandas del morro/cola) ---------- */
+
     const matFaro = new THREE.MeshPhysicalMaterial({
       color: 0xfff6dd, emissive: 0xffe7a8, emissiveIntensity: 0.35,
       metalness: 0.1, roughness: 0.12, clearcoat: 1, side: THREE.DoubleSide
@@ -600,7 +600,7 @@
     bandaCara(THREE, P, p => p[0] < -mitadLargo + 12 && p[1] >= tLo - 1 && p[1] <= tHi + 1, HW, 0.9, 1.0, taper, ref)
       .forEach(g => { grupo.add(new THREE.Mesh(g, matTrasero)); ctx.disposables.push(g); });
 
-    /* ---------- manijas y espejos ---------- */
+
     const cromo = new THREE.MeshStandardMaterial({ color: 0xc7d2df, metalness: 0.9, roughness: 0.28 });
     ctx.disposables.push(cromo);
     (perfil.manijas || []).forEach(m => {
@@ -625,7 +625,7 @@
       ctx.disposables.push(g, gStalk);
     }
 
-    /* ---------- ruedas ---------- */
+
     const ruedaGeo = crearRueda(THREE, perfil.ruedas[0].r, ancho * 0.135);
     ctx.disposables.push.apply(ctx.disposables, ruedaGeo.geos);
     const matsR = materialesRueda(THREE, ctx);
@@ -640,10 +640,10 @@
       });
     });
 
-    /* ---------- placas delantera y trasera (tipo Perú) ---------- */
+
     agregarPlacas(THREE, grupo, ctx, perfil, { P, mitadLargo, altura });
 
-    /* ---------- mini persona junto a la puerta del conductor ---------- */
+
     const manoX = (perfil.manijas && perfil.manijas.length ? perfil.manijas[0][0] : cx + mitadLargo * 0.35) - cx;
     grupo.add(construirPersona(THREE, ctx, (ctx.v && ctx.v.genero) || '', {
       alto: altura * 1.15,
@@ -654,10 +654,10 @@
     return grupo;
   }
 
-  /* =======================================================
-     PLACAS (texto real del vehículo, delante y atrás)
-     ======================================================= */
-  /** Texto de placa sobre fondo claro, guiño al estilo de la app. */
+
+
+
+
   function texturaPlaca(THREE, texto) {
     const c = document.createElement('canvas');
     c.width = 256; c.height = 96;
@@ -667,7 +667,7 @@
     g.strokeStyle = '#10151d';
     g.lineWidth = 7;
     g.strokeRect(5, 5, 246, 86);
-    g.fillStyle = '#1d4ed8';           // banda superior, como .ag-plate
+    g.fillStyle = '#1d4ed8';
     g.fillRect(12, 12, 232, 12);
     g.fillStyle = '#0f172a';
     g.font = 'bold 50px ui-monospace, "Courier New", monospace';
@@ -679,7 +679,7 @@
     return t;
   }
 
-  /** Placa en el parachoques frontal (+x) y en la trasera (−x). */
+
   function agregarPlacas(THREE, grupo, ctx, perfil, d) {
     const txt = ((perfil.placa || '').trim() || '___-___').toUpperCase();
     const tex = texturaPlaca(THREE, txt);
@@ -687,15 +687,15 @@
     const base = new THREE.MeshStandardMaterial({ color: 0xe9edf3, roughness: 0.5, metalness: 0.35 });
     ctx.disposables.push(tex, cara, base);
 
-    const w = Math.max(14, d.mitadLargo * 0.19);   // ~4.5 % del largo total
+    const w = Math.max(14, d.mitadLargo * 0.19);
     const h = w * 0.38;
-    const y = Math.max(h, d.altura * 0.17);        // altura del parachoques
+    const y = Math.max(h, d.altura * 0.17);
     const banda = d.P.filter(p => p[1] >= y - h * 0.7 && p[1] <= y + h * 0.7);
     const xF = banda.length ? Math.max.apply(null, banda.map(p => p[0])) : d.mitadLargo;
     const xR = banda.length ? Math.min.apply(null, banda.map(p => p[0])) : -d.mitadLargo;
 
     const geo = new THREE.BoxGeometry(1.4, h, w);
-    // caras del cubo: [+x, −x, +y, −y, +z, −z]
+
     const delantera = new THREE.Mesh(geo, [cara, base, base, base, base, base]);
     delantera.position.set(xF - 0.1, y, 0);
     const trasera = new THREE.Mesh(geo, [base, cara, base, base, base, base]);
@@ -704,16 +704,16 @@
     ctx.disposables.push(geo);
   }
 
-  /* =======================================================
-     MINI PERSONA JUNTO A LA PUERTA (escala + género)
-     ======================================================= */
-  /**
-   * Figura humana de escala junto a la puerta del conductor.
-   * El diseño —hombros, pelo y ropa— cambia con el género del cliente:
-   * MASCULINO (hombros anchos, pelo corto, polo azul),
-   * FEMENINO (hombros estrechos, pelo largo, top malva),
-   * OTROS/sin especificar (complexión media, pelo medio, verde).
-   */
+
+
+
+
+
+
+
+
+
+
   function construirPersona(THREE, ctx, genero, o) {
     const g = (genero || '').toUpperCase();
     const esF = g === 'FEMENINO';
@@ -749,21 +749,21 @@
     const hombrosY = piernaH + torsoH;
     const cabezaY = hombrosY + cabezaR + H * 0.035;
 
-    /* piernas + zapatos */
+
     const px = hombros * 0.26;
     caja(hombros * 0.34, piernaH, hombros * 0.42, pantalon, -px, piernaH / 2, 0);
     caja(hombros * 0.34, piernaH, hombros * 0.42, pantalon, px, piernaH / 2, 0);
     caja(hombros * 0.36, H * 0.03, hombros * 0.58, zapato, -px, H * 0.016, hombros * 0.08);
     caja(hombros * 0.36, H * 0.03, hombros * 0.58, zapato, px, H * 0.016, hombros * 0.08);
-    /* torso */
+
     caja(hombros, torsoH, hombros * 0.46, camisa, 0, piernaH + torsoH / 2, 0);
-    /* brazos colgados + manos */
+
     const bx = hombros / 2 + hombros * 0.075;
     caja(hombros * 0.15, torsoH * 1.05, hombros * 0.2, camisa, -bx, piernaH + torsoH * 0.55, 0);
     caja(hombros * 0.15, torsoH * 1.05, hombros * 0.2, camisa, bx, piernaH + torsoH * 0.55, 0);
     caja(hombros * 0.14, H * 0.05, hombros * 0.18, piel, -bx, piernaH + torsoH * 0.03, 0);
     caja(hombros * 0.14, H * 0.05, hombros * 0.18, piel, bx, piernaH + torsoH * 0.03, 0);
-    /* cuello + cabeza */
+
     caja(hombros * 0.18, H * 0.045, hombros * 0.2, piel, 0, hombrosY + H * 0.022, 0);
     const cabezaGeo = new THREE.SphereGeometry(cabezaR, 14, 12);
     const cabeza = new THREE.Mesh(cabezaGeo, piel);
@@ -772,7 +772,7 @@
     grupo.add(cabeza);
     ctx.disposables.push(cabezaGeo);
 
-    /* pelo: corona común + caída según género */
+
     const coronaGeo = new THREE.SphereGeometry(cabezaR * 1.06, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.55);
     const corona = new THREE.Mesh(coronaGeo, pelo);
     corona.position.copy(cabeza.position);
@@ -785,11 +785,11 @@
     }
 
     grupo.position.set(o.x, 0, o.z);
-    grupo.rotation.y = Math.PI - 0.45;   // mira hacia fuera, ligeramente al frente
+    grupo.rotation.y = Math.PI - 0.45;
     return grupo;
   }
 
-  /* ---------- materiales de llanta (compartidos) ---------- */
+
   function materialesRueda(THREE, ctx) {
     if (ctx._mRueda) return ctx._mRueda;
     const m = {
@@ -804,7 +804,7 @@
     return m;
   }
 
-  /** Geometrías de rueda compartidas entre las 4 ruedas. */
+
   function crearRueda(THREE, r, ancho) {
     const hw = ancho / 2, rimR = r * 0.63;
     const perfilGoma = [
@@ -844,18 +844,18 @@
     };
   }
 
-  /* =======================================================
-     CINTAS (parabrisas, luneta, faros, parrilla)
-     Banda que sigue un tramo del contorno cruzando el ancho.
-     ======================================================= */
-  /** ptsSvg: polilínea ya muestreada (coords SVG) que se convertirá en banda. */
+
+
+
+
+
   function cinta(THREE, ptsSvg, cx, suelo, HW, inset, fuera, taper, ref) {
     if (!ptsSvg || ptsSvg.length < 2) return [];
     return banda(THREE, ptsSvg.map(p => [p[0] - cx, suelo - p[1]]), HW, inset, fuera, taper, ref);
   }
 
-  /** Convierte una polilínea del contorno en una banda cruzando el vehículo.
-   *  za/zb: fracciones del semiancho (−1..1) para acotar el tramo lateral. */
+
+
   function banda(THREE, pts3, HW, inset, fuera, taper, ref, za, zb) {
     if (!pts3 || pts3.length < 2) return [];
     if (za == null) { za = -1; zb = 1; }
@@ -866,7 +866,7 @@
       let tx = b[0] - a[0], ty = b[1] - a[1];
       const len = Math.hypot(tx, ty) || 1; tx /= len; ty /= len;
       let nx = ty, ny = -tx;
-      /* la normal debe apuntar hacia fuera del vehículo */
+
       if ((pts3[i][0] - rx) * nx + (pts3[i][1] - ry) * ny < 0) { nx = -nx; ny = -ny; }
       const x = pts3[i][0] + nx * fuera, y = pts3[i][1] + ny * fuera;
       const hw = HW * taper(x, y) * inset;
@@ -884,14 +884,14 @@
     return [g];
   }
 
-  /** Filtra un tramo del contorno y lo convierte en banda. */
+
   function bandaCara(THREE, P, filtro, HW, inset, fuera, taper, ref, za, zb) {
     const sel = P.filter(filtro);
     if (sel.length < 2) return [];
     return banda(THREE, sel, HW, inset, fuera, taper, ref, za, zb);
   }
 
-  /** Tira fina pegada al lateral (líneas de puerta, cintura, etc.). */
+
   function tiraLateral(THREE, pts3, HW, taper, w, lado, fuera) {
     if (!pts3 || pts3.length < 2) return [];
     const zp = p => (HW * taper(p[0], p[1]) + fuera) * lado;

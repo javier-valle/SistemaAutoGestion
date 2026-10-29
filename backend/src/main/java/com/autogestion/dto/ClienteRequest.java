@@ -41,7 +41,7 @@ public class ClienteRequest {
 
     @AssertTrue(message = "Tipo de documento inválido: usa DNI, RUC, CE o PASAPORTE")
     public boolean isTipoDocumentoValido() {
-        if (tipoDocumento == null || tipoDocumento.isBlank()) return true; // por defecto DNI
+        if (tipoDocumento == null || tipoDocumento.isBlank()) return true;
         return TipoDocumento.desde(tipoDocumento) != null;
     }
 
@@ -49,7 +49,7 @@ public class ClienteRequest {
     public boolean isDocumentoValido() {
         String tipo = (tipoDocumento == null || tipoDocumento.isBlank()) ? "DNI" : tipoDocumento;
         TipoDocumento td = TipoDocumento.desde(tipo);
-        if (td == null) return true; // el error lo reporta isTipoDocumentoValido
+        if (td == null) return true;
         if (documento == null || documento.isBlank()) return false;
         return DocumentoValidator.valido(td, documento);
     }

@@ -22,7 +22,7 @@
 <body>
     <div id="navbar"></div>
     <div class="ag-page">
-        <!-- HERO -->
+        
         <div class="ag-tutorial-hero">
             <div class="ag-tutorial-hero-inner">
                 <span class="hero-badge">
@@ -41,7 +41,7 @@
             </div>
         </div>
 
-        <!-- FLUJO INTERACTIVO -->
+        
         <div class="ag-section ag-mb-3">
             <div class="ag-section-header">
                 <h3>
@@ -65,7 +65,7 @@
             </div>
         </div>
 
-        <!-- MODULOS -->
+        
         <div id="modulos" class="ag-section ag-mb-3">
             <div class="ag-section-header">
                 <h3>
@@ -80,7 +80,7 @@
         </div>
 
         <div class="ag-layout-wide ag-mb-3">
-            <!-- ROLES -->
+            
             <div class="ag-section">
                 <div class="ag-section-header">
                     <h3>
@@ -125,7 +125,7 @@
             </div>
 
             <div class="ag-layout-stack">
-                <!-- CHECKLIST -->
+                
                 <div class="ag-section">
                     <div class="ag-section-header">
                         <h3>
@@ -137,7 +137,7 @@
                     <div class="ag-section-body" id="checklistBox"></div>
                 </div>
 
-                <!-- QUIZ -->
+                
                 <div class="ag-section">
                     <div class="ag-section-header">
                         <h3>
@@ -151,7 +151,7 @@
             </div>
         </div>
 
-        <!-- FAQ -->
+        
         <div class="ag-section">
             <div class="ag-section-header">
                 <h3>
@@ -162,7 +162,7 @@
             <div class="ag-section-body" style="padding-top:0.25rem;" id="faqBox"></div>
         </div>
 
-        <!-- CASO GUIADO -->
+        
         <div class="ag-section ag-mt-3">
             <div class="ag-section-header">
                 <h3>
@@ -174,7 +174,7 @@
             <div class="ag-section-body" id="casoBox"></div>
         </div>
 
-        <!-- GLOSARIO -->
+        
         <div class="ag-section ag-mt-3">
             <div class="ag-section-header">
                 <h3>
@@ -191,7 +191,7 @@
     <script src="/js/ui-kit.js?v=20261005"></script>
     <script>
         (function() {
-            /* Navbar: si hay sesion usa el normal; si no, una barra minima (el tutorial es publico) */
+            
             if (isLoggedIn()) {
                 document.getElementById('navbar').innerHTML = renderNavbar('tutorial');
                 document.getElementById('themeToggleWrap').innerHTML = renderThemeToggle();
@@ -209,7 +209,7 @@
                 </nav>`;
             }
 
-            /* ---------- Flujo interactivo ---------- */
+            
             const FLOW = [
                 { label: 'Recepcion', icon: 'car', title: '1. Recepcion del vehiculo', role: 'Recepcionista / Admin',
                   text: 'El cliente llega con su vehiculo. Se registran sus datos, la placa, marca y modelo, y el problema que reporta. El vehiculo queda con estado PENDIENTE esperando revision.' },
@@ -255,12 +255,12 @@
             });
             setFlow(0);
 
-            /* ---------- Modulos (segun el rol del usuario) ---------- */
+            
             const ROLE_MAP = (typeof window !== 'undefined' && window.AG_ROLE_PAGES) || null;
             const sesionUser = (typeof getUser === 'function') ? getUser() : null;
             const paginasPermitidas = (ROLE_MAP && sesionUser)
                 ? Object.keys(ROLE_MAP).filter(p => ROLE_MAP[p].includes(sesionUser.rol))
-                : null; /* null = sin sesion: mostrar todos (el tutorial es publico) */
+                : null; 
             const MODULES = [
                 { href: 'dashboard.html', cls: 'tut-ic-amber', title: 'Dashboard', pages: ['dashboard'], desc: 'El centro de mando: metricas del taller y alertas en un vistazo.',
                   steps: ['Revisa los KPIs del mes', 'Vigila alertas de stock', 'Salta a cualquier modulo'] },
@@ -292,7 +292,7 @@
                     <div class="tut-steps">${m.steps.map(s => `<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${s}</span>`).join('')}</div>
                 </a>`).join('');
 
-            /* ---------- Checklist ---------- */
+            
             const CHECK_ITEMS = [
                 'Registrar una recepcion con cliente y vehiculo',
                 'Crear un diagnostico y una cotizacion',
@@ -325,7 +325,7 @@
             });
             renderChecks();
 
-            /* ---------- Quiz ---------- */
+            
             const QUIZ = [
                 { q: '¿Que se necesita para crear una Orden de Trabajo?',
                   opts: ['Una recepcion pendiente', 'Una cotizacion APROBADA', 'Un pago registrado', 'Un producto en stock'], ok: 1,
@@ -362,7 +362,7 @@
             document.getElementById('quizReset').addEventListener('click', renderQuiz);
             renderQuiz();
 
-            /* ---------- FAQ ---------- */
+            
             const FAQ = [
                 { q: '¿Que puertos usa el sistema?', a: 'Frontend (web): http://localhost:5500 · Backend (API): http://localhost:8080/api · Base de datos PostgreSQL: puerto 5433. Todo esto con docker-compose up.' },
                 { q: '¿El sistema funciona sin internet o sin el backend?', a: 'No. La web que abres en http://localhost:5500 necesita que la API del backend este activa en http://localhost:8080/api. Si no hay conexion veras errores de carga: levanta todo con docker-compose up o ejecuta el backend desde tu IDE. Si tu backend corre en otro host o puerto, abre la consola del navegador y guarda localStorage.setItem("apiBase", "http://TU-HOST:PUERTO/api") y recarga.' },
@@ -387,7 +387,7 @@
                 a.classList.toggle('open', open);
             });
 
-            /* ---------- Caso guiado ---------- */
+            
             const CASO = [
                 { t: 'Registra la recepción', d: 'Cliente, vehículo y problema.', href: 'recepcion.html' },
                 { t: 'Crea el diagnóstico', d: 'Hallazgos del mecánico.', href: 'cotizacion.html' },
@@ -416,12 +416,12 @@
                 if (isNaN(i)) return;
                 if (e.target.checked && !casoDone.includes(i)) casoDone.push(i);
                 if (!e.target.checked) casoDone = casoDone.filter(x => x !== i);
-                try { localStorage.setItem(casoKey, JSON.stringify(casoDone)); } catch (_) { /* noop */ }
+                try { localStorage.setItem(casoKey, JSON.stringify(casoDone)); } catch (_) {  }
                 renderCaso();
             });
             renderCaso();
 
-            /* ---------- Glosario ---------- */
+            
             const GLOSARIO = [
                 ['OT', 'Orden de Trabajo: la orden que dice qué se le hace al auto, quién y en qué estado va.'],
                 ['RUC', 'Registro Único de Contribuyente: 11 dígitos de una empresa o negocio. Sin RUC válido no hay factura.'],

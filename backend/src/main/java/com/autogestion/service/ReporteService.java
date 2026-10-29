@@ -63,12 +63,12 @@ public class ReporteService {
         return new LocalDateTime[]{ym.atDay(1).atStartOfDay(), ym.plusMonths(1).atDay(1).atStartOfDay()};
     }
 
-    /* ---------- Indicadores (dashboard) ---------- */
+
 
     @Transactional(readOnly = true)
     public IndicadoresResponse obtenerIndicadores() {
         LocalDateTime[] mes = mesActual();
-        // Ingresos = lo realmente cobrado (comprobantes EMITIDO del mes), no la cotización.
+
         BigDecimal ingresos = comprobanteRepository.ingresosEntre(EstadoComprobante.EMITIDO, mes[0], mes[1]);
         List<OrdenTrabajo> finalizadas = ordenTrabajoRepository.finalizadasEntre(EstadoOT.FINALIZADA, mes[0], mes[1]);
         double promedio = finalizadas.stream()
@@ -83,7 +83,7 @@ public class ReporteService {
                 .build();
     }
 
-    /* ---------- Clientes ---------- */
+
 
     /** H2 y Postgres devuelven el CAST a fecha con tipos distintos; se aceptan todos. */
     static LocalDate comoDia(Object o) {
@@ -124,7 +124,7 @@ public class ReporteService {
                 .toList();
     }
 
-    /* ---------- Ingresos y comprobantes ---------- */
+
 
     @Transactional(readOnly = true)
     public List<ReporteDTOs.IngresoPunto> ingresos(LocalDate desde, LocalDate hastaExcluido, String agrupar) {
@@ -159,7 +159,7 @@ public class ReporteService {
                 .toList();
     }
 
-    /* ---------- Mecánicos ---------- */
+
 
     @Transactional(readOnly = true)
     public List<ReporteDTOs.MecanicoRendimiento> rendimientoMecanicos(LocalDate desde, LocalDate hastaExcluido) {
@@ -213,7 +213,7 @@ public class ReporteService {
         long asignadas, enProceso, finalizadas;
     }
 
-    /* ---------- Inventario ---------- */
+
 
     @Transactional(readOnly = true)
     public ReporteDTOs.InventarioResumen inventarioResumen(LocalDate desde, LocalDate hastaExcluido) {
@@ -277,13 +277,13 @@ public class ReporteService {
                     m.getUsuario() != null ? m.getUsuario().getNombreCompleto() : null,
                     m.getMotivo(), saldo));
         }
-        // Saldo inicial = actual − neto del rango (cuadra con stock_actual por construcción).
+
         int neto = saldo;
         int actual = movs.isEmpty() ? 0 : movs.get(0).getProducto().getStockActual();
         return new ReporteDTOs.KardexDTO(productoId, nombre, actual - neto, lineas, actual);
     }
 
-    /* ---------- Entradas (compras) ---------- */
+
 
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<MovimientoResponseDTO> entradas(
@@ -291,7 +291,7 @@ public class ReporteService {
         return inventarioService.entradas(desde, hastaExcluido, proveedorId, page, size);
     }
 
-    /* ---------- Gastos y resultado ---------- */
+
 
     @Transactional(readOnly = true)
     public List<ReporteDTOs.GastoGrupo> gastosPorCategoria(LocalDate desde, LocalDate hasta) {

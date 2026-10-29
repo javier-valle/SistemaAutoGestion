@@ -171,7 +171,7 @@ public class ReporteController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
         LocalDate[] r = rango(desde, hasta);
-        // gastosPorCategoria usa "hasta" inclusivo: se deshace el +1 del rango
+
         return ResponseEntity.ok(reporteService.gastosPorCategoria(r[0], r[1].minusDays(1)));
     }
 
@@ -199,7 +199,7 @@ public class ReporteController {
         return ResponseEntity.ok(reporteService.margenPorProducto());
     }
 
-    /* ---------- Exportación consolidada ---------- */
+
 
     @RolesAllowed({"ADMIN", "RECEPCIONISTA", "ALMACENERO"})
     @GetMapping("/export/disponibles")

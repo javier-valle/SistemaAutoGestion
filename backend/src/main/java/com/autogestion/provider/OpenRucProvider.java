@@ -73,7 +73,7 @@ public class OpenRucProvider implements ProveedorDocumento {
                 .header("Accept", "application/json")
                 .header("User-Agent", "Mozilla/5.0 (compatible; AutogestionTaller/1.0)")
                 .retrieve()
-                // 404 = el RUC no existe en la fuente: no es una caída técnica.
+
                 .onStatus(s -> s.value() == 404, (req, res) -> { })
                 .onStatus(HttpStatusCode::isError, (req, res) -> {
                     throw new IllegalStateException("openruc HTTP " + res.getStatusCode().value());
@@ -86,7 +86,7 @@ public class OpenRucProvider implements ProveedorDocumento {
 
         String razon = primero(data, "razon_social", "razonSocial", "nombre");
         if (razon.isEmpty()) {
-            // {"error":"not_found"} o cualquier respuesta sin razón social.
+
             if (data.hasNonNull("error")) log.debug("openruc sin datos para {}", enmascarar(ruc));
             return Optional.empty();
         }

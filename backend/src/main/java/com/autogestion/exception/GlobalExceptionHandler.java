@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
                 FieldError fe = (FieldError) err;
                 errors.put(fe.getField(), fe.getDefaultMessage());
             } else {
-                // Errores globales (@AssertTrue): son ObjectError, no FieldError.
+
                 errors.put(err.getObjectName(), err.getDefaultMessage());
             }
         });
@@ -91,8 +91,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
-        // Legado: los servicios usan RuntimeException para errores de negocio
-        // esperados (se migran a BusinessException). Se registra para rastreo.
+
+
         log.warn("RuntimeException controlada: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         String message = ex.getMessage();

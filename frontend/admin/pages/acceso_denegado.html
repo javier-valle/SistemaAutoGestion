@@ -86,7 +86,7 @@
     </div>
 
     <script>
-        // Si no hay sesion activa, no tiene sentido quedarse aqui: al login.
+        
         if (!localStorage.getItem('token')) {
             window.location.replace('../index.html');
         }
@@ -96,7 +96,7 @@
         let rol = null;
         try { rol = JSON.parse(localStorage.getItem('user') || 'null')?.rol || null; } catch (_) { rol = null; }
 
-        // homePageForRol vive en js/api.js; si no esta cargado, uso un fallback local.
+        
         const home = typeof homePageForRol === 'function' && rol
             ? homePageForRol(rol)
             : 'dashboard.html';

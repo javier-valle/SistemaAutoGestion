@@ -194,7 +194,7 @@
             document.getElementById('navbar').innerHTML = renderNavbar('dashboard');
         document.getElementById('themeToggleWrap').innerHTML = renderThemeToggle();
         initTheme();
-        /* Oculta accesos rapidos a modulos no permitidos para el rol actual */
+        
         const dashUser = getUser();
         if (dashUser && dashUser.rol !== 'ADMIN' && window.AG_ROLE_PAGES) {
             document.querySelectorAll('.ag-action-link[href]').forEach(a => {
@@ -203,7 +203,7 @@
                 if (permitidos && !permitidos.includes(dashUser.rol)) a.hidden = true;
             });
         }
-        /* Contador animado para los KPIs */
+        
         function animateValue(el, target, isMoney) {
             if (isMoney) { el.textContent = formatCurrency(target); return; }
             const dur = 800, start = performance.now();
@@ -214,7 +214,7 @@
             }
             requestAnimationFrame(tick);
         }
-        /* Flujo del taller interactivo */
+        
         const HINTS = {
             'Recepcion': 'el cliente llega con su vehiculo y se registra el ingreso con su problema reportado.',
             'Diagnostico': 'un mecanico revisa el vehiculo y documenta los hallazgos tecnicos.',
@@ -261,7 +261,7 @@
                 document.getElementById('alertasContainer').innerHTML = '<p class="ag-text-muted">No se pudieron cargar las alertas</p>';
             }
         }
-        /* Marcar el paso activo del flujo segun el estado global */
+        
         function setActiveFlowStep(label) {
             const el = dashFlow.querySelector(`[data-label="${label}"]`);
             if (el) { dashFlow.querySelectorAll('.ag-flow-step').forEach(s => s.classList.remove('active')); el.classList.add('active'); }

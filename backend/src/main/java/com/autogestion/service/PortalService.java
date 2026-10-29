@@ -105,7 +105,7 @@ public class PortalService {
         return resumen(clienteId);
     }
 
-    // ---------------------------------------------------------------- helpers
+
 
     private Optional<Cliente> buscarCliente(String documento, String tipoDocumento) {
         TipoDocumento td = TipoDocumento.desde(tipoDocumento);
@@ -139,13 +139,13 @@ public class PortalService {
         TipoDocumento tipo = req.tipoEfectivo();
         String doc = req.documentoNormalizado();
 
-        // Validación previa: duplicados (mensaje genérico, sin revelar datos)
+
         if (clienteRepository.existsByTipoDocumentoAndDocumento(tipo, doc)) {
             throw new BusinessException("Ya existe una cuenta con ese documento. Intenta ingresar al portal.",
                     HttpStatus.CONFLICT);
         }
 
-        // Fuentes públicas sin API key (padrón SUNAT local). Si no hay datos, el cliente declara su nombre.
+
         com.autogestion.dto.ConsultaDocumentoResponseDTO consulta =
                 consultaDocumentoService.consultar(req.getTipoDocumento(), doc);
         boolean verificado = consulta != null && consulta.isVerificado();
@@ -155,7 +155,7 @@ public class PortalService {
         String direccionFiscalCliente = null;
 
         if (verificado) {
-            // Datos de la fuente pública: el navegador no puede cambiarlos
+
             nombreCliente = texto(consulta.getNombre());
             if (nombreCliente == null) nombreCliente = texto(consulta.getRazonSocial());
             if (nombreCliente == null) {
@@ -167,7 +167,7 @@ public class PortalService {
                 direccionFiscalCliente = texto(consulta.getDireccion());
             }
         } else {
-            // Sin fuente pública: datos declarados por el cliente (se marca documento_verificado=false)
+
             if (tipo == TipoDocumento.RUC) {
                 razonSocialCliente = nombreDeclarado(req.getRazonSocial(), true);
                 nombreCliente = razonSocialCliente;
@@ -180,12 +180,12 @@ public class PortalService {
             }
         }
 
-        // Ajustar al largo de las columnas (la razón social del padrón puede ser más larga)
+
         nombreCliente = recortar(nombreCliente, 150);
         razonSocialCliente = recortar(razonSocialCliente, 200);
         direccionFiscalCliente = recortar(direccionFiscalCliente, 250);
 
-        // Aviso para RUC con estado o condición distinta de ACTIVO/HABIDO (se permite registrar igual)
+
         if (verificado && tipo == TipoDocumento.RUC) {
             String estadoDoc = consulta.getEstado() != null ? consulta.getEstado().trim() : "";
             String condicionDoc = consulta.getCondicion() != null ? consulta.getCondicion().trim() : "";
@@ -213,7 +213,7 @@ public class PortalService {
             throw new BusinessException("Ya existe una cuenta con ese documento. Intenta ingresar al portal.", HttpStatus.CONFLICT);
         }
 
-        // Consentimiento obligatorio
+
         consentimientoRepository.save(Consentimiento.builder()
                 .cliente(cliente)
                 .politicaVersion("v1")
@@ -222,7 +222,7 @@ public class PortalService {
                 .ipHash(sha256(ip == null ? "" : ip))
                 .build());
 
-        // Vehículo opcional
+
         String placaNormalizada = req.getPlaca() != null ? req.getPlaca().trim().toUpperCase().replaceAll("\\s+", "") : null;
         if (placaNormalizada != null && !placaNormalizada.isBlank()) {
             Vehiculo veh = Vehiculo.builder()

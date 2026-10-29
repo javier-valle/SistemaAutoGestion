@@ -52,7 +52,7 @@ public class DataInitializer implements CommandLineRunner {
 
         @Override
         public void run(String... args) {
-                // 1. Admin de arranque: siempre, para no quedarse sin acceso.
+
                 if (usuarioRepository.findByEmail(adminEmail).isEmpty()) {
                         usuarioRepository.save(Usuario.builder()
                                         .nombre("Administrador")
@@ -64,7 +64,7 @@ public class DataInitializer implements CommandLineRunner {
                         log.info("Admin de arranque creado ({})", adminEmail);
                 }
 
-                // 2. Series de comprobantes (infraestructura, no demo).
+
                 if (serieRepository.findById("B001").isEmpty()) {
                         serieRepository.save(SerieComprobante.builder()
                                         .serie("B001").tipo(TipoComprobante.BOLETA).ultimoNumero(0).build());
@@ -74,10 +74,10 @@ public class DataInitializer implements CommandLineRunner {
                                         .serie("F001").tipo(TipoComprobante.FACTURA).ultimoNumero(0).build());
                 }
 
-                // 3. El admin es genérico ("Administrador"): renombra instalaciones
-                // viejas con nombre personal, sin tocar claves ni roles.
+
+
                 renombrarAdmin(adminEmail);
-                // Repara nombres genéricos de instalaciones viejas (sin tocar claves).
+
                 repararNombre("mecanico1@sanmartin.pe", "Luis Alberto", "Ramírez Torres",
                                 TipoDocumento.DNI, "40258963", "962458713", Especialidad.MOTOR);
                 repararNombre("almacen@sanmartin.pe", "Pedro Pablo", "Quispe Mendoza",
@@ -85,7 +85,7 @@ public class DataInitializer implements CommandLineRunner {
                 repararNombre("recepcionista@sanmartin.pe", "Rosa Elena", "Chávez Paredes",
                                 TipoDocumento.DNI, "43852196", "956321478", null);
 
-                // 4. Demo: solo con bandera (en producción, false).
+
                 if (seedDemo && clienteRepository.count() == 0) {
                         sembrarDemo();
                 }
@@ -127,7 +127,7 @@ public class DataInitializer implements CommandLineRunner {
                                 .tipoDocumento(TipoDocumento.DNI)
                                 .genero(Genero.MASCULINO)
                                 .direccion("Av. Las Palmeras 123, Los Olivos, Lima").build());
-                // Empresas de prueba con RUC válido (ficticios)
+
                 Cliente c4 = clienteRepository.save(Cliente.builder()
                                 .nombre("Repuestos El Sol S.A.C.").telefono("014251478")
                                 .email("contacto@elsol.pe").documento("20123456786")
@@ -141,7 +141,7 @@ public class DataInitializer implements CommandLineRunner {
                                 .razonSocial("JUAN CARLOS PEREZ NUÑEZ")
                                 .direccion("Jr. Las Flores 123, Lima").build());
 
-                // 3. Proveedores (demo)
+
                 Proveedor p1 = proveedorRepository.save(Proveedor.builder()
                         .nombre("Repuestos El Sol S.A.C.").ruc("20123456786")
                         .telefono("014251478").email("ventas@elsol.pe")

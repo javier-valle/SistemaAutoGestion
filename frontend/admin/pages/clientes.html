@@ -72,7 +72,7 @@
         </div>
     </div>
 
-    <!-- Modal detalle -->
+    
     <div class="ag-modal-overlay" id="cliDetalleModal">
         <div class="ag-modal ag-modal--wide">
             <div class="ag-modal-header"><h3 id="cliDetTitle">Cliente</h3>
@@ -87,7 +87,7 @@
         </div>
     </div>
 
-    <!-- Modal formulario -->
+    
     <div class="ag-modal-overlay" id="cliFormModal">
         <div class="ag-modal">
             <div class="ag-modal-header"><h3 id="cliFormTitle">Nuevo cliente</h3>
@@ -281,7 +281,7 @@
                 return true;
             }
 
-            // Si el documento cambió, el nombre anterior ya no corresponde.
+            
             const clave = tipo + ':' + num;
             if (clave !== cfDocConsultado) {
                 if (num !== cfDocOriginal) limpiarAutocompletadoCliente();
@@ -294,7 +294,7 @@
                 hint.style.color = r.valido ? 'var(--ag-signal-go)' : 'var(--ag-signal-stop)';
                 if (!r.valido) { limpiarAutocompletadoCliente(); return false; }
 
-                // Formato válido: intentar traer nombres de una fuente configurada.
+                
                 const seq = ++cfSeq;
                 hint.textContent = '✔ ' + r.mensaje + ' Consultando nombres...';
                 try {

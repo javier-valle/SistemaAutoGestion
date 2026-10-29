@@ -179,7 +179,8 @@ public class OrdenTrabajoService {
 
     @Transactional
     public PagoEntregaResponseDTO registrarPagoEntregaCompleto(PagoEntregaCompletaRequest request) {
-        OrdenTrabajo ot = ordenTrabajoRepository.findById(request.getOrdenTrabajoId())
+
+        OrdenTrabajo ot = ordenTrabajoRepository.bloquearPorId(request.getOrdenTrabajoId())
                 .orElseThrow(() -> new BusinessException("Orden de trabajo no encontrada"));
 
         if (request.getMonto() != null) {

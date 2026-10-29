@@ -66,7 +66,7 @@
         <div id="repBody"></div>
         <div id="printAreaRep"></div>
 
-        <!-- Modal exportación consolidada -->
+        
         <div id="exportModal" style="display:none;position:fixed;inset:0;background:rgba(6,17,30,0.55);z-index:200;align-items:center;justify-content:center;" onclick="if(event.target===this)closeExportModal()">
             <div style="background:var(--ag-oil-surface);border:1px solid var(--ag-oil-border);border-radius:16px;padding:2rem;width:520px;max-width:92vw;box-shadow:0 24px 64px rgba(0,0,0,0.35);max-height:88vh;overflow:auto;">
                 <div class="ag-d-flex ag-justify-between ag-align-center ag-mb-3">
@@ -160,7 +160,7 @@
             };
             return m[k] || m['ic-blue'];
         }
-        /* Barras SVG sin librerías: funcionan sin internet */
+        
         function svgBars(el, labels, values, color) {
             const W = 560, H = 180, pad = 28;
             const max = Math.max(1, ...values);
@@ -202,8 +202,8 @@
             csvDescargar(nombre, filas);
             toast('CSV descargado', 'success');
         };
-        /* PDF plano listo para impresión: documento blanco, tablas simples, sin colores del tema.
-           Cada tabla ya trae CSV + PDF; esto imprime UNA tabla. */
+        
+
         window.imprimirTabla = function(id) {
             const data = window[id];
             if (!data) return;
@@ -223,14 +223,14 @@
                 <script>window.onload=function(){window.print();}<\/script></body></html>`);
             w.document.close();
         };
-        /* PDF general: toda la pestaña activa en un documento plano (KPIs + tablas). */
+        
         window.exportarPDF = function() {
             const tabLabel = (TABS.find(t => t.id === tabActiva) || {}).label || tabActiva;
             const desde = document.getElementById('fDesde').value || '—';
             const hasta = document.getElementById('fHasta').value || '—';
             const host = document.getElementById('repBody');
             if (!host || !host.innerHTML.trim()) { toast('Nada que imprimir todavía', 'warning'); return; }
-            // Clonar y limpiar: sin botones, sin gráficos SVG, sin hints interactivos
+            
             const clon = host.cloneNode(true);
             clon.querySelectorAll('button, .ag-chart, svg').forEach(n => n.remove());
             const w = window.open('', '_blank', 'width=1000,height=800');
@@ -244,17 +244,17 @@
             w.document.close();
             toast('Abriendo vista de impresión (guarda como PDF)', 'success');
         };
-        /* El CSV de "clientes por día" lo genera el backend con nuestra sesión:
-           un <a href="/api/..."> no lleva Authorization y /api tampoco existe
-           en el puerto del frontend, así que caía en 404/403. */
+        
+
+
         window.exportarClientesPorDia = async function () {
             try {
                 await apiDescargar(`/reportes/clientes-por-dia/export?${rangoQS()}&formato=csv`, 'clientes-por-dia.csv');
                 toast('CSV descargado', 'success');
             } catch (e) { toast('No se pudo exportar: ' + e.message, 'danger'); }
         };
-        /* CSV GENERAL: una sola descarga con todo lo de la pestaña activa (evita el 1x1).
-           Secciones separadas por líneas [SECCION] para abrirse directo en Excel. */
+        
+
         window.exportarGeneralCSV = async function() {
             const qs = rangoQS();
             const desde = document.getElementById('fDesde').value || '';
@@ -337,7 +337,7 @@
         };
         const B = document.getElementById('repBody');
 
-        /* ---------- RESUMEN ---------- */
+        
         async function tabResumen() {
             B.innerHTML = '<p class="ag-text-muted">Cargando...</p>';
             try {
@@ -374,7 +374,7 @@
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
         }
 
-        /* ---------- CLIENTES ---------- */
+        
         function enRango(fechaIso, desde, hasta) {
             if (!fechaIso) return false;
             const f = String(fechaIso).slice(0, 10);
@@ -432,7 +432,7 @@
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
         }
 
-        /* ---------- INGRESOS ---------- */
+        
         let ingAgrupar = 'dia';
         async function tabIngresos() {
             B.innerHTML = '<p class="ag-text-muted">Cargando...</p>';
@@ -475,7 +475,7 @@
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
         }
 
-        /* ---------- INVENTARIO ---------- */
+        
         let invAgrupar = 'producto';
         async function tabInventario() {
             B.innerHTML = '<p class="ag-text-muted">Cargando...</p>';
@@ -533,7 +533,7 @@
                         }).join(''),
                         { nombre: 'inventario-stock.csv', filas: [['producto', 'tipo', 'stock', 'costo', 'valorizado'], ...prods.map(p => [p.nombre, p.tipo, p.stockActual, p.costoUnitario, (p.stockActual || 0) * (p.costoUnitario || 0)])] })
                         + (prods.length > 100 ? '<p class="ag-field-hint">Mostrando 100 — el CSV trae todo el catálogo.</p>' : '');
-                } catch (_) { /* noop */ }
+                } catch (_) {  }
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
         }
         async function cargarKardex() {
@@ -549,7 +549,7 @@
             } catch (e) { toast('Error: ' + e.message, 'danger'); }
         }
 
-        /* ---------- GASTOS (ADMIN: ver + registrar) ---------- */
+        
         async function tabGastos() {
             B.innerHTML = '<p class="ag-text-muted">Cargando...</p>';
             try {
@@ -611,7 +611,7 @@
             } catch (e) { err.textContent = e.message; err.hidden = false; }
         }
 
-        /* ---------- RESULTADO ---------- */
+        
         async function tabResultado() {
             B.innerHTML = '<p class="ag-text-muted">Cargando...</p>';
             try {
@@ -633,7 +633,7 @@
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
         }
 
-        /* ---------- MECÁNICOS ---------- */
+        
         async function tabMecanicos() {
             B.innerHTML = '<p class="ag-text-muted">Cargando...</p>';
             try {
@@ -646,7 +646,7 @@
             } catch (e) { B.innerHTML = '<p class="ag-text-muted">Error al cargar</p>'; }
         }
 
-        /* ---------- EXPORTACIÓN CONSOLIDADA ---------- */
+        
         const REP_NAMES = {
             resumen: 'Resumen', clientes: 'Clientes', ingresos: 'Ingresos',
             inventario: 'Inventario', gastos: 'Gastos', resultado: 'Resultado', mecanicos: 'Mecánicos'
@@ -692,7 +692,7 @@
                 closeExportModal();
             } catch (e) { toast('Error: ' + e.message, 'danger'); }
         }
-        /* init */
+        
         pintarTabs();
         rangoRapido('mes');
     </script>

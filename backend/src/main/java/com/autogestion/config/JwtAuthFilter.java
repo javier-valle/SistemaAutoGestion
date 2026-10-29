@@ -57,7 +57,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .parseSignedClaims(token)
                         .getPayload();
 
-                // Token del portal (tipo=CLIENTE): solo rol CLIENTE, nunca roles del personal.
+
                 if (PortalTokenService.TIPO_CLIENTE.equals(claims.get(PortalTokenService.TIPO_CLAIM, String.class))) {
                     String sub = claims.getSubject();
                     boolean valido = false;
@@ -91,8 +91,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     filterChain.doFilter(request, response);
                     return;
                 }
-                // El rol y la vigencia salen de la BD, no del claim: un usuario
-                // desactivado o con rol cambiado pierde acceso de inmediato.
+
+
                 var usuario = usuarioRepository.findById(id).orElse(null);
                 if (usuario == null || !Boolean.TRUE.equals(usuario.getActivo()) || usuario.getRol() == null) {
                     log.warn("JWT de usuario inexistente/inactivo: {}", id);

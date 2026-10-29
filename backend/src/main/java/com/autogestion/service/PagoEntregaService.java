@@ -30,7 +30,8 @@ public class PagoEntregaService {
         if (request.getMonto() == null || request.getMonto().compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException("El monto debe ser mayor a 0.", "monto", null);
         }
-        OrdenTrabajo ot = ordenTrabajoRepository.findById(request.getOrdenTrabajoId())
+
+        OrdenTrabajo ot = ordenTrabajoRepository.bloquearPorId(request.getOrdenTrabajoId())
                 .orElseThrow(() -> new BusinessException("Orden de trabajo no encontrada.", "ordenTrabajoId",
                         null, HttpStatus.NOT_FOUND));
 
@@ -51,7 +52,7 @@ public class PagoEntregaService {
 
     @Transactional
     public PagoEntregaResponseDTO registrarEntrega(Long ordenTrabajoId) {
-        OrdenTrabajo ot = ordenTrabajoRepository.findById(ordenTrabajoId)
+        OrdenTrabajo ot = ordenTrabajoRepository.bloquearPorId(ordenTrabajoId)
                 .orElseThrow(() -> new BusinessException("Orden de trabajo no encontrada.", "ordenTrabajoId",
                         null, HttpStatus.NOT_FOUND));
 

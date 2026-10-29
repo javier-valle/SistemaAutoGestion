@@ -155,7 +155,7 @@
         initTheme();
         let itemsSeleccionados = [];
         let cotStep = 1;
-        /* ---- Borrador + bloqueo de navegación (no perder la cotización a medias) ---- */
+        
         const DRAFT_KEY = 'ag-cot-draft-v1';
         function leerCamposBorrador() {
             return {
@@ -192,7 +192,7 @@
             try {
                 if (hayOperacionEnCurso()) localStorage.setItem(DRAFT_KEY, JSON.stringify(leerCamposBorrador()));
                 else localStorage.removeItem(DRAFT_KEY);
-            } catch (_) { /* noop */ }
+            } catch (_) {  }
             pintarDraftBar();
         }
         function restaurarBorrador() {
@@ -205,12 +205,12 @@
                 if (d.servicioNombre) document.getElementById('servicioNombre').value = d.servicioNombre;
                 if (d.servicioPrecio) document.getElementById('servicioPrecio').value = d.servicioPrecio;
                 if (Array.isArray(d.items) && d.items.length) { itemsSeleccionados = d.items; actualizarItems(); }
-                // recepcion/mecanico se restauran cuando los selects ya cargaron (ver loadData)
+                
                 window._draftRecep = d.recepcionId || '';
                 window._draftMec = d.mecanicoId || '';
                 if (d.step) setCotStep(d.step);
                 if (hayOperacionEnCurso()) toast('Borrador recuperado: sigue donde lo dejaste.', 'info');
-            } catch (_) { /* noop */ }
+            } catch (_) {  }
             pintarDraftBar();
         }
         window.descartarBorrador = async function() {
@@ -229,23 +229,23 @@
             itemsSeleccionados = []; actualizarItems();
             document.getElementById('servicioNombre').value = '';
             document.getElementById('servicioPrecio').value = '';
-            // se conserva el diagnosticoId por si quiere generar otra cotización del mismo diagnóstico,
-            // pero si ya aprobó, el flujo terminó: limpiar todo
+            
+            
             try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
             pintarDraftBar();
         }
-        // Avisar al cerrar/recargar con operación a medias
+        
         window.addEventListener('beforeunload', (e) => {
             if (hayOperacionEnCurso()) { e.preventDefault(); e.returnValue = ''; }
         });
-        // Interceptar clicks del menú/buscador mientras haya operación en curso
+        
         document.addEventListener('click', async (e) => {
             const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
             if (!a) return;
             const href = a.getAttribute('href') || '';
             if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
             if (!hayOperacionEnCurso()) return;
-            // mismo documento: dejar pasar modales internos
+            
             if (a.target === '_blank') return;
             e.preventDefault();
             e.stopPropagation();
@@ -279,7 +279,7 @@
                 cargarMecanicos();
                 loadSolicitudes();
                 loadCotizaciones();
-                // restaurar selects del borrador una vez cargados
+                
                 try {
                     if (window._draftRecep) { const s = document.getElementById('recepcionSelect'); if ([...s.options].some(o => o.value === String(window._draftRecep))) s.value = String(window._draftRecep); }
                     if (window._draftMec) { const m = document.getElementById('mecanicoSelect'); if ([...m.options].some(o => o.value === String(window._draftMec))) m.value = String(window._draftMec); }
@@ -287,7 +287,7 @@
                 pintarDraftBar();
             } catch (e) { console.error('loadData error:', e); showError('alertContainer', 'Error al cargar datos: ' + e.message); }
         }
-        /* Mecánicos desde la API, ordenados por menor carga (el primero es el sugerido) */
+        
         async function cargarMecanicos() {
             const sel = document.getElementById('mecanicoSelect');
             try {
@@ -467,7 +467,7 @@
             catch (e) { toast('Error: ' + e.message, 'danger'); }
         };
         window.rechazarCotizacion = async function(id) { try { await apiFetch(`/cotizaciones/${id}/rechazar`, { method: 'PUT' }); showSuccess('alertContainer', 'Cotizacion rechazada'); loadCotizaciones(); } catch (e) { showError('alertContainer', e.message); } };
-        /* Enter en el campo de servicio agrega directamente */
+        
         document.getElementById('servicioPrecio').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); agregarServicio(); }
         });

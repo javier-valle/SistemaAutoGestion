@@ -73,7 +73,7 @@ class OrdenTrabajoServiceTest {
 
         ordenTrabajoService.registrarProductoUsado(7L, new ProductoUsadoRequest(1L, 3), 99L);
 
-        // Un solo camino: auditoría completa en InventarioService + un OtProductoUsado
+
         verify(inventarioService, times(1)).registrarConsumoOT(7L, 1L, 3, 99L);
         verify(otProductoUsadoRepository, times(1)).save(any(OtProductoUsado.class));
         verify(inventarioMovimientoRepository, never()).save(any());

@@ -76,7 +76,7 @@ public class ReniecDniProvider implements ProveedorDocumento {
         }
         JsonNode body = request
                 .retrieve()
-                // 404/422 = el documento no existe en la fuente: no es un error técnico.
+
                 .onStatus(s -> s.value() == 404 || s.value() == 422, (req, res) -> { })
                 .onStatus(HttpStatusCode::isError, (req, res) -> {
                     throw new IllegalStateException("RENIEC HTTP " + res.getStatusCode().value());
@@ -100,11 +100,11 @@ public class ReniecDniProvider implements ProveedorDocumento {
             if (apellidos.isEmpty()) {
                 apellidos = String.join(" ", paterno, materno).trim();
             }
-            // Orden de presentación en Perú: apellidos y luego nombres.
+
             completo = String.join(" ", apellidos, nombres).trim().replaceAll("\\s+", " ");
         }
         if (completo.isEmpty()) {
-            // Solo los NOMBRES de los campos (nunca los valores: son datos personales).
+
             log.warn("RENIEC respondió sin un nombre reconocible. Campos recibidos: {}",
                     String.join(",", (Iterable<String>) data::fieldNames));
             return Optional.empty();

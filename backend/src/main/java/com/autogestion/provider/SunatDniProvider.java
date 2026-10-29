@@ -69,7 +69,7 @@ public class SunatDniProvider implements ProveedorDocumento {
     public Optional<ConsultaDocumentoResponseDTO> consultar(TipoDocumento tipo, String numero) {
         String dni = numero == null ? "" : numero.trim();
         if (!dni.matches("\\d{8}")) return Optional.empty();
-        // Si el padrón no está cargado, no vale la pena consultar la tabla.
+
         if (!disponible()) return Optional.empty();
 
         String base = "10" + dni;

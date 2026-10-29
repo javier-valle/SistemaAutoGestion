@@ -70,7 +70,7 @@
         <button type="button" class="pl-tab" role="tab" id="tab-reg" aria-selected="false" aria-controls="panel-reg" data-panel="reg" tabindex="-1">Crear cuenta</button>
       </nav>
 
-      <!-- ============================ ACCESO: DOCUMENTO + PLACA ============================ -->
+      
       <section id="panel-doc" class="pl-panel" role="tabpanel" aria-labelledby="tab-doc">
         <form class="pu-form" id="formDoc" novalidate>
           <div class="pu-field">
@@ -107,7 +107,7 @@
         </p>
       </section>
 
-      <!-- ============================ REGISTRO ============================ -->
+      
       <section id="panel-reg" class="pl-panel" role="tabpanel" aria-labelledby="tab-reg" hidden>
         <div class="pl-steps" aria-label="Pasos del registro">
           <div class="pl-step is-active" data-step="1"><i>1</i><span>Documento</span></div>
@@ -117,7 +117,7 @@
           <div class="pl-step" data-step="3"><i>3</i><span>Contacto</span></div>
         </div>
 
-        <!-- Paso 1: documento -->
+        
         <div id="reg-paso1">
           <form class="pu-form" id="formRegDoc" novalidate>
             <div class="pu-row">
@@ -148,7 +148,7 @@
           </p>
         </div>
 
-        <!-- Paso 2: datos -->
+        
         <div id="reg-paso2" hidden>
           <div id="reg-card" class="pl-doc-result" hidden>
             <p class="label">Datos encontrados</p>
@@ -201,7 +201,7 @@
           </div>
         </div>
 
-        <!-- Paso 3: contacto -->
+        
         <div id="reg-paso3" hidden>
           <form class="pu-form" id="formRegistro" novalidate>
             <div class="pu-row">
@@ -269,7 +269,7 @@
   const esc = portalEsc;
   const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])';
 
-  /* ---------------------------------------------------------------- mensajes */
+  
   let msgTimer = null;
   function msg(tipo, titulo, detalle) {
     const el = $('msg');
@@ -316,7 +316,7 @@
     }
   }
 
-  /* --------------------------------------------------------------- pestañas */
+  
   const tabs = Array.from(document.querySelectorAll('.pl-tab'));
   function activarTab(nombre, enfocar) {
     limpiarMsg();
@@ -342,7 +342,7 @@
     });
   });
 
-  /* ---------------------------------------------------------------- helpers */
+  
   const soloDigitos = s => String(s || '').replace(/\D/g, '');
   const soloAlnum = s => String(s || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
   const placaValida = s => /^[A-Z0-9]{3}-?[A-Z0-9]{3}$/.test(String(s || '').trim().toUpperCase());
@@ -370,7 +370,7 @@
     return;
   }
 
-  /* ================================ LOGIN ================================ */
+  
   $('doc').addEventListener('input', e => {
     e.target.value = soloDigitos(e.target.value).slice(0, e.target.maxLength);
     e.target.removeAttribute('aria-invalid');
@@ -412,7 +412,7 @@
     msg('error', texto, 'Corrige el campo marcado y vuelve a intentar.');
   }
 
-  /* ============================== REGISTRO ============================== */
+  
   const REG = {
     tipo: 'DNI',
     doc: '',
@@ -515,7 +515,7 @@
     REG.doc = limpio;
     if (!cambio) return;
 
-    // El documento cambió: cualquier nombre anterior deja de ser válido.
+    
     limpiarDatosVerificados();
     REG.ultimaClave = '';
     estadoReg('');
@@ -530,7 +530,7 @@
   }
 
   function cancelarConsulta() {
-    if (REG.abort) { try { REG.abort.abort(); } catch (_) { /* noop */ } }
+    if (REG.abort) { try { REG.abort.abort(); } catch (_) {  } }
     REG.abort = null;
     REG.secuencia++;
     clearTimeout(REG.timer);
@@ -786,13 +786,13 @@
     }
   });
 
-  /* Al cambiar de pestaña, no dejamos consultas ni temporizadores vivos. */
+  
   tabs.forEach(t => t.addEventListener('click', cancelarConsulta));
 
-  // Configuración inicial del registro
+  
   configurarTipo();
 
-  // Foco visible al cargar: primer campo útil
+  
   const params = new URLSearchParams(location.search);
   if (params.get('panel') === 'registro') {
     activarTab('reg');

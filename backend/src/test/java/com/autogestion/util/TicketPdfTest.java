@@ -65,7 +65,7 @@ class TicketPdfTest {
         assertEquals("xref", pdf.substring(xref, xref + 4),
                 "El offset de startxref debe apuntar a la tabla xref");
 
-        // El primer objeto (catálogo) debe estar donde dice su entrada en el xref
+
         String entradas = pdf.substring(xref);
         int off1 = Integer.parseInt(entradas.split("\n")[3].trim().split(" ")[0]);
         assertEquals("1 0 obj", pdf.substring(off1, off1 + "1 0 obj".length()),

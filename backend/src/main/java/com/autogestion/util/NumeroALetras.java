@@ -34,7 +34,7 @@ public final class NumeroALetras {
         long enteros = t.longValue();
         int centavos = t.remainder(BigDecimal.ONE).movePointRight(2).intValue();
         String letras = enteros == 0 ? "CERO" : enLetras(enteros);
-        // "UNO" suelto suena mal en soles: "UN SOL" lo maneja el lector; SUNAT usa "UNO".
+
         return "SON: " + letras + " Y " + String.format("%02d", centavos) + "/100 " + moneda;
     }
 

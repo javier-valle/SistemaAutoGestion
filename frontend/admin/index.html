@@ -725,7 +725,7 @@
             btn.title = `Tema: ${mode}`;
         }
         initLoginTheme();
-        /* Mostrar / ocultar contrasena */
+        
         const passInput = document.getElementById('password');
         document.getElementById('passToggle').addEventListener('click', () => {
             const show = passInput.type === 'password';
@@ -735,7 +735,7 @@
                 : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
             passInput.focus();
         });
-        /* Feedback de envio: spinner en el boton + sacudida en la tarjeta */
+        
         function cargando(on) {
             const btn = document.getElementById('loginBtn');
             if (btn) btn.classList.toggle('is-loading', !!on);
@@ -764,7 +764,7 @@
                     try {
                         const err = await response.json();
                         if (err && (err.mensaje || err.error)) msg = err.mensaje || err.error;
-                    } catch (_) { /* mensaje genérico */ }
+                    } catch (_) {  }
                     fallo(msg); return;
                 }
                 const data = await response.json();
@@ -775,7 +775,7 @@
                         localStorage.setItem('ag-hola-' + data.rol, '1');
                         sessionStorage.setItem('ag-hola-msg', `Bienvenido, ${data.nombreCompleto || data.nombre}. Este es tu panel: usa el botón ¿Cómo usar? para el recorrido.`);
                     }
-                } catch (_) { /* noop */ }
+                } catch (_) {  }
                 window.location.href = homePageForRol(data.rol);
             } catch (error) {
                 fallo('Error de conexion. Verifique que el servidor este activo.');

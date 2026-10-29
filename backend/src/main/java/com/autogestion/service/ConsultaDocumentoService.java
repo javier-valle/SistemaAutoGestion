@@ -87,7 +87,7 @@ public class ConsultaDocumentoService {
                 }
             } catch (Exception e) {
                 algunaFuenteFallo = true;
-                // Nunca se registra el nombre ni el documento completo.
+
                 log.warn("Proveedor {} falló con documento {}: {}",
                         p.getClass().getSimpleName(), enmascarar(doc), e.getMessage());
             }

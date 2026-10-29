@@ -43,7 +43,7 @@ public class SolicitudCotizacionService {
                         "Elige un vehículo de tu lista.", HttpStatus.NOT_FOUND));
 
         if (!vehiculo.getCliente().getId().equals(clienteId)) {
-            // No se revela a quién pertenece la placa.
+
             throw new BusinessException("Ese vehículo no está registrado a tu nombre.", "vehiculoId",
                     "Elige un vehículo de tu lista o consulta con el taller.", HttpStatus.FORBIDDEN);
         }

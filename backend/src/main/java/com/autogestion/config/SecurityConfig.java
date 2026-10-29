@@ -41,15 +41,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Desarrollo local: el portal se abre en varios puertos (Docker 5501,
-        // Live Server 5500/5501, `python -m http.server` 8000...) y a veces con
-        // doble clic sobre index.html, donde el navegador manda Origin "null".
-        // Sin estos patrones el navegador bloquea las llamadas a
-        // /api/public/portal/documento/consultar y el registro cae en
-        // "La fuente de consulta no respondió".
-        // En producción el frontend y la API comparten origen (Nginx), así que
-        // esta lista no interviene. El token del portal viaja en la cabecera
-        // Authorization (no en cookies), por lo que no hay CSRF entre orígenes.
+
+
+
+
+
+
+
+
+
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "http://127.0.0.1:*",
@@ -83,7 +83,7 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
-                // Públicas: login del personal e identificación del portal (nada más).
+
                 auth.requestMatchers("/api/auth/**").permitAll();
                 auth.requestMatchers(HttpMethod.GET,
                         "/api/public/portal/documento/consultar",
@@ -96,8 +96,8 @@ public class SecurityConfig {
                 }
                 auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
                 auth.requestMatchers("/api/admin/padron-ruc/**").hasRole("ADMIN");
-                // Portal: solo token CLIENTE. API del personal: solo roles del personal
-                // (un token de cliente NO abre ningún endpoint del personal).
+
+
                 auth.requestMatchers("/api/portal/**").hasRole("CLIENTE");
                 auth.requestMatchers("/api/**").hasAnyRole("ADMIN", "MECANICO", "RECEPCIONISTA", "ALMACENERO");
                 auth.anyRequest().authenticated();

@@ -1,4 +1,4 @@
-// frontend/js/reportes/charts.js?v=1
+
 function svgBars(el, labels, values, color) {
     const W = 560, H = 180, pad = 28;
     const max = Math.max(1, ...values);

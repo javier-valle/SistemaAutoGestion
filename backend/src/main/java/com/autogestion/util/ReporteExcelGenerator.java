@@ -82,7 +82,7 @@ public final class ReporteExcelGenerator {
             cItem.setCellStyle(bodyStyle);
         }
 
-        /* Hoja por cada sección (o una hoja consolidada con separadores si prefieren) */
+
         for (Seccion sec : secciones) {
             String nombreHoja = sanitizeSheetName(sec.titulo);
             Sheet sh = wb.createSheet(nombreHoja);
@@ -176,7 +176,7 @@ public final class ReporteExcelGenerator {
         return out.toByteArray();
     }
 
-    /* ---------- estilos ---------- */
+
     private static CellStyle crearHeaderStyle(XSSFWorkbook wb) {
         CellStyle s = wb.createCellStyle();
         XSSFFont f = wb.createFont();
@@ -271,7 +271,7 @@ public final class ReporteExcelGenerator {
     }
 
     private static String sanitizeSheetName(String name) {
-        // Solo caracteres prohibidos en Excel; conservar acentos y espacios.
+
         String s = name.replaceAll("[\\\\/\\?\\*\\[\\]\\:]", "");
         s = s.trim();
         if (s.isEmpty()) s = "Hoja";

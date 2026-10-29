@@ -1,6 +1,6 @@
-/* Cliente API del Portal del Cliente.
-   Separado a proposito de js/api.js (personal): token distinto, almacenamiento distinto.
-   El token del cliente vive en sessionStorage: se borra al cerrar la pestaña. */
+
+
+
 const PORTAL_API = (() => {
     const { protocol, hostname, port } = window.location;
     const sinProxy = protocol === 'file:' ||
@@ -27,7 +27,7 @@ function portalSalir() {
     sessionStorage.removeItem(PORTAL_NOMBRE_KEY);
     window.location.href = '/';
 }
-/* Uso en paginas internas del portal: if (!portalGuard()) return; */
+
 function portalGuard() {
     if (!portalToken()) { window.location.href = '/'; return false; }
     return true;
@@ -41,9 +41,9 @@ async function portalFetch(endpoint, options = {}) {
     if (res.status === 401 && token) { portalSalir(); throw new Error('Sesión vencida'); }
     if (res.status === 429) { const e429 = new Error('Demasiados intentos. Espera un minuto.'); e429.status = 429; throw e429; }
     if (!res.ok) {
-        // El mensaje del servidor va aparte (err.detalle): los llamadores deciden si mostrarlo.
+
         let detalle = null;
-        try { const j = await res.json(); detalle = j && (j.mensaje || j.message) || null; } catch (_) { /* sin cuerpo */ }
+        try { const j = await res.json(); detalle = j && (j.mensaje || j.message) || null; } catch (_) {  }
         const err = new Error('No se pudo completar la solicitud (' + res.status + ')');
         err.status = res.status;
         err.detalle = detalle;

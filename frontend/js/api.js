@@ -1,22 +1,22 @@
 const API_BASE = (() => {
-    // Solo localStorage y mismo-origen: ?apiBase= en la URL permitía a un
-    // enlace malicioso redirigir la API y robar el token (phishing).
+
+
     const saved = localStorage.getItem('apiBase');
     if (saved) {
         try {
             const u = new URL(saved);
             if (u.protocol === 'http:' || u.protocol === 'https:') return saved.replace(/\/$/, '');
-        } catch (_) { /* valor inválido: se ignora */ }
+        } catch (_) {  }
     }
-    // Docker: Nginx sirve la web y reenvia /api al backend (mismo origen, sin CORS).
-    // Live Server (5501/5502) o file:// no tienen proxy: hablan directo con el backend.
+
+
     const { protocol, hostname, port } = window.location;
     const sinProxy = protocol === 'file:' ||
         ((hostname === 'localhost' || hostname === '127.0.0.1') && (port === '5501' || port === '5502'));
     return sinProxy ? 'http://localhost:8080/api' : '/api';
 })();
-/* Escape HTML: todo dato del backend/usuario que se interpole en innerHTML
-   debe pasar por aquí. Cubre & < > " ' ` =. */
+
+
 function esc(s) {
     return String(s ?? '').replace(/[&<>"'`=]/g, c => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;', '=': '&#61;'
@@ -25,21 +25,26 @@ function esc(s) {
 function getToken() { return localStorage.getItem('token'); }
 function setToken(token) { localStorage.setItem('token', token); }
 function clearToken() { localStorage.removeItem('token'); localStorage.removeItem('user'); }
-function getUser() { const u = localStorage.getItem('user'); return u ? JSON.parse(u) : null; }
+function getUser() {
+    const u = localStorage.getItem('user');
+    if (!u) return null;
+    try { return JSON.parse(u); }
+    catch (_) { localStorage.removeItem('user'); return null; }
+}
 function setUser(user) { localStorage.setItem('user', JSON.stringify(user)); }
 function isLoggedIn() { return !!getToken(); }
-/* Rutas base: el login del personal vive en frontend/admin/index.html y las paginas en
-   frontend/admin/pages/. Desde pages/ hay que subir un nivel (../index.html); desde /admin/ no.
-   La raiz (/) es el portal del cliente. */
+
+
+
 function agIsInPages() { return window.location.pathname.replace(/\\/g, '/').includes('/pages/'); }
 function agLoginPath() { return agIsInPages() ? '../index.html' : 'index.html'; }
 function logout() { clearToken(); window.location.href = agLoginPath(); }
 function checkAuth() { if (!isLoggedIn()) { window.location.href = agLoginPath(); return false; } return true; }
 
-/* =========================================================
-   LIMPIEZA DE OBJETOS: quita vacíos ("" / null / undefined)
-   para no romper @Email/@Size opcionales. El backend ya exige
-   lo obligatorio con mensajes claros. */
+
+
+
+
 function agLimpia(obj) {
     const o = {};
     for (const [k, v] of Object.entries(obj || {})) {
@@ -49,12 +54,12 @@ function agLimpia(obj) {
     return o;
 }
 
-/* =========================================================
-   PERMISOS POR ROL
-   Define que paginas puede ver cada rol. El navbar, los
-   guards de pagina, el buscador Ctrl+K y el tutorial usan
-   este mismo mapa como unica fuente de verdad.
-   ========================================================= */
+
+
+
+
+
+
 const ROLE_PAGES = {
     dashboard:     ['ADMIN', 'ALMACENERO'],
     recepcion:     ['ADMIN', 'RECEPCIONISTA'],
@@ -71,9 +76,9 @@ const ROLE_PAGES = {
 };
 window.AG_ROLE_PAGES = ROLE_PAGES;
 
-/* Guard de pagina: exige sesion y que el rol tenga acceso.
-   Sin sesion -> login; con sesion pero rol sin permiso -> pagina de acceso denegado.
-   Uso: if (!guardPage('inventario')) return; */
+
+
+
 function guardPage(page) {
     if (!checkAuth()) return false;
     const user = getUser();
@@ -83,8 +88,8 @@ function guardPage(page) {
     return false;
 }
 
-/* Pagina de inicio segun el rol (post-login y redirecciones).
-   Desde el login (raiz) incluye 'pages/'; desde dentro de pages/ es relativo. */
+
+
 function homePageForRol(rol, fromPages) {
     const inPages = typeof fromPages === 'boolean' ? fromPages : agIsInPages();
     const page = rol === 'MECANICO' ? 'mecanico.html'
@@ -94,21 +99,38 @@ function homePageForRol(rol, fromPages) {
     return inPages ? page : 'pages/' + page;
 }
 
+
+
+
+const agPeticionesEnVuelo = new Map();
+
 async function apiFetch(endpoint, options = {}) {
-    const token = getToken();
-    const headers = { 'Content-Type': 'application/json', ...options.headers };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    try {
-        const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-        await agFalla(response);
-        const ct = response.headers.get('content-type');
-        if (ct && ct.includes('application/json')) return await response.json();
-        return null;
-    } catch (error) { console.error('API Error:', error); throw error; }
+    const metodo = String(options.method || 'GET').toUpperCase();
+    const clave = metodo === 'POST' ? `${metodo} ${endpoint} ${options.body ?? ''}` : null;
+    if (clave && agPeticionesEnVuelo.has(clave)) return agPeticionesEnVuelo.get(clave);
+
+    const peticion = (async () => {
+        const token = getToken();
+        const headers = { 'Content-Type': 'application/json', ...options.headers };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        try {
+            const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+            await agFalla(response);
+            const ct = response.headers.get('content-type');
+            if (ct && ct.includes('application/json')) return await response.json();
+            return null;
+        } catch (error) { console.error('API Error:', error); throw error; }
+    })();
+
+    if (clave) {
+        agPeticionesEnVuelo.set(clave, peticion);
+        peticion.then(() => agPeticionesEnVuelo.delete(clave), () => agPeticionesEnVuelo.delete(clave));
+    }
+    return peticion;
 }
 
-/* Descarga de archivos (PDF) con la misma sesion y los mismos errores que
-   apiFetch. El archivo lo genera el backend: aqui solo se trae el blob. */
+
+
 async function apiFetchBlob(endpoint) {
     const token = getToken();
     const headers = {};
@@ -120,9 +142,9 @@ async function apiFetchBlob(endpoint) {
     } catch (error) { console.error('API Error:', error); throw error; }
 }
 
-/* Descarga un archivo del backend (PDF, CSV...) con la sesión del usuario y
-   lo guarda con el nombre indicado. Un <a href="/api/..."> no sirve: no lleva
-   el token y /api tampoco existe en el puerto del frontend. */
+
+
+
 async function apiDescargar(endpoint, nombre) {
     const blob = await apiFetchBlob(endpoint);
     const a = document.createElement('a');
@@ -134,16 +156,16 @@ async function apiDescargar(endpoint, nombre) {
     return blob;
 }
 
-/* Unico lugar donde un HTTP de error se convierte en el mensaje que ve el
-   usuario (BusinessException, validacion Bean, 401 y 403). */
+
+
 async function agFalla(response) {
     if (response.status === 401) {
-        // Token invalido o expirado: cerrar sesion y volver al login.
+
         clearToken();
         throw new Error('Sesion expirada. Inicia sesion nuevamente');
     }
     if (response.status === 403) {
-        // Autenticado pero sin permisos por rol: NO cerrar sesion, solo informar.
+
         throw new Error('No tienes permisos para realizar esta accion con tu rol');
     }
     if (!response.ok) {
@@ -151,11 +173,11 @@ async function agFalla(response) {
         let campo = null;
         try {
             const body = await response.json();
-            /* BusinessException: { mensaje, campo, sugerencia } en lenguaje claro */
+
             if (body?.mensaje) msg = body.sugerencia ? `${body.mensaje} ${body.sugerencia}` : body.mensaje;
             else if (body?.error) msg = body.error;
             else if (body?.message) msg = body.message;
-            /* Validación Bean: mapa { campo: mensaje } sin clave fija */
+
             else if (body && typeof body === 'object') {
                 const parts = Object.entries(body)
                     .filter(([, v]) => typeof v === 'string' && v)
@@ -163,7 +185,7 @@ async function agFalla(response) {
                 if (parts.length) { msg = parts.join(' · '); campo = Object.keys(body)[0]; }
             }
             campo = campo || body?.campo || null;
-        } catch (_) { try { const t = await response.text(); msg = t || msg; } catch (_) { /* noop */ } }
+        } catch (_) { try { const t = await response.text(); msg = t || msg; } catch (_) {  } }
         const err = new Error(msg);
         if (campo) err.campo = campo;
         throw err;
@@ -192,11 +214,11 @@ function showAlert(containerId, message, type = 'danger') {
 function showSuccess(id, msg) { showAlert(id, msg, 'success'); }
 function showError(id, msg) { showAlert(id, msg, 'danger'); }
 
-/* =========================================================
-   STEPPER DE CANTIDAD ( - / input / + )
-   Reemplaza los spinners nativos de input[type=number].
-   Uso: container.innerHTML = agStepper('miInput', { value: 1, min: 1, size: 'sm' });
-   ========================================================= */
+
+
+
+
+
 function agStepper(inputId, { value = 1, min = 1, max = 9999, step = 1, size = '' } = {}) {
     const sizeClass = size === 'sm' ? ' ag-stepper--sm' : size === 'lg' ? ' ag-stepper--lg' : '';
     const iconMinus = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
@@ -222,11 +244,11 @@ window.agStepperStep = function (inputId, dir) {
     input.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
-/* =========================================================
-   NAVBAR SEGUN ROL
-   ========================================================= */
-/* Set duotono AutoGestion: trazo 1.8, remates redondos y capa suave
-   (fill con opacidad) para dar profundidad sin perder legibilidad a 15px. */
+
+
+
+
+
 const AG_SW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">';
 const AG_SOFT = ' fill="currentColor" stroke="none" opacity=".28"';
 const NAV_ICONS = {
@@ -254,7 +276,7 @@ const ROLE_NAV = {
     RECEPCIONISTA: ['recepcionista', 'recepcion', 'clientes', 'cotizacion', 'orden_trabajo', 'pago_entrega', 'reportes'],
 };
 
-/* Grupos del menú lateral, en orden del flujo del taller */
+
 const NAV_GROUPS = [
     { titulo: 'Operación', paginas: ['dashboard', 'recepcion', 'clientes', 'recepcionista'] },
     { titulo: 'Taller', paginas: ['cotizacion', 'orden_trabajo', 'mecanico'] },
@@ -282,7 +304,7 @@ function agToggleSidebar() {
         return;
     }
     try { localStorage.setItem('ag-sidebar', agSidebarSaved() === 'open' ? 'closed' : 'open'); }
-    catch (_) { /* noop */ }
+    catch (_) {  }
     agApplySidebar();
 }
 function agCloseSidebarMobile() { document.body.classList.remove('sb-m-open'); }

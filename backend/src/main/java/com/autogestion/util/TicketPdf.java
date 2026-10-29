@@ -22,10 +22,10 @@ public final class TicketPdf {
 
     private TicketPdf() { }
 
-    private static final float W = 226.8f;                 // 80 mm a 72 dpi
-    private static final int M = 16;                       // margen izquierdo
-    private static final float R = W - 16;                 // borde derecho
-    private static final float BASE = 560;                 // alto sin detalle
+    private static final float W = 226.8f;
+    private static final int M = 16;
+    private static final float R = W - 16;
+    private static final float BASE = 560;
     private static final float ALTO_LINEA_DETALLE = 22;
 
     private static final String DARK = "0.06 0.09 0.16";
@@ -48,19 +48,19 @@ public final class TicketPdf {
         boolean anulado = "ANULADO".equals(c.getEstado());
         String moneda = c.getMoneda() == null ? "PEN" : c.getMoneda();
 
-        /* Cabecera del emisor */
+
         t.rect(0, 0, W, 62, DARK);
         String emisor = valor(c.getEmisorNombreComercial(), c.getEmisorRazonSocial());
         t.txt(M, 22, "F2", 11, WHITE, corta(emisor, 30));
         t.txt(M, 36, "F1", 7.5f, WHITE, "RUC " + valor(c.getEmisorRuc(), ""));
         t.txt(M, 48, "F1", 6.5f, "0.75 0.8 0.86", corta(valor(c.getEmisorDireccion(), ""), 44));
 
-        /* Folio */
+
         t.rect(0, 62, W, 34, AMBER);
         t.centro(74, "F2", 9, WHITE, titulo);
         t.centro(86, "F2", 11, WHITE, valor(c.getFolio(), ""));
 
-        /* Adquirente */
+
         float y = 112;
         y = t.txt(M, y, "F1", 7, GRAY, valor(c.getClienteTipoDoc(), "-") + " " + valor(c.getClienteNumDoc(), "-")) + 11;
         for (String l : t.wrap(valor(c.getClienteNombre(), ""), 34).stream().limit(2).toList()) {
@@ -82,7 +82,7 @@ public final class TicketPdf {
         y += 4;
         y = t.linea(y, LINE, 0.7f) + 12;
 
-        /* Detalle */
+
         for (var d : detalle) {
             String desc = cant(d.getCantidad()) + " " + valor(d.getUnidadMedida(), "")
                     + " " + valor(d.getDescripcion(), "");
@@ -94,7 +94,7 @@ public final class TicketPdf {
             y += 2;
         }
 
-        /* Totales */
+
         y = t.linea(y, LINE, 0.7f) + 13;
         t.txt(M, y, "F1", 8.5f, GRAY, "Op. gravada");
         t.der(R, y, "F1", 8.5f, DARK, dinero(c.getTotalGravado()));
@@ -111,7 +111,7 @@ public final class TicketPdf {
         }
         y += 6;
 
-        /* QR + leyendas */
+
         for (String l : t.wrap("QR: " + valor(c.getQrContenido(), ""), 52).stream().limit(3).toList()) {
             y = t.txt(M, y, "F1", 5.5f, GRAY, l) + 8;
         }
@@ -126,7 +126,7 @@ public final class TicketPdf {
         return t.enPDF();
     }
 
-    /* ---------------- helpers de valor ---------------- */
+
 
     private static String valor(String v, String porDefecto) {
         return v == null || v.isBlank() ? porDefecto : v;
@@ -147,7 +147,7 @@ public final class TicketPdf {
         return v.stripTrailingZeros().toPlainString();
     }
 
-    /* ---------------- dibujo ---------------- */
+
 
     private static final class Lienzo {
         private final float alto;

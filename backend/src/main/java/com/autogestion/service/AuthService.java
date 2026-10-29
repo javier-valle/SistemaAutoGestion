@@ -32,7 +32,7 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
-        // Mensaje único en los tres casos: no revelar si el email existe.
+
         Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BusinessException("Credenciales inválidas",
                         org.springframework.http.HttpStatus.UNAUTHORIZED));

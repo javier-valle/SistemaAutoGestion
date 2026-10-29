@@ -44,7 +44,7 @@ class RecepcionServiceTest {
         r.setClienteNombre("Pedro Paredes");
         r.setClienteTipoDocumento("DNI");
         r.setClienteDocumento("87654321");
-        r.setClienteTelefono("951234567"); // mismo teléfono que otro cliente: NO debe fusionar
+        r.setClienteTelefono("951234567");
         r.setVehiculoPlaca("XYZ-999");
         r.setProblemaReportado("Ruido al frenar");
         return r;
@@ -63,7 +63,7 @@ class RecepcionServiceTest {
 
         recepcionService.crearCompleto(base());
 
-        // Nunca se busca por teléfono ni email para decidir identidad
+
         verify(clienteRepository, never()).findByTelefono(any());
         verify(clienteRepository, never()).findByEmail(any());
         verify(clienteRepository).save(argThat((Cliente c) -> "87654321".equals(c.getDocumento())));
@@ -105,8 +105,8 @@ class RecepcionServiceTest {
 
     @Test
     void wizardConIdsNoExigeNombreNiPlaca() {
-        // El wizard manda { clienteId, vehiculoId, problemaReportado }: nombre y placa van null.
-        // Antes el @NotBlank los rechazaba con un 400 genérico.
+
+
         Cliente yo = Cliente.builder().id(1L).nombre("Yo").documento("87654321").build();
         Vehiculo mio = Vehiculo.builder().id(5L).placa("XYZ-999").cliente(yo).build();
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(yo));

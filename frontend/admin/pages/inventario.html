@@ -46,7 +46,7 @@
             <button class="ag-tab" data-tab="alertas" onclick="cambiarTab('alertas')">Alertas</button>
         </div>
 
-        <!-- STOCK -->
+        
         <div class="ag-tabpane" data-pane="stock">
             <div class="ag-section">
                 <div class="ag-section-header">
@@ -70,7 +70,7 @@
             </div>
         </div>
 
-        <!-- MOVIMIENTOS -->
+        
         <div class="ag-tabpane" data-pane="movimientos" hidden>
             <div class="ag-section">
                 <div class="ag-section-header">
@@ -103,7 +103,7 @@
             </div>
         </div>
 
-        <!-- COMPRA -->
+        
         <div class="ag-tabpane" data-pane="compra" hidden>
             <div class="ag-section">
                 <div class="ag-section-header"><h3>Registrar compra a proveedor</h3>
@@ -141,7 +141,7 @@
             </div>
         </div>
 
-        <!-- MERMAS -->
+        
         <div class="ag-tabpane" data-pane="mermas" hidden>
             <div class="ag-section">
                 <div class="ag-section-header"><h3>Mermas y ajustes</h3>
@@ -168,7 +168,7 @@
             </div>
         </div>
 
-        <!-- PROVEEDORES -->
+        
         <div class="ag-tabpane" data-pane="proveedores" hidden>
             <div class="ag-section">
                 <div class="ag-section-header"><h3>Proveedores</h3>
@@ -184,7 +184,7 @@
             </div>
         </div>
 
-        <!-- ALERTAS -->
+        
         <div class="ag-tabpane" data-pane="alertas" hidden>
             <div class="ag-section">
                 <div class="ag-section-header"><h3 style="color:var(--ag-signal-stop);">Alertas de stock</h3></div>
@@ -193,7 +193,7 @@
         </div>
     </div>
 
-    <!-- Modal producto (crear/editar) -->
+    
     <div class="ag-modal-overlay" id="modalNuevoProducto">
         <div class="ag-modal">
             <div class="ag-modal-header"><h3 id="prodModalTitle">Nuevo Producto</h3>
@@ -223,7 +223,7 @@
         </div>
     </div>
 
-    <!-- Modal proveedor -->
+    
     <div class="ag-modal-overlay" id="modalProveedor">
         <div class="ag-modal">
             <div class="ag-modal-header"><h3 id="provModalTitle">Nuevo Proveedor</h3>
@@ -278,7 +278,7 @@
             if (name === 'alertas') loadAlertas();
         }
 
-        /* ---------- STOCK ---------- */
+        
         let productosCache = [];
         window.filtrarProductos = function() {
             const q = (document.getElementById('searchProducto').value || '').toLowerCase();
@@ -391,7 +391,7 @@
             document.getElementById('compraCantidad').focus();
         };
 
-        /* ---------- MOVIMIENTOS ---------- */
+        
         let movPage = 0;
         const MOV_SIZE = 12;
         const TIPO_BADGE = { ENTRADA: 'ag-badge-success', CONSUMO: 'ag-badge-warning', AJUSTE_POSITIVO: 'ag-badge-info', AJUSTE_NEGATIVO: 'ag-badge-danger', MERMA: 'ag-badge-danger' };
@@ -423,7 +423,7 @@
         function movGo(d) { movPage = Math.max(0, movPage + d); loadMovimientos(); }
         function movBuscar() { movPage = 0; loadMovimientos(); }
 
-        /* ---------- COMPRA ---------- */
+        
         let compraLineas = [];
         let proveedoresCache = [];
         async function loadProveedores() {
@@ -437,7 +437,7 @@
                     o.textContent = `${p.nombre}${p.ruc ? ' · ' + p.ruc : ''}`;
                     sel.appendChild(o);
                 });
-            } catch (_) { /* sin permiso o sin datos */ }
+            } catch (_) {  }
             pintarProveedores();
         }
         function pintarProveedores() {
@@ -541,10 +541,10 @@
                 const r = await apiFetch(`/documentos/validar?tipo=RUC&numero=${encodeURIComponent(num)}`);
                 hint.textContent = (r.valido ? '✔ ' : '✖ ') + r.mensaje;
                 hint.style.color = r.valido ? 'var(--ag-signal-go)' : 'var(--ag-signal-stop)';
-            } catch (_) { /* el backend valida al guardar */ }
+            } catch (_) {  }
         });
 
-        /* ---------- MERMAS ---------- */
+        
         document.getElementById('movimientoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             try {
@@ -559,7 +559,7 @@
             } catch (e) { toast('Error: ' + e.message, 'danger'); }
         });
 
-        /* ---------- EXPORTS CSV ---------- */
+        
         function descargarFilasCSV(nombre, filas) {
             const csv = filas.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
             const a = document.createElement('a');
@@ -592,7 +592,7 @@
             } catch (e) { toast('No se pudo exportar: ' + e.message, 'danger'); }
         };
 
-        /* ---------- ALERTAS ---------- */
+        
         async function loadAlertas() {            try {
                 const alertas = await apiFetch('/inventario/alertas');
                 const c = document.getElementById('alertasContainer');

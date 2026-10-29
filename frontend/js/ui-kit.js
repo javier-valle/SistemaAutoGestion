@@ -1,8 +1,8 @@
-/* =========================================================
-   AutoGestion - UI Kit de interactividad
-   Toasts, buscador global (Ctrl+K), ayuda flotante y
-   tour guiado por pagina. Cargado despues de api.js.
-   ========================================================= */
+
+
+
+
+
 (function () {
   'use strict';
   if (window.__agUiKit) return;
@@ -11,7 +11,7 @@
   const IS_PAGES = /\/pages\//.test(window.location.pathname);
   const P = IS_PAGES ? '' : 'pages/';
 
-  /* ---------------- Toasts ---------------- */
+
   const TOAST_ICONS = {
     success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
     danger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
@@ -40,19 +40,19 @@
   }
   window.toast = toast;
 
-  /* Interceptar alertas antiguas para que tambien salgan como toast */
+
   const origShowSuccess = window.showSuccess;
   const origShowError = window.showError;
   window.showSuccess = function (id, msg) {
-    if (typeof origShowSuccess === 'function') { try { origShowSuccess(id, msg); } catch (_) { /* noop */ } }
+    if (typeof origShowSuccess === 'function') { try { origShowSuccess(id, msg); } catch (_) {  } }
     toast(msg, 'success');
   };
   window.showError = function (id, msg) {
-    if (typeof origShowError === 'function') { try { origShowError(id, msg); } catch (_) { /* noop */ } }
+    if (typeof origShowError === 'function') { try { origShowError(id, msg); } catch (_) {  } }
     toast(msg, 'danger');
   };
 
-  /* ---------------- Tour guiado ---------------- */
+
   const TOUR_STEPS = {
     dashboard: [
       { sel: '.ag-grid.ag-grid-4', title: 'Indicadores del taller', text: 'Aqui ves el pulso del negocio en tiempo real: OT completadas, tiempo promedio, ingresos del mes y alertas de stock.' },
@@ -136,7 +136,7 @@
     document.getElementById('agTourClose').addEventListener('click', stopTour);
     document.getElementById('agTourSkip').addEventListener('click', stopTour);
     document.getElementById('agTourNext').addEventListener('click', () => tourAdvance(1));
-    /* El hueco de luz sigue a su elemento si se mueve (scroll/resize) */
+
     let tourRaf = 0;
     const reponer = () => {
       if (!tourState) return;
@@ -161,7 +161,7 @@
     const hl = document.getElementById('agTourHighlight');
     const pop = document.getElementById('agTourPopover');
     const el = step.sel ? document.querySelector(step.sel) : null;
-    /* Sin objetivo a la vista, el overlay atenua toda la pantalla */
+
     ov.classList.toggle('no-target', !el);
     document.getElementById('agTourBadge').textContent = 'Paso ' + (idx + 1) + ' de ' + steps.length;
     document.getElementById('agTourTitle').textContent = step.title;
@@ -180,7 +180,7 @@
       let left = Math.min(Math.max(14, r.left), window.innerWidth - 334);
       pop.style.top = top + 'px';
       pop.style.left = left + 'px';
-      try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) { /* noop */ }
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {  }
     } else {
       hl.style.display = 'none';
       pop.style.top = '18vh';
@@ -200,7 +200,7 @@
 
   function stopTour(markDone = true) {
     if (tourState && markDone) {
-      try { localStorage.setItem('ag-tour-' + tourState.page, 'done'); } catch (_) { /* noop */ }
+      try { localStorage.setItem('ag-tour-' + tourState.page, 'done'); } catch (_) {  }
     }
     tourState = null;
     const ov = document.getElementById('agTourOverlay');
@@ -217,7 +217,7 @@
   }
   window.agStartTour = startTour;
 
-  /* ---------------- Guia contextual ("que hago aqui") ---------------- */
+
   const GUIDE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" fill="currentColor" stroke="none" opacity=".22"/><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.9.8c0 1.7-2.5 2.1-2.5 3.4"/><path d="M12 16.9v.01"/></svg>';
   const AG_GUIDES = {
     dashboard: { title: 'Tu tablero de un vistazo', steps: ['Revisa los indicadores: OT, ingresos y stock', 'Sigue el flujo del taller paso a paso', 'Usa los accesos rapidos o pulsa Ctrl+K'], cta: { label: 'Registrar recepcion', page: 'recepcion' } },
@@ -246,7 +246,7 @@
     const page = (window.location.pathname.match(/([a-z_]+)\.html/i) || [null, ''])[1] || '';
     const g = AG_GUIDES[page];
     if (!g) return;
-    try { if (localStorage.getItem('ag-guide-off-' + page)) return; } catch (_) { /* noop */ }
+    try { if (localStorage.getItem('ag-guide-off-' + page)) return; } catch (_) {  }
     const host = document.querySelector('.ag-page');
     if (!host || host.querySelector('.ag-guide')) return;
     const el = document.createElement('div');
@@ -263,7 +263,7 @@
       ${cta}
       <button class="ag-guide-close" aria-label="Ocultar guia" title="Ocultar guia">&times;</button>`;
     el.querySelector('.ag-guide-close').addEventListener('click', () => {
-      try { localStorage.setItem('ag-guide-off-' + page, '1'); } catch (_) { /* noop */ }
+      try { localStorage.setItem('ag-guide-off-' + page, '1'); } catch (_) {  }
       el.remove();
     });
     const header = host.querySelector('.ag-page-header, .ag-head');
@@ -272,7 +272,7 @@
   }
   window.agMountGuide = mountGuide;
 
-  /* ---------------- Glosario en línea (data-g="ruc") ---------------- */
+
   const GLOSARIO = {
     ot: 'OT = Orden de Trabajo: qué se le hace al auto, quién y en qué estado va.',
     ruc: 'RUC: 11 dígitos de empresa o negocio. Sin RUC válido no hay factura.',
@@ -299,7 +299,7 @@
   }
   function initGlosario() {
     document.querySelectorAll('[data-g]').forEach(enhanceGlosarioEl);
-    /* Los reportes y wizard inyectan HTML después: se observan nodos nuevos */
+
     try {
       new MutationObserver(muts => {
         muts.forEach(m => m.addedNodes.forEach(n => {
@@ -308,11 +308,11 @@
           if (n.querySelectorAll) n.querySelectorAll('[data-g]').forEach(enhanceGlosarioEl);
         }));
       }).observe(document.body, { childList: true, subtree: true });
-    } catch (_) { /* noop */ }
+    } catch (_) {  }
   }
   window.agInitGlosario = initGlosario;
 
-  /* ---------------- Ayuda flotante + auto-tour ---------------- */
+
   function initHelp() {
     const page = (window.location.pathname.match(/([a-z_]+)\.html/i) || [null, ''])[1] || '';
     if (document.querySelector('.ag-fab')) return;
@@ -323,15 +323,15 @@
     fab.addEventListener('click', () => startTour(page));
     document.body.appendChild(fab);
 
-    /* Tour automatico la primera vez que se visita una pagina */
+
     try {
       if (TOUR_STEPS[page] && !localStorage.getItem('ag-tour-' + page)) {
         setTimeout(() => startTour(page), 900);
       }
-    } catch (_) { /* noop */ }
+    } catch (_) {  }
   }
 
-  /* ---------------- Buscador global Ctrl+K ---------------- */
+
   const NAV_ENTRIES = [
     { page: 'dashboard', label: 'Dashboard', desc: 'Resumen e indicadores', keywords: 'inicio resumen kpi indicadores' },
     { page: 'recepcion', label: 'Recepcion', desc: 'Registrar ingreso de vehiculos', keywords: 'ingreso vehiculo cliente nuevo' },
@@ -367,7 +367,7 @@
     let selected = 0;
     let results = [];
 
-    /* Paginas permitidas segun el rol del usuario logueado */
+
     function allowedPages() {
       try {
         const u = (typeof getUser === 'function') ? getUser() : null;
@@ -433,7 +433,7 @@
       }
       if (e.key === 'Escape' && paletteOpen) closePalette();
     });
-    /* Boton en el navbar (se inserta cuando el navbar existe) */
+
     const tryInject = setInterval(() => {
       const right = document.querySelector('.ag-navbar-right');
       if (!right) return;
@@ -448,7 +448,7 @@
     setTimeout(() => clearInterval(tryInject), 8000);
   }
 
-  /* ---------------- Boton Tutorial en navbar ---------------- */
+
   function initNavbarHelp() {
     const tryInject = setInterval(() => {
       const right = document.querySelector('.ag-navbar-right');
@@ -465,22 +465,22 @@
     setTimeout(() => clearInterval(tryInject), 8000);
   }
 
-  /* ---------------- Bienvenida (solo la primera vez que entras) ---------------- */
+
   function initHola() {
     let msg = null;
-    try { msg = sessionStorage.getItem('ag-hola-msg'); sessionStorage.removeItem('ag-hola-msg'); } catch (_) { /* noop */ }
+    try { msg = sessionStorage.getItem('ag-hola-msg'); sessionStorage.removeItem('ag-hola-msg'); } catch (_) {  }
     if (msg) setTimeout(() => toast(msg, 'info', 6000), 800);
   }
 
-  /* ---------------- Init ---------------- */
+
   function init() {
     initPalette();
     initNavbarHelp();
     initHola();
-    try { mountGuide(); } catch (_) { /* noop */ }
-    try { initGlosario(); } catch (_) { /* noop */ }
+    try { mountGuide(); } catch (_) {  }
+    try { initGlosario(); } catch (_) {  }
     const page = (window.location.pathname.match(/([a-z_]+)\.html/i) || [null, ''])[1] || '';
-    /* El FAB no tiene sentido en el login ni en el tutorial */
+
     if (page && page !== 'tutorial' && TOUR_STEPS[page]) initHelp();
   }
   if (document.readyState === 'loading') {

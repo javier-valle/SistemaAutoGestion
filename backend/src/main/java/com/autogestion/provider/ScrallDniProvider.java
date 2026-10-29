@@ -79,7 +79,7 @@ public class ScrallDniProvider implements ProveedorDocumento {
                 .accept(MediaType.APPLICATION_JSON)
                 .body(Map.of("dni", dni))
                 .retrieve()
-                // 404/422 = el DNI no existe en la fuente: no es una caída técnica.
+
                 .onStatus(s -> s.value() == 404 || s.value() == 422, (req, res) -> { })
                 .onStatus(HttpStatusCode::isError, (req, res) -> {
                     throw new IllegalStateException("Scrall HTTP " + res.getStatusCode().value());

@@ -26,13 +26,13 @@ public class ConsultaDocumentoResponseDTO {
 
     private String tipoDocumento;
     private String documento;
-    private String nombre; // nombre completo (persona) o razón social (RUC)
+    private String nombre;
     private String apellidoPaterno;
     private String apellidoMaterno;
-    private String razonSocial; // para RUC
-    private String direccion; // fiscal en RUC
-    private String estado; // ACTIVO / BAJA / etc.
-    private String condicion; // HABIDO / NO HABIDO / etc.
+    private String razonSocial;
+    private String direccion;
+    private String estado;
+    private String condicion;
     /** true = los datos salieron de una fuente externa; false = el usuario debe declararlos. */
     private boolean verificado;
     /** Nombre legible de la fuente que respondió (nunca se inventa). */

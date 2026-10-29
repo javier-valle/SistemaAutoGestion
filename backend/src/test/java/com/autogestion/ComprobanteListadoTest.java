@@ -59,12 +59,12 @@ class ComprobanteListadoTest {
 
         emitir(otId, "DNI", "87654321");
 
-        // El mismo sort que manda el front (?sort=fechaEmision,desc)
+
         var page = comprobanteService.listar(null, null, desde(), hasta(), null,
                 PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "fechaEmision")));
         assertFalse(page.isEmpty(), "Debe listar el comprobante emitido");
 
-        // Y también sin sort: el orden por defecto tiene que ser determinista
+
         var sinOrden = comprobanteService.listar(null, null, desde(), hasta(), null,
                 PageRequest.of(0, 20));
         assertFalse(sinOrden.isEmpty());
@@ -75,7 +75,7 @@ class ComprobanteListadoTest {
         Long adminId = usuarioRepository.findByEmail("admin@sanmartin.pe").orElseThrow().getId();
         Long otId = flujoHastaFinalizar(adminId, "LIST-002");
 
-        // Así lo enviaba el front: el tipo del COMPROBANTE, no el del documento
+
         var comp = emitir(otId, "BOLETA", "87654321");
         assertEquals("DNI", comp.clienteTipoDoc());
         assertEquals("87654321", comp.clienteNumDoc());
@@ -86,14 +86,14 @@ class ComprobanteListadoTest {
         Long adminId = usuarioRepository.findByEmail("admin@sanmartin.pe").orElseThrow().getId();
         Long otId = flujoHastaFinalizar(adminId, "LIST-003");
 
-        // Regla vigente: la boleta acepta RUC (negocios que la piden así);
-        // solo la factura lo exige. Antes se rechazaba con "corresponde factura".
+
+
         var comp = emitir(otId, "BOLETA", "20123456786");
         assertEquals("RUC", comp.clienteTipoDoc());
         assertEquals("20123456786", comp.clienteNumDoc());
     }
 
-    /* ---------------- helpers ---------------- */
+
 
     private record Comp(String clienteTipoDoc, String clienteNumDoc) { }
 

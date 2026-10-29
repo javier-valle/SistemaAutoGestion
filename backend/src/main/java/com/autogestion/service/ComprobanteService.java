@@ -102,7 +102,7 @@ public class ComprobanteService {
                 .orElseThrow(() -> new BusinessException("Sesión inválida.", null,
                         "Vuelve a iniciar sesión.", HttpStatus.UNAUTHORIZED));
 
-        // Serie con bloqueo: el número se reserva aquí dentro, sin saltos.
+
         SerieComprobante serie = serieRepository.bloquearPorSerie(tipo.getSerie())
                 .orElseThrow(() -> new BusinessException("Serie " + tipo.getSerie() + " no configurada.", "tipo",
                         "Contacta soporte."));
@@ -146,7 +146,7 @@ public class ComprobanteService {
         detalle.construir(c, ot, total);
         c = comprobanteRepository.save(c);
 
-        // Pago: crea o enlaza el registro existente (flujo antiguo) con el total real.
+
         Optional<PagoEntrega> pagoOpt = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId());
         PagoEntrega pago = pagoOpt.orElseGet(() -> PagoEntrega.builder().ordenTrabajo(ot).build());
         pago.setMonto(c.getTotal());

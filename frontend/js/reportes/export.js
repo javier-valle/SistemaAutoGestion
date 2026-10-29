@@ -1,4 +1,4 @@
-// frontend/js/reportes/export.js?v=1
+
 function exportarPDF() {
     const tabLabel = (document.querySelector('.ag-tab.active') || {}).textContent || 'reporte';
     const desde = document.getElementById('fDesde').value || '—';

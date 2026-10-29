@@ -1,4 +1,4 @@
-// frontend/js/reportes/api-reportes.js?v=1
+
 function rangoQS() {
     const d = document.getElementById('fDesde').value;
     const h = document.getElementById('fHasta').value;

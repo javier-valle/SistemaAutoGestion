@@ -1,5 +1,5 @@
-/* Cabecera y menú compartidos del Portal del Cliente.
-   Se inserta sola en cada página interna. No requiere frameworks. */
+
+
 (function () {
   'use strict';
 

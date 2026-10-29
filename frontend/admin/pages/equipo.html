@@ -99,7 +99,7 @@
         </div>
     </div>
 
-    <!-- Modal miembro -->
+    
     <div class="ag-modal-overlay" id="miembroModal">
         <div class="ag-modal ag-modal--wide">
             <div class="ag-modal-header">
@@ -146,7 +146,7 @@
         </div>
     </div>
 
-    <!-- Modal clave -->
+    
     <div class="ag-modal-overlay" id="claveModal">
         <div class="ag-modal">
             <div class="ag-modal-header"><h3 id="claveTitle">Restablecer clave</h3>
@@ -295,7 +295,7 @@
             try { await apiFetch(`/usuarios/${claveId}/restablecer-clave`, { method: 'POST', body: JSON.stringify({ nuevaClave: v }) }); document.getElementById('claveModal').classList.remove('show'); toast('Clave actualizada. Entrégala al usuario.', 'success'); }
             catch (e) { const x = document.getElementById('claveError'); x.textContent = e.message; x.hidden = false; }
         }
-        /* Validación de documento en vivo (misma regla del backend) */
+        
         document.getElementById('mDoc').addEventListener('input', async (e) => {
             const num = e.target.value.trim();
             const hint = document.getElementById('mDocHint');
@@ -305,7 +305,7 @@
                 const r = await apiFetch(`/documentos/validar?tipo=${tipo}&numero=${encodeURIComponent(num)}`);
                 hint.textContent = (r.valido ? '✔ ' : '✖ ') + r.mensaje;
                 hint.style.color = r.valido ? 'var(--ag-signal-go)' : 'var(--ag-signal-stop)';
-            } catch (_) { /* el backend valida al guardar */ }
+            } catch (_) {  }
         });
         document.getElementById('miembroModal').addEventListener('click', (e) => { if (e.target.id === 'miembroModal') cerrarMiembroModal(); });
         document.getElementById('claveModal').addEventListener('click', (e) => { if (e.target.id === 'claveModal') e.target.classList.remove('show'); });

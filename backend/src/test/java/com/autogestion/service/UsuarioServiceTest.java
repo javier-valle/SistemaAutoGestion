@@ -68,8 +68,8 @@ class UsuarioServiceTest {
     void mecanicoSinEspecialidadSeRechaza() {
         UsuarioRequest r = mecanicoNuevo();
         r.setEspecialidad("");
-        // La anotación lo frenaría en el controller; el servicio exige rol válido:
-        // aquí verificamos que el DTO lo marque inválido
+
+
         assertFalse(r.isEspecialidadRequerida());
     }
 

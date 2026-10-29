@@ -134,7 +134,7 @@ public class ReporteExportService {
                                 List<ReporteExcelGenerator.Seccion> xlsx,
                                 LocalDate desde, LocalDate hasta) {
         var rango = rango(desde, hasta);
-        // Ajuste: gastos usa "hasta" inclusivo
+
         var grupos = reporteService.gastosPorCategoria(rango[0], rango[1].minusDays(1));
         String[] enc = {"Categoría", "Etiqueta", "Veces", "Total (S/)"};
         List<String[]> datos = new ArrayList<>();

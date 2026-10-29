@@ -80,7 +80,7 @@ public class ClienteService {
 
     @Transactional(readOnly = true)
     public List<Vehiculo> vehiculosDe(Long clienteId) {
-        obtenerPorId(clienteId); // 404 si no existe
+        obtenerPorId(clienteId);
         return vehiculoRepository.findByClienteId(clienteId);
     }
 

@@ -46,7 +46,7 @@ public class UsuarioRequest {
 
     @AssertTrue(message = "Documento inválido para el tipo elegido")
     public boolean isDocumentoValido() {
-        if (documento == null || documento.isBlank()) return true; // opcional en personal
+        if (documento == null || documento.isBlank()) return true;
         String tipo = (tipoDocumento == null || tipoDocumento.isBlank()) ? "DNI" : tipoDocumento;
         TipoDocumento td = TipoDocumento.desde(tipo);
         if (td == null) return false;

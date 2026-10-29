@@ -37,7 +37,7 @@ public class Producto {
 
     @Builder.Default
     @Column(name = "unidad_medida", nullable = false, length = 4)
-    private String unidadMedida = "NIU"; // NIU bienes, ZZ servicios
+    private String unidadMedida = "NIU";
 
     @Builder.Default
     @Column(nullable = false)

@@ -31,7 +31,7 @@ public class ComprobanteDetalle {
     private String descripcion;
 
     @Column(name = "unidad_medida", nullable = false, length = 4)
-    private String unidadMedida; // NIU bienes, ZZ servicios
+    private String unidadMedida;
 
     @Column(nullable = false, precision = 12, scale = 3)
     private BigDecimal cantidad;
@@ -44,7 +44,7 @@ public class ComprobanteDetalle {
 
     @Column(name = "tipo_afectacion", nullable = false, length = 2)
     @Builder.Default
-    private String tipoAfectacion = "10"; // 10 = gravado, operación onerosa
+    private String tipoAfectacion = "10";
 
     @Column(name = "valor_venta", nullable = false, precision = 12, scale = 2)
     private BigDecimal valorVenta;

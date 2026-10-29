@@ -55,7 +55,7 @@ public class Comprobante {
     @Column(name = "metodo_pago", nullable = false, length = 20)
     private MetodoPago metodoPago;
 
-    // Emisor (snapshot)
+
     @Column(name = "emisor_ruc", nullable = false, length = 11)
     private String emisorRuc;
 
@@ -77,7 +77,7 @@ public class Comprobante {
     @Column(name = "emisor_email", length = 150)
     private String emisorEmail;
 
-    // Adquirente (snapshot)
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
@@ -94,7 +94,7 @@ public class Comprobante {
     @Column(name = "cliente_direccion", length = 250)
     private String clienteDireccion;
 
-    // Importes (BigDecimal, 2 decimales; nunca double)
+
     @Column(name = "total_gravado", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalGravado;
 

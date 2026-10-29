@@ -55,7 +55,7 @@ public class ConsultaDocumentoRateLimit {
         try {
             marcas = accesos.get(clave, ArrayDeque::new);
         } catch (ExecutionException e) {
-            // ArrayDeque::new no lanza checked exceptions; por seguridad, ante la duda se bloquea.
+
             return false;
         }
         synchronized (marcas) {

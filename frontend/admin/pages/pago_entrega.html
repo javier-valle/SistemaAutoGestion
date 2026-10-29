@@ -147,7 +147,7 @@
         </div>
     </div>
 
-    <!-- Modal: cobrar con boleta / factura (wizard en 3 pasos) -->
+    
     <div class="ag-modal-overlay" id="pagoModal">
         <div class="ag-modal ag-modal--wide">
             <div class="ag-modal-header">
@@ -257,7 +257,7 @@
         </div>
     </div>
 
-    <!-- Modal: constancia del comprobante -->
+    
     <div class="ag-modal-overlay" id="compModal">
         <div class="ag-modal" style="max-width:440px;">
             <div class="ag-modal-header">
@@ -297,9 +297,9 @@
         document.getElementById('themeToggleWrap').innerHTML = renderThemeToggle();
         initTheme();
 
-        /* ---- Comprobantes desde el backend (Fase 1): sin localStorage de negocio ---- */
-        let pagoActual = null;      // { otId }
-        let previewData = null;     // totales + adquirente sugerido, todo del servidor
+        
+        let pagoActual = null;      
+        let previewData = null;     
         const SERIES = { BOLETA: 'B001', FACTURA: 'F001' };
         const CAMPO_A_INPUT = { numDoc: 'pagoDoc', tipoDoc: 'pagoTipoDoc', nombre: 'pagoNombre', direccion: 'pagoDireccion', metodoPago: 'pagoMetodo', tipo: null, ordenTrabajoId: null };
 
@@ -404,11 +404,11 @@
             const curDoc = document.getElementById('pagoDoc').value.trim();
             const soloDig = curDoc.replace(/\D/g, '');
             if (isFac) {
-                // Factura exige RUC: preseleccionar RUC y no arrastrar un DNI de 8 dígitos
+                
                 selDoc.value = 'RUC';
                 if (soloDig.length === 8) document.getElementById('pagoDoc').value = '';
             } else {
-                // Boleta acepta DNI/CE/PASAPORTE/RUC: si el valor actual parece RUC válido, marcar RUC
+                
                 if (soloDig.length === 11) selDoc.value = 'RUC';
                 else if (selDoc.value === 'RUC' && soloDig.length !== 11) selDoc.value = 'DNI';
             }
@@ -443,8 +443,8 @@
             document.getElementById('btnRucDesdeDni').hidden = !showRucHelp;
             document.getElementById('rucAyuda').hidden = !showRucHelp;
         }
-        /* RUC persona natural = 10 + DNI(8) + DV (mismo algoritmo SUNAT del backend).
-           No vale inventar "DNI + 3 números": el último dígito es de control. */
+        
+
         function rucDV10(base10) {
             const pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
             let suma = 0;
@@ -455,9 +455,9 @@
             return dv;
         }
         window.generarRucDesdeDni = function() {
-            // Fuente del DNI: lo escrito (si son 8) o el documento del cliente del preview
+            
             let dni = (document.getElementById('pagoDoc').value || '').replace(/\D/g, '');
-            if (dni.length === 11) dni = dni.slice(2, 10); // si pegó un RUC, extraer el DNI del medio
+            if (dni.length === 11) dni = dni.slice(2, 10); 
             if (dni.length !== 8 && previewData && previewData.clienteNumDoc) {
                 const c = String(previewData.clienteNumDoc).replace(/\D/g, '');
                 if (c.length === 8) dni = c;
@@ -484,8 +484,8 @@
             validarDocEnVivo();
             updatePayPreview();
         };
-        /* Validación en vivo contra el backend (la misma regla que acepta la emisión).
-           Con guarda anti-carrera: si escribes rápido, la respuesta vieja no pisa a la nueva. */
+        
+
         let docValSeq = 0;
         const validarDocEnVivo = debounce(async () => {
             const miTurno = ++docValSeq;
@@ -495,11 +495,11 @@
             if (!num) { syncDocUI(); return; }
             try {
                 const r = await apiFetch(`/documentos/validar?tipo=${tipoDoc}&numero=${encodeURIComponent(num)}`);
-                if (miTurno !== docValSeq) return; // llegó tarde: ignorar
+                if (miTurno !== docValSeq) return; 
                 hint.textContent = (r.valido ? '✔ ' : '✖ ') + r.mensaje;
                 hint.style.color = r.valido ? 'var(--ag-signal-go)' : 'var(--ag-signal-stop)';
                 document.getElementById('pagoDoc').classList.toggle('is-bad', !r.valido);
-            } catch (_) { /* sin conexión: el backend valida al emitir */ }
+            } catch (_) {  }
             if (miTurno === docValSeq) updatePayPreview();
         }, 450);
         function setPayStep(n) {
@@ -530,7 +530,7 @@
             return false;
         }
         function validatePayStep2() {
-            /* Chequeo rápido local; la verdad la dice el backend al emitir */
+            
             const f = collectPay();
             const dig = (f.doc || '').replace(/\D/g, '');
             if (f.tipo === 'FACTURA') {
@@ -542,7 +542,7 @@
                 if (!f.nombre) return !payError('La factura exige la razon social.', 'pagoNombre'), false;
                 if (!f.direccion) return !payError('La factura exige la direccion fiscal.', 'pagoDireccion'), false;
             } else {
-                // Boleta: DNI (8), RUC (11), CE o pasaporte — pero siempre con documento salvo boleta chica
+                
                 if (!f.doc) return !payError('Escribe el documento del cliente (u omítelo solo si la boleta es de S/ 700 o menos).', 'pagoDoc'), false;
                 if (f.tipoDoc === 'DNI' && dig.length !== 8) return !payError(`El DNI debe tener 8 dígitos (llevas ${dig.length}). ¿Es RUC? Cambia el tipo a RUC.`, 'pagoDoc'), false;
                 if (f.tipoDoc === 'RUC') {
@@ -586,7 +586,7 @@
             if (!pagoActual) return;
             try {
                 previewData = await apiFetch(`/comprobantes/previsualizar?ordenTrabajoId=${pagoActual.otId}&tipo=${tipoCompSel()}`);
-                // Autocompletar tipoDoc según el documento del cliente (DNI 8 / RUC 11 / otro)
+                
                 try {
                     const docCli = String(previewData.clienteNumDoc || '').replace(/\D/g, '');
                     const tdCli = (previewData.clienteTipoDoc || '').toUpperCase();
@@ -598,7 +598,7 @@
                 } catch (_) {}
                 syncDocUI();
                 if (!document.getElementById('pagoDoc').value && previewData.clienteNumDoc) {
-                    // No arrastrar un DNI a una factura: solo prellenar si el largo coincide
+                    
                     const curTd = document.getElementById('pagoTipoDoc').value;
                     const docCli = String(previewData.clienteNumDoc);
                     const okLen = (curTd === 'RUC' && docCli.replace(/\D/g, '').length === 11)
@@ -635,7 +635,7 @@
         document.querySelectorAll('input[name="tipoComp"]').forEach(r => r.addEventListener('change', onTipoCompChange));
         document.getElementById('pagoTipoDoc').addEventListener('change', () => { syncDocUI(); validarDocEnVivo(); updatePayPreview(); });
         document.getElementById('pagoDoc').addEventListener('input', () => {
-            // autodetectar DNI/RUC por largo para no bloquear al usuario
+            
             const dig = document.getElementById('pagoDoc').value.replace(/\D/g, '');
             const sel = document.getElementById('pagoTipoDoc');
             if (dig.length === 11 && sel.value === 'DNI' && tipoCompSel() === 'BOLETA') { sel.value = 'RUC'; syncDocUI(); }
@@ -655,7 +655,7 @@
             btn.disabled = true;
             const otId = pagoActual.otId;
             try {
-                /* El monto lo calcula el backend desde la cotización; aquí no se envía */
+                
                 const sinDoc = f.tipo === 'BOLETA' && !f.doc;
                 const tipoDocEnvio = sinDoc ? 'SIN_DOC' : (f.tipoDoc || (f.tipo === 'FACTURA' ? 'RUC' : 'DNI'));
                 const comp = await apiFetch('/comprobantes', { method: 'POST', body: JSON.stringify({
@@ -733,12 +733,12 @@
             document.getElementById('comprobanteTicketPrint').innerHTML = ticketHTML(comp);
             document.getElementById('compModal').classList.add('show');
         }
-        /* El ticket 80 mm lo dibuja el backend (TicketPdf): el navegador solo
-           descarga el archivo desde GET /api/comprobantes/{id}/pdf. */
+        
+
         async function descargarComprobante() {
             if (!compShown) { toast('No hay comprobante para descargar', 'warning'); return; }
             try {
-                /* El PDF lo arma el backend (TicketPdf) con los mismos datos validados */
+                
                 await apiDescargar(`/comprobantes/${compShown.id}/pdf`, `${compShown.tipo}-${compShown.folio}.pdf`);
                 toast('Constancia PDF descargada', 'success');
             } catch (e) { toast('No se pudo generar el PDF: ' + e.message, 'danger'); }
@@ -783,14 +783,14 @@
             try { await apiFetch(`/entregas/${otId}`, { method: 'POST' }); toast(`Entrega registrada para OT #${otId}`, 'success'); loadOrdenesFinalizadas(); } catch (e) { toast('Error: ' + e.message, 'danger'); }
         }
 
-        /* ---- Historial de comprobantes emitidos ---- */
+        
         let histPage = 0;
         const HIST_SIZE = 8;
 async function loadHistorial() {
     const tipo = document.getElementById('histTipo').value || null;
     const q = document.getElementById('histQ').value.trim() || '';
     try {
-        /* Parámetros limpios: sin tipo vacío y con la búsqueda q de verdad enviada */
+        
         const params = new URLSearchParams({ page: histPage, size: HIST_SIZE, sort: 'fechaEmision,desc' });
         if (tipo) params.set('tipo', tipo);
         if (q) params.set('q', q);

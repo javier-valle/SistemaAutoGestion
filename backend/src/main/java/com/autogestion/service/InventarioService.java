@@ -116,7 +116,8 @@ public class InventarioService {
         if (cantidad == null || cantidad < 1) {
             throw new BusinessException("La cantidad mínima es 1.", "cantidad", null);
         }
-        Producto producto = productoRepository.findById(productoId)
+
+        Producto producto = productoRepository.bloquearPorId(productoId)
                 .orElseThrow(() -> new BusinessException("Producto no encontrado.", "productoId",
                         null, HttpStatus.NOT_FOUND));
 
@@ -151,7 +152,7 @@ public class InventarioService {
                     throw new BusinessException("El costo no puede ser negativo.", "costoUnitario", null);
                 }
                 producto.setStockActual(antes + cantidad);
-                producto.setCostoUnitario(costo); // último costo manda
+                producto.setCostoUnitario(costo);
                 if (motivoFinal == null) {
                     motivoFinal = "Compra" + (documentoRef != null ? " " + documentoRef : "")
                             + (proveedor != null ? " - " + proveedor.getNombre() : "");

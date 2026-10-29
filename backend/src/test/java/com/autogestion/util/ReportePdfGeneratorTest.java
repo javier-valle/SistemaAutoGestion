@@ -19,9 +19,9 @@ class ReportePdfGeneratorTest {
         assertNotNull(pdf);
         assertTrue(pdf.length > 100, "PDF muy pequeño");
         String start = new String(pdf, 0, Math.min(20, pdf.length), java.nio.charset.StandardCharsets.ISO_8859_1);
-        // PDFBox 3 puede escribir 1.6 o superior; basta con que sea un PDF válido.
+
         assertTrue(start.startsWith("%PDF-1."), "Debe empezar con la firma de un PDF");
-        // El contenido va comprimido: se extrae el texto con PDFBox en vez de buscar bytes crudos.
+
         try (PDDocument doc = Loader.loadPDF(pdf)) {
             String texto = new PDFTextStripper().getText(doc);
             assertTrue(texto.contains("Test"), "Debe contener el título de la sección");

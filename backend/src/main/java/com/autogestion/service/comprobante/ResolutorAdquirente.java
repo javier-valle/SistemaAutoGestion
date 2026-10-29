@@ -60,8 +60,8 @@ public class ResolutorAdquirente {
             return new AdquirenteResuelto(cliente, "RUC", numDoc, nombre, direccion);
         }
 
-        // Boleta: acepta DNI, CE, PASAPORTE y también RUC válido
-        // (negocios que piden boleta con RUC). Solo FACTURA exige RUC sí o sí.
+
+
         if ("SIN_DOC".equals(tipoDoc) || numDoc.isEmpty() || "-".equals(numDoc)) {
             if (total.compareTo(empresa.getBoletaUmbralDni()) > 0) {
                 throw new BusinessException("Boleta mayor a S/ " + empresa.getBoletaUmbralDni()
@@ -72,10 +72,10 @@ public class ResolutorAdquirente {
         }
         TipoDocumento td = TipoDocumento.desde(tipoDoc);
         if (td != null && DocumentoValidator.valido(td, numDoc)) {
-            // el tipo declarado coincide con el número: se respeta tal cual
+
         } else if (DocumentoValidator.rucValido(numDoc)) {
-            // RUC válido aunque el tipo declarado sea DNI (ficha vieja o campo sin cambiar):
-            // se acepta como RUC en boleta en vez de bloquear con "corresponde factura".
+
+
             td = TipoDocumento.RUC;
         } else {
             TipoDocumento inferido = inferirTipoDocumento(numDoc, cliente);

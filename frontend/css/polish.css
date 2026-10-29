@@ -1,11 +1,6 @@
-/* =========================================================
-   AutoGestion - Polish v1.4.0
-   Simetria, responsive, guias contextuales, wizard de pago
-   y ticket imprimible. Carga despues de redesign.css.
-   Solo suma: no pisa el sistema de diseno existente.
-   ========================================================= */
 
-/* ---------- 1. GUIA CONTEXTUAL ("que hago aqui") ---------- */
+
+
 .ag-guide {
   display: flex;
   gap: 0.85rem;
@@ -46,7 +41,7 @@
 }
 .ag-guide-close:hover { color: var(--ag-text); background: var(--ag-border-subtle); }
 
-/* ---------- 2. HEAD SIMETRICO ---------- */
+
 .ag-head {
   display: flex;
   align-items: center;
@@ -72,7 +67,7 @@
 .ag-head-titles p { color: var(--ag-text-muted); font-size: 0.86rem; margin: 0.25rem 0 0; }
 .ag-head-meta { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 
-/* ---------- 3. CTA + ESTADO VACIO ---------- */
+
 .ag-cta {
   display: inline-flex; align-items: center; gap: 0.5rem;
   padding: 0.65rem 1.2rem; border-radius: var(--ag-radius);
@@ -96,7 +91,7 @@
 .ag-empty strong { color: var(--ag-text-heading); font-size: 0.95rem; }
 .ag-empty p { margin: 0; font-size: 0.82rem; max-width: 380px; }
 
-/* ---------- 4. WIZARD DE PAGO ---------- */
+
 .ag-modal--wide { max-width: 760px; }
 .ag-wizard { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 1.1rem; }
 .ag-wz-step { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 600; color: var(--ag-text-muted); white-space: nowrap; }
@@ -153,7 +148,7 @@
 .ag-field-error { font-size: 0.74rem; color: var(--ag-signal-stop, #dc2626); font-weight: 600; margin-top: 0.25rem; }
 .ag-form-control.is-bad { border-color: var(--ag-signal-stop, #dc2626); box-shadow: 0 0 0 3px rgba(220,38,38,0.12); }
 
-/* ---------- 5. TICKET / CONSTANCIA ---------- */
+
 .ag-ticket {
   max-width: 380px; margin: 0 auto;
   background: #ffffff; color: #1e293b;
@@ -186,7 +181,7 @@
 .ag-ticket-foot .ok { display: inline-flex; align-items: center; gap: 0.3rem; color: #059669; font-weight: 700; font-size: 0.75rem; }
 .ag-ticket-foot .ok svg { width: 14px; height: 14px; }
 
-/* ---------- 6. RESPONSIVE ---------- */
+
 @media (max-width: 1100px) {
   .ag-layout-main { grid-template-columns: 1fr; }
   .ag-grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -196,7 +191,7 @@
 @media (max-width: 768px) {
   .ag-page { padding: 1rem; }
   .ag-grid-2, .ag-grid-3 { grid-template-columns: 1fr; }
-  /* Navbar: scroll horizontal en vez de desaparecer */
+
   .ag-navbar { flex-wrap: wrap; }
   .ag-navbar-nav {
     display: flex !important;
@@ -226,7 +221,7 @@
   .ag-ticket { max-width: 100%; }
 }
 
-/* ---------- 7. MODAL INTERNO (header/body/footer) ---------- */
+
 .ag-modal {
   background: var(--ag-surface);
   border: 1px solid var(--ag-border);
@@ -256,7 +251,7 @@
   padding: 0.9rem 1.2rem; border-top: 1px solid var(--ag-border); background: var(--ag-ground);
 }
 
-/* ---------- 8. KANBAN DE OT ---------- */
+
 .ag-kanban { display:grid; grid-template-columns:repeat(4, minmax(240px, 1fr)); gap:0.9rem; align-items:start; }
 .ag-kanban-col { background:var(--ag-ground); border:1px solid var(--ag-border); border-radius:var(--ag-radius-lg); overflow:hidden; display:flex; flex-direction:column; max-height:640px; }
 .ag-kanban-colhead { display:flex; align-items:center; justify-content:space-between; gap:0.5rem; padding:0.65rem 0.9rem; border-bottom:1px solid var(--ag-border); background:var(--ag-surface); position:sticky; top:0; }
@@ -267,7 +262,7 @@
 .ag-kanban-cardbtns { display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.6rem; }
 @media (max-width: 1100px) { .ag-kanban { grid-template-columns:repeat(4, minmax(250px, 85vw)); overflow-x:auto; padding-bottom:0.5rem; } }
 
-/* ---------- 9. TOPBAR + SIDEBAR HAMBURGUESA ---------- */
+
 .ag-topbar { gap:0.75rem; }
 .ag-hamburger { display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; flex-shrink:0; align-self:center; background:transparent; border:1px solid rgba(255,255,255,0.15); border-radius:10px; color:rgba(255,255,255,0.8); cursor:pointer; transition:all 0.15s ease; }
 .ag-hamburger:hover { background:rgba(255,255,255,0.08); color:#fff; }
@@ -307,14 +302,14 @@ body.sb-closed .ag-sb-foot { justify-content:center; }
   body.sb-open .ag-page, body.sb-closed .ag-page { margin-left:0; }
 }
 
-/* ---------- 10. PESTAÑAS ---------- */
+
 .ag-tabs { display:flex; gap:0.25rem; flex-wrap:wrap; border-bottom:2px solid var(--ag-border); margin-bottom:1.1rem; }
 .ag-tab { border:none; background:transparent; padding:0.6rem 1rem; font:inherit; font-size:0.85rem; font-weight:600; color:var(--ag-text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.15s ease; }
 .ag-tab:hover { color:var(--ag-text-heading); }
 .ag-tab.active { color:var(--ag-oil); border-bottom-color:var(--ag-oil); }
 .ag-tabpane[hidden] { display:none; }
 
-/* ---------- 10. IMPRESION FIEL A PANTALLA ---------- */
+
 .ag-ticket, .ag-ticket * {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
@@ -325,7 +320,7 @@ body.sb-closed .ag-sb-foot { justify-content:center; }
   .ag-ticket-body { break-inside: avoid; }
 }
 
-/* ---------- 9. FOCO + MOVIMIENTO ---------- */
+
 .ag-btn:focus-visible, .ag-cta:focus-visible, .ag-action-link:focus-visible,
 .ag-form-control:focus-visible, .ag-navbar-nav a:focus-visible {
   outline: 2px solid var(--ag-oil); outline-offset: 2px;

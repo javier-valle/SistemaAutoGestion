@@ -124,11 +124,11 @@
                     });
                     if (!mecs.length) sel.innerHTML = '<option value="">Sin mecánicos activos</option>';
                 });
-                /* Si ya se eligió cotización, pre-asigna su mecánico; si no, el último usado */
+                
                 sugerirMecanico();
             } catch (e) { sels.forEach(sel => { if (sel) sel.innerHTML = '<option value="">No se pudo cargar</option>'; }); }
         }
-        /* Mecánico del diagnóstico de la cotización elegida (o el último asignado) */
+        
         async function sugerirMecanico() {
             const cotId = document.getElementById('cotizacionSelect')?.value;
             const sel = document.getElementById('mecanicoSelect');
@@ -143,11 +143,11 @@
                         return;
                     }
                 }
-            } catch (_) { /* sin detalle: se usa el último */ }
+            } catch (_) {  }
             try {
                 const ultimo = localStorage.getItem('ag_ultimo_mecanico');
                 if (ultimo && existe(ultimo) && !sel.value) sel.value = ultimo;
-            } catch (_) { /* noop */ }
+            } catch (_) {  }
         }
         document.getElementById('cotizacionSelect')?.addEventListener('change', sugerirMecanico);
         document.getElementById('otForm')?.addEventListener('submit', async (e) => {
@@ -158,7 +158,7 @@
                     cotizacionId: parseInt(document.getElementById('cotizacionSelect').value),
                     mecanicoId: mecId
                 }) });
-                try { localStorage.setItem('ag_ultimo_mecanico', String(mecId)); } catch (_) { /* noop */ }
+                try { localStorage.setItem('ag_ultimo_mecanico', String(mecId)); } catch (_) {  }
                 showSuccess('alertContainer', 'Orden de trabajo creada');
                 document.getElementById('otForm').reset();
                 loadData();

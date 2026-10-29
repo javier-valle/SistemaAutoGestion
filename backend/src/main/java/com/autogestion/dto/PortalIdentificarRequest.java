@@ -6,5 +6,5 @@ import lombok.Data;
 public class PortalIdentificarRequest {
     private String documento;
     private String tipoDocumento;
-    private String placa; // Modo A
+    private String placa;
 }

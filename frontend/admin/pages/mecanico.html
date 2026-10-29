@@ -192,7 +192,7 @@
                 }
                 panelOTs = ordenes;
                 pintarTarjetas();
-                /* Repuestos usados por OT (una sola pasada por carga: sin este flag entraría en bucle) */
+                
                 if (!loadPanel._reps) {
                     loadPanel._reps = true;
                     const abiertas = ordenes.filter(o => o.estado === 'EN_PROCESO' || o.estado === 'EN_PRUEBA');
@@ -232,7 +232,7 @@
                     if (p.stockActual <= 0) o.disabled = true;
                     sel.appendChild(o);
                 });
-            } catch (_) { /* noop */ }
+            } catch (_) {  }
             document.getElementById('repCantidad').value = 1;
             document.getElementById('repError').hidden = true;
             document.getElementById('modalRepuesto').classList.add('show');
@@ -251,7 +251,7 @@
                 loadPanel();
             } catch (e) { const x = document.getElementById('repError'); x.textContent = e.message; x.hidden = false; }
         };
-        window.loadPanel = loadPanel; // el botón Reintentar usa onclick en línea
+        window.loadPanel = loadPanel; 
         loadPanel();
         })();
     </script>

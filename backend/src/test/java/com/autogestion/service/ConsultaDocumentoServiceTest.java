@@ -20,7 +20,7 @@ class ConsultaDocumentoServiceTest {
     private static class Stub implements ProveedorDocumento {
         final AtomicInteger llamadas = new AtomicInteger();
         final TipoDocumento tipo;
-        final String nombre;      // null = no encontrado
+        final String nombre;
         final boolean falla;
 
         Stub(TipoDocumento tipo, String nombre, boolean falla) {

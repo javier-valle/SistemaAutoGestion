@@ -1,18 +1,18 @@
-/* =========================================================
-   AutoGestion - Catálogo visual de vehículos (v2)
-   ---------------------------------------------------------
-   · Marcas con emblema y color estable.
-   · Renders SVG laterales ALTA FIDELIDAD: la carrocería se
-     elige según marca y modelo (sedan, hatch, SUV, pickup,
-     van), con proporciones reales aproximadas, pintura con
-     degradado metálico, cristales con reflejo, llantas con
-     disco y pinza, luces con interior, parrilla, líneas de
-     puertas, manijas cromadas y sombra de contacto.
-   · El mismo perfil (contorno + cristales) se exporta con
-     vehPerfil() para que el visor 3D lo extruya, así el 2D
-     y el 3D comparten proporciones exactas.
-   Sin backend: marca/modelo siguen siendo texto libre.
-   ========================================================= */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
   if (window.__agVehiculos) return;
@@ -20,9 +20,9 @@
 
   const SW = 'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
 
-  /* =======================================================
-     1. COLOR
-     ======================================================= */
+
+
+
   function hexRGB(h) {
     h = (h || '#888888').replace('#', '');
     if (h.length === 3) h = h.split('').map(c => c + c).join('');
@@ -33,7 +33,7 @@
     const c = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
     return '#' + c(r) + c(g) + c(b);
   }
-  /** Mezcla color con blanco (t>0) o negro (t<0). */
+
   function mezcla(hex, t) {
     const [r, g, b] = hexRGB(hex);
     const dst = t >= 0 ? 255 : 0, k = Math.abs(t);
@@ -42,9 +42,9 @@
   const claro = (h, t) => mezcla(h, t);
   const oscuro = (h, t) => mezcla(h, -t);
 
-  /* =======================================================
-     2. MARCAS, EMBLEMAS Y COLORES
-     ======================================================= */
+
+
+
   const EMBLEMAS = {
     toyota: `<ellipse cx="12" cy="12" rx="8.5" ry="6.2"/><ellipse cx="12" cy="12" rx="2.7" ry="6.2"/><path d="M6.3 10.4h11.4"/>`,
     hyundai: `<ellipse cx="12" cy="12" rx="8.5" ry="6.2"/><path d="M9.6 7.3L8.1 16.7M14.4 7.3L15.9 16.7M8.7 11.8h6.6"/>`,
@@ -60,8 +60,8 @@
     generico: `<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.4"/><path d="M12 9.6V4"/><path d="M9.9 13.2L4.9 16.1"/><path d="M14.1 13.2L19.1 16.1"/>`
   };
 
-  /* `carro` es la carrocería por defecto de la marca (cuando
-     el modelo no está en la tabla MODELOS). */
+
+
   const MARCAS = [
     { id: 'toyota', nombre: 'Toyota', color: '#cf3a2c', carro: 'pickup' },
     { id: 'hyundai', nombre: 'Hyundai', color: '#2b5f8a', carro: 'sedan' },
@@ -89,7 +89,7 @@
     return MARCAS.find(x => x.id === id) || null;
   }
 
-  /** Color estable por placa (para marcas libres o desconocidas). */
+
   function colorPorPlaca(placa) {
     const s = (placa || 'ABC-000').toUpperCase();
     let h = 0;
@@ -108,10 +108,10 @@
   }
   window.vehEmblema = emblemaSVG;
 
-  /* =======================================================
-     3. MODELO -> CARROCERÍA
-     Palabras clave del modelo (sin acentos, en minúsculas).
-     ======================================================= */
+
+
+
+
   const TIPOS = ['pickup', 'suv', 'van', 'hatch', 'sedan'];
   const TABLA_MODELOS = [
     { t: 'pickup', k: ['hilux', 'ranger', 'navara', 'np300', 'np3000', 'frontier', 'l200', 'l 200', 'dmax', 'd max', 'd-max', 'amarok', 's10', 'luv', 'k2700', 'dynasty', 'bighorn', 'tacoma', 'maverick', 'hilux sw4', 'revo', 'tulo', 'minicargo'] },
@@ -123,7 +123,7 @@
   function sinAcento(s) {
     return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   }
-  /** Devuelve la carrocería según modelo (si lo reconocemos) o la de la marca. */
+
   function estiloDe(marca, modelo) {
     const m = sinAcento(modelo);
     if (m) {
@@ -135,11 +135,11 @@
     return (mk && mk.carro) || 'sedan';
   }
 
-  /* =======================================================
-     4. GEOMETRÍA: segmentos -> puntos muestreados
-     Segmentos:  M x y | L x y | C x1 y1 x2 y2 x y
-                 AR cx cy r yBase  (arco de guardabarros)
-     ======================================================= */
+
+
+
+
+
   function muestrear(segs, paso) {
     paso = paso || 2.2;
     const pts = [];
@@ -183,9 +183,9 @@
     return 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L');
   }
 
-  /* =======================================================
-     5. PIEZAS REUTILIZABLES DEL RENDER
-     ======================================================= */
+
+
+
   let UID = 0;
   const TINTA = 'rgba(15,23,42,.55)';
   const LINEA = 'rgba(10,18,32,.42)';
@@ -233,7 +233,7 @@
     </defs>`;
   }
 
-  /** Llanta: neumático, disco, pinza, pestaña metálica, radios y bujes. */
+
   function rueda(cx, cy, r, brazos, g) {
     const rim = r * 0.63, disco = r * 0.47, buje = r * 0.15;
     let radios = '';
@@ -241,7 +241,7 @@
     for (let i = 0; i < brazos; i++) {
       const a = i * paso;
       const inner = r * 0.17, outer = r * 0.6;
-      const w = 7.5, wm = 3.4; /* ancho del radio: exterior / medio */
+      const w = 7.5, wm = 3.4;
       const rad = d => d * Math.PI / 180;
       const p = (ang, rr) => [(cx + rr * Math.cos(rad(ang))).toFixed(1), (cy + rr * Math.sin(rad(ang))).toFixed(1)];
       const a1 = p(a - w, outer), a2 = p(a + w, outer), m1 = p(a - wm, (inner + outer) / 2), m2 = p(a + wm, (inner + outer) / 2), i1 = p(a - 9, inner), i2 = p(a + 9, inner);
@@ -267,7 +267,7 @@
     </g>`;
   }
 
-  /** Cristal con reflejo diagonal. */
+
   function cristal(pts, g) {
     const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
     const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
@@ -280,7 +280,7 @@
       <path d="${dLine(pts)}Z" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1"/>`;
   }
 
-  /** Faro con proyector y tira de LED. */
+
   function faro(pts, g, trasero) {
     const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
     const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
@@ -291,12 +291,12 @@
       <path d="${dPath(pts)}" fill="none" stroke="${trasero ? '#7f1d1d' : '#7c8ba0'}" stroke-width="1"/>`;
   }
 
-  /** Manija cromada. */
+
   function manija(x, y, largo) {
     return `<rect x="${x}" y="${y}" width="${largo}" height="3" rx="1.5" fill="url(#GIDm)" stroke="rgba(10,18,32,.5)" stroke-width=".9"/>`;
   }
 
-  /** Espejo retrovisor (con piloto direccional). */
+
   function espejo(x, y, grande) {
     const s = grande ? 1.25 : 1;
     return `<path d="M${x} ${y} l${(7 * s).toFixed(1)} ${(-3 * s).toFixed(1)}" stroke="${oscuro('#223149', .2)}" stroke-width="${(2.6 * s).toFixed(1)}" stroke-linecap="round"/>
@@ -305,18 +305,18 @@
       <path d="M${x + 7 * s} ${y - 5.6 * s} l${(7 * s).toFixed(1)} ${(-2.4 * s).toFixed(1)}" stroke="#fbbf24" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>`;
   }
 
-  /** Sombra interna del guardabarros sobre el neumático. */
+
   function sombraArco(cx, cy, r) {
     return `<path d="M${(cx - r).toFixed(1)} ${(cy + 6).toFixed(1)} A ${r} ${r} 0 0 1 ${(cx + r).toFixed(1)} ${(cy + 6).toFixed(1)}"
       fill="none" stroke="rgba(6,10,18,.55)" stroke-width="3.4" stroke-linecap="round"/>`;
   }
 
-  /* =======================================================
-     6. CARROCERÍAS (contorno + cristales + detalles)
-     Coordenadas en el lienzo 240x112, suelo = Y del neumático.
-     ======================================================= */
+
+
+
+
   const SPECS = {
-    /* ---------- SEDÁN ---------- */
+
     sedan: {
       suelo: 89, ruedaR: 15, ejeT: 63, ejeF: 185, yB: 82.6, archR: 17.5, ancho: 83,
       contorno: [
@@ -353,8 +353,8 @@
       extras(g, c) {
         return linea([[214, 59.5], [150, 57.4], [70, 56.6], [26, 58.8]], 'rgba(255,255,255,.35)', 1.4)
           + linea([[215, 61.6], [150, 59.6], [70, 58.8], [27, 61]], 'rgba(10,18,32,.18)', 1.6)
-          + linea([[168, 55], [200, 56], [222, 58]], 'rgba(10,18,32,.3)', 1.1) /* costura del capó */
-          + linea([[24, 52.4], [58, 49.6]], 'rgba(10,18,32,.28)', 1.1) /* costura del maletero */
+          + linea([[168, 55], [200, 56], [222, 58]], 'rgba(10,18,32,.3)', 1.1)
+          + linea([[24, 52.4], [58, 49.6]], 'rgba(10,18,32,.28)', 1.1)
           + `<circle cx="46" cy="57" r="4.4" fill="none" stroke="${LINEA}" stroke-width="1.2"/>`
           + linea([[24, 80.6], [40, 80.6]], 'rgba(10,18,32,.5)', 2)
           + `<path d="M112 21.6 l7 -1.4 q3 -.4 3 2 l0 1 z" fill="#1f2937" opacity=".8"/>`
@@ -362,7 +362,7 @@
       }
     },
 
-    /* ---------- HATCHBACK ---------- */
+
     hatch: {
       suelo: 89, ruedaR: 15, ejeT: 58, ejeF: 176, yB: 82.6, archR: 17.5, ancho: 80,
       contorno: [
@@ -401,15 +401,15 @@
       extras(g, c) {
         return linea([[210, 59.6], [150, 58], [80, 57.4], [44, 58.4]], 'rgba(255,255,255,.32)', 1.4)
           + linea([[211, 61.6], [150, 60], [80, 59.4], [45, 60.4]], 'rgba(10,18,32,.18)', 1.6)
-          + `<path d="M47 43 L59 31" stroke="rgba(10,18,32,.55)" stroke-width="1.8" stroke-linecap="round"/>` /* limpiaparabrisas trasero */
-          + `<path d="M60 29.6 L70 25.4" stroke="${claro(c, .25)}" stroke-width="3.4" stroke-linecap="round" opacity=".85"/>` /* alerón */
+          + `<path d="M47 43 L59 31" stroke="rgba(10,18,32,.55)" stroke-width="1.8" stroke-linecap="round"/>`
+          + `<path d="M60 29.6 L70 25.4" stroke="${claro(c, .25)}" stroke-width="3.4" stroke-linecap="round" opacity=".85"/>`
           + `<circle cx="46" cy="57.5" r="4.2" fill="none" stroke="${LINEA}" stroke-width="1.2"/>`
           + linea([[26, 80.8], [40, 80.8]], 'rgba(10,18,32,.5)', 2)
           + linea([[200, 81.4], [212, 81.4]], 'rgba(10,18,32,.35)', 1.4);
       }
     },
 
-    /* ---------- SUV ---------- */
+
     suv: {
       suelo: 93, ruedaR: 16, ejeT: 59, ejeF: 179, yB: 82.5, archR: 18.5, ancho: 83, alto: true,
       contorno: [
@@ -460,7 +460,7 @@
       }
     },
 
-    /* ---------- PICKUP doble cabina ---------- */
+
     pickup: {
       suelo: 92, ruedaR: 16, ejeT: 62, ejeF: 186, yB: 83.6, archR: 19, ancho: 75,
       contorno: [
@@ -514,7 +514,7 @@
       }
     },
 
-    /* ---------- VAN / MINIBÚS ---------- */
+
     van: {
       suelo: 95, ruedaR: 15, ejeT: 57, ejeF: 183, yB: 87.7, archR: 17.5, ancho: 79,
       contorno: [
@@ -563,11 +563,11 @@
     }
   };
 
-  /* --- helpers de trazo usados por extras() --- */
+
   function linea(pts, color, w) {
     return `<path d="${dLine(pts)}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
-  /** Molding negro sobre el guardabarros (típico de SUV/pickup). */
+
   function arcoGuardabarros(cx, cy, r, yB, cerrar) {
     const al = Math.asin((yB - cy) / r);
     const x0 = cx + r * Math.cos(al), y0 = yB;
@@ -575,9 +575,9 @@
     return `<path d="M${x0.toFixed(1)} ${y0} A ${r} ${r} 0 1 0 ${x1.toFixed(1)} ${y0}" fill="none" stroke="#1c2431" stroke-width="${cerrar ? 3.6 : 3.2}" stroke-linecap="round" opacity=".9"/>`;
   }
 
-  /* =======================================================
-     7. PINTADO COMPLETO DE UNA CARROCERÍA
-     ======================================================= */
+
+
+
   function pintar(tipo, color, marca) {
     const s = SPECS[tipo] || SPECS.sedan;
     const g = 'v' + (++UID);
@@ -589,9 +589,9 @@
     const cuerpo = dPath(cont);
     const brazos = (tipo === 'suv' || tipo === 'pickup' || tipo === 'van') ? 6 : 5;
 
-    /* Todo lo que va SOBRE la carrocería se recorta contra la
-       silueta: así los faros y la parrilla envuelven la esquina
-       sin desbordarse nunca del contorno. */
+
+
+
     const clip = `<clipPath id="${g}c"><path d="${cuerpo}"/></clipPath>`;
 
     let sombra = `<ellipse cx="${cxSombra}" cy="${s.suelo + 3.5}" rx="${rxSombra}" ry="5.5" fill="url(#${g}s)"/>`;
@@ -599,30 +599,30 @@
       + rueda(cxF, s.suelo - s.ruedaR, s.ruedaR, brazos, g);
     let capa = '';
 
-    /* faldón inferior */
+
     const fal = cont.filter(p => p[1] >= s.yB - 5);
     if (fal.length > 4) capa += `<path d="${dLine(fal)}" fill="none" stroke="rgba(6,10,18,.4)" stroke-width="5" stroke-linecap="round"/>`;
-    /* líneas de puertas */
+
     s.puertas.forEach(p => { capa += linea(p, LINEA, 1.3); });
-    /* cristales */
+
     s.vidrios.forEach(v => { capa += cristal(v, g); });
-    /* cintura cromada */
+
     capa += linea(s.cintura, 'rgba(233,240,248,.85)', 1.6);
     capa += linea(s.cintura, 'rgba(10,18,32,.35)', 0.8);
-    /* detalles propios de la carrocería */
+
     capa += (s.extras ? s.extras(g, color) : '');
-    /* manijas */
+
     s.manijas.forEach(m => { capa += manija(m[0], m[1], 9); });
-    /* luces */
+
     capa += faro(s.faroF, g, false);
     capa += faro(s.faroT, g, true);
-    /* parrilla (esquina lateral) */
+
     capa += `<path d="${dPath(s.parrilla)}" fill="#131a25" stroke="rgba(8,14,24,.7)" stroke-width="1.1" stroke-linejoin="round"/>`;
     for (let i = 0; i < 3; i++) {
       const y0 = s.parrilla[0][1] + (i + 1) * 2.6;
       capa += `<path d="M${(s.parrilla[0][0] + 1.4).toFixed(1)} ${y0.toFixed(1)} L${(s.parrilla[1][0] - 1.2).toFixed(1)} ${(y0 + 1.4).toFixed(1)}" stroke="#7d8b9e" stroke-width="1.1" stroke-linecap="round" opacity=".75"/>`;
     }
-    /* brillo especular en techo/capó/maletero */
+
     const sup = cont.filter(p => p[1] <= s.suelo - 42);
     if (sup.length > 6) {
       capa += `<path d="${dLine(sup)}" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2.2" stroke-linecap="round" opacity=".55"/>`;
@@ -638,9 +638,9 @@
     return defs(g, color, brazos) + clip + out;
   }
 
-  /* =======================================================
-     8. API PÚBLICA
-     ======================================================= */
+
+
+
   function carroSVG(marca, modelo, placa) {
     const tipo = estiloDe(marca, modelo);
     const color = colorVehiculo(marca, placa);
@@ -648,7 +648,7 @@
   }
   window.vehCarSVG = function (marca, placa) { return carroSVG(marca, '', placa); };
 
-  /** Perfil compartido con el visor 3D: contorno, cristales, ruedas. */
+
   window.vehPerfil = function (v) {
     v = v || {};
     const tipo = estiloDe(v.marca, v.modelo);
@@ -673,7 +673,7 @@
     };
   };
 
-  /** Botón del visor 3D (el manejador vive en vehiculo3d.js). */
+
   function btn3D(v, chica) {
     const d = `data-marca="${esc(v.marca || '')}" data-modelo="${esc(v.modelo || '')}" data-placa="${esc(v.placa || '')}" data-anio="${esc(v.anio || '')}" data-genero="${esc(v.genero || '')}"`;
     return chica
@@ -684,7 +684,7 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   }
 
-  /** Tarjeta de preview completa: render + emblema + placa + 3D. */
+
   function previewHTML(v) {
     const m = marcaDe(v.marca);
     const placa = ((v.placa || '').trim() || '___-___').toUpperCase();
@@ -702,7 +702,7 @@
   }
   window.vehPreviewHTML = previewHTML;
 
-  /** Mini para listas: render compacto + placa + 3D. */
+
   function miniHTML(v) {
     const m = marcaDe(v.marca);
     const placa = (v.placa || '—').toUpperCase();
@@ -715,7 +715,7 @@
   }
   window.vehMiniHTML = miniHTML;
 
-  /** Llena un <select> con el catálogo + opción libre. */
+
   function poblarMarcas(sel, actual) {
     if (!sel) return;
     const cur = (actual || '').trim();

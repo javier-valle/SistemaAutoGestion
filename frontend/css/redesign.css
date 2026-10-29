@@ -1,8 +1,6 @@
-/* =========================================================
-   AutoGestion - Rediseño 2026 (capa visual sobre styles.css)
-   ========================================================= */
 
-/* ---------- Paleta (marca secundaria + utilidades) ---------- */
+
+
 :root {
   --ag-navy: #0f172a;
   --ag-cyan: #22d3ee;
@@ -21,7 +19,7 @@
   --ag-lime-deep: #65a30d;
 }
 
-/* ---------- Fondo del cuerpo con gradientes ---------- */
+
 body {
   background:
     radial-gradient(1200px 600px at 85% -10%, rgba(217, 119, 6, 0.05), transparent 60%),
@@ -36,7 +34,7 @@ body {
     var(--ag-ground);
 }
 
-/* ---------- Navbar premium ---------- */
+
 .ag-navbar {
   height: 60px;
   padding: 0 1.6rem;
@@ -124,7 +122,7 @@ body {
 
 .ag-user-pill { padding: 0.28rem 0.7rem 0.28rem 0.35rem; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.08); }
 
-/* ---------- Botones: pulido ---------- */
+
 .ag-btn { box-shadow: var(--ag-shadow-sm); }
 .ag-btn:hover { transform: translateY(-1px); box-shadow: var(--ag-shadow); }
 .ag-btn:active { transform: translateY(0) scale(0.97); }
@@ -136,17 +134,17 @@ body {
 .ag-btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
 .ag-btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
 
-/* ---------- Inputs y selects ---------- */
+
 .ag-form-control { transition: border-color var(--ag-transition), box-shadow var(--ag-transition), background var(--ag-transition); }
 .ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); }
 select.ag-form-control { transition: border-color var(--ag-transition), box-shadow var(--ag-transition); }
 select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); }
 
-/* ---------- Tarjetas / secciones ---------- */
+
 .ag-section, .ag-card { transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease; }
 .ag-section-header h3 svg { color: var(--ag-oil); opacity: 0.85; }
 
-/* Indicadores KPI con acento de color */
+
 .ag-indicator { position: relative; overflow: hidden; }
 .ag-indicator::before {
   content: '';
@@ -161,7 +159,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
 .ag-indicator-value { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .ag-indicator:hover .ag-indicator-value { transform: scale(1.06); }
 
-/* ---------- Tarjetas de estado (OT / recepciones / cotizaciones) ---------- */
+
 .ag-state-card {
   background: var(--ag-surface);
   border: 1px solid var(--ag-border);
@@ -210,7 +208,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
   letter-spacing: -0.01em;
 }
 
-/* Barra de progreso para estados */
+
 .ag-progress {
   height: 6px;
   background: var(--ag-border-subtle);
@@ -227,7 +225,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
 .ag-progress-fill.pf-green { background: linear-gradient(90deg, #34d399, #059669); }
 .ag-progress-fill.pf-gray { background: linear-gradient(90deg, #94a3b8, #64748b); }
 
-/* ---------- Filtros tipo chip ---------- */
+
 .ag-chip-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .ag-chip {
   padding: 0.32rem 0.8rem;
@@ -255,7 +253,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- Buscador inline ---------- */
+
 .ag-search-box { position: relative; }
 .ag-search-box input {
   width: 100%;
@@ -278,16 +276,16 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
   pointer-events: none;
 }
 
-/* ---------- Enlaces de accion ---------- */
+
 .ag-action-link { border-radius: var(--ag-radius-lg); }
 .ag-action-link:hover { transform: translateX(3px); }
 .ag-action-link svg:not(.ag-action-arrow) { color: var(--ag-oil); opacity: 0.8; }
 
-/* ---------- Modal pulido ---------- */
+
 .ag-modal { border-radius: var(--ag-radius-xl); border: 1px solid var(--ag-border); }
 .ag-modal-overlay { backdrop-filter: blur(6px); }
 
-/* ---------- Toasts ---------- */
+
 .ag-toast-stack {
   position: fixed;
   bottom: 1.25rem;
@@ -323,7 +321,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
 @keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes toastOut { to { opacity: 0; transform: translateY(10px) scale(0.95); } }
 
-/* ---------- Buscador global Ctrl+K ---------- */
+
 .ag-palette-overlay {
   position: fixed;
   inset: 0;
@@ -394,7 +392,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
   border-radius: 4px;
 }
 
-/* ---------- Tour guiado ---------- */
+
 .ag-tour-overlay {
   position: fixed;
   inset: 0;
@@ -403,14 +401,13 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
   background: transparent;
 }
 .ag-tour-overlay.hidden { display: none; }
-/* Paso sin objetivo visible: se oscurece toda la pantalla */
+
 .ag-tour-overlay.no-target { background: rgba(2, 6, 23, 0.62); }
 .ag-tour-highlight {
   position: fixed;
   border: 2px solid var(--ag-oil);
   border-radius: var(--ag-radius-lg);
-  /* Spotlight: la primera sombra (alcance gigante) oscurece todo menos
-     el hueco del recuadro; el anillo ambar y el glow quedan en el borde. */
+
   box-shadow: 0 0 0 9999px rgba(2, 6, 23, 0.62),
     0 0 0 4px rgba(217, 119, 6, 0.2),
     0 0 40px rgba(217, 119, 6, 0.25);
@@ -476,7 +473,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
 }
 .ag-tour-popover .tour-close:hover { color: var(--ag-text); }
 
-/* ---------- Boton flotante de ayuda ---------- */
+
 .ag-fab {
   position: fixed;
   bottom: 1.25rem;
@@ -501,7 +498,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
 .ag-fab:hover { transform: translateY(-2px); box-shadow: var(--ag-shadow-glow), var(--ag-shadow-lg); border-color: var(--ag-oil); }
 .ag-fab svg { width: 15px; height: 15px; color: var(--ag-oil); }
 
-/* ---------- Página de tutorial ---------- */
+
 .ag-tutorial-hero {
   position: relative;
   overflow: hidden;
@@ -562,7 +559,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
 .ag-tutorial-hero p { color: rgba(255, 255, 255, 0.6); font-size: 1rem; line-height: 1.65; margin: 0 0 1.4rem; max-width: 520px; }
 .ag-tutorial-hero .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
-/* Tarjetas de modulo del tutorial */
+
 .ag-tut-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 .ag-tut-card {
   position: relative;
@@ -623,7 +620,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
 .tut-ic-violet { background: rgba(139, 92, 246, 0.12); color: var(--ag-grape); border: 1px solid rgba(139, 92, 246, 0.3); }
 .tut-ic-red { background: var(--ag-signal-stop-surface); color: var(--ag-signal-stop); border: 1px solid var(--ag-signal-stop-border); }
 
-/* Lista de pasos (roles) */
+
 .ag-tut-list { display: flex; flex-direction: column; gap: 0.75rem; }
 .ag-tut-step {
   display: flex;
@@ -671,7 +668,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
   color: var(--ag-text-muted);
 }
 
-/* Checklist / quiz */
+
 .ag-check-row {
   display: flex;
   align-items: center;
@@ -741,7 +738,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
 .ag-faq-a.open { max-height: 240px; }
 .ag-faq-a div { padding: 0 0.3rem 0.9rem; }
 
-/* ---------- Login (rediseño) ---------- */
+
 .login-page .ag-login-brand::after {
   width: 640px;
   height: 640px;
@@ -816,7 +813,7 @@ select.ag-form-control:hover:not(:focus) { border-color: var(--ag-steel-light); 
 .ag-demo-chip .demo-role { font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ag-text-muted); }
 .ag-demo-chip .demo-email { font-family: var(--ag-font-mono); font-size: 0.72rem; }
 
-/* ---------- Responsive ---------- */
+
 @media (max-width: 1024px) {
   .ag-tut-grid { grid-template-columns: repeat(2, 1fr); }
 }

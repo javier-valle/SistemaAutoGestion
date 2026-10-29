@@ -50,8 +50,8 @@ public class RecepcionService {
 
     @Transactional
     public RecepcionResponseDTO crearCompleto(RecepcionCompletaRequest request) {
-        // Wizard: si ya eligió cliente/vehículo existentes, se usan directo (verificados).
-        // El nombre y la placa solo se exigen cuando hay que crear (sin IDs).
+
+
         if (request.getClienteId() == null
                 && (request.getClienteNombre() == null || request.getClienteNombre().trim().length() < 2)) {
             throw new BusinessException("Escribe el nombre del cliente (mínimo 2 letras).", "clienteNombre",

@@ -8,7 +8,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 <br>
 
-<img src="https://img.shields.io/badge/version-2.14.1-orange?style=for-the-badge" />
+<img src="https://img.shields.io/badge/version-2.14.2-orange?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
 <img src="https://img.shields.io/badge/Spring_Boot-3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
 
@@ -20,6 +20,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 | Version | Fecha | Lo destacado |
 | :-- | :-- | :-- |
+| [2.14.2](#-2142---2026-10-29) | 2026-10-29 | 🛡️ Auditoría final: stock y pagos serializados con bloqueo de fila · doble clic ya no duplica registros · base real sin descuadres |
 | [2.14.1](#-2141---2026-10-29) | 2026-10-29 | 📚 Documentación de `docs/` reescrita (guía, manual, permisos, políticas) · Notas de defensa retiradas · Caja autorizada a recepción, como ya mostraba el menú |
 | [2.14.0](#-2140---2026-10-29) | 2026-10-29 | 🧪 Avance 3: Guava y Commons Lang3 en el límite de consultas · Logback con archivo rotativo · Javadoc configurado · Migraciones compatibles con H2 · 98/98 pruebas en verde |
 | [2.13.0](#-2130---2026-10-28) | 2026-10-28 | 🆓 DNI y RUC sin token: dniperu.com y openruc.com consultados desde el backend · CORS para `file://` y cualquier puerto local · Fin del “La fuente de consulta no respondió” por bloqueo del navegador |
@@ -41,6 +42,16 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 | [1.0.0](#-100---2026-09-14) | 2026-09-14 | 🐛 Correccion de errores fundacionales (DTOs, pagos, cache) |
 
 <img src="./readme-assets/divider.svg" width="100%" height="6" alt="" />
+
+## 🛡️ 2.14.2 — 2026-10-29
+
+### Integridad de datos bajo concurrencia
+- **Stock con bloqueo de fila:** `ProductoRepository.bloquearPorId` (`PESSIMISTIC_WRITE`) y `InventarioService` lo usa en cada movimiento. Antes, dos consumos o ajustes simultáneos leían el mismo stock y el último guardado pisaba al otro: quedaba descuadrado y podía bajar de cero. Ahora las operaciones sobre el mismo producto se serializan.
+- **Pago y entrega serializados:** `PagoEntregaService` y `OrdenTrabajoService.registrarPagoEntregaCompleto` bloquean la OT antes de escribir. Dos cobros o dos entregas simultáneas de la misma orden ya no compiten: la segunda recibe un conflicto claro.
+- **Doble clic en el panel:** `apiFetch` comparte la misma promesa para POST idénticos en vuelo. Un doble clic o un reintento del navegador ya no crea dos diagnósticos, dos cotizaciones ni dos movimientos de inventario (afectaba a mermas, compras y consumos).
+- **Sesión corrupta:** `getUser` tolera un JSON inválido en `localStorage` y devuelve al login en vez de romper la página completa.
+- **Comentarios fuera del código:** se retiraron los comentarios `//` y `/* ... */` de Java, JavaScript, HTML y CSS (incluidos los scripts en línea). Se conserva el Javadoc (`/** ... */`) porque es el anexo de documentación técnica que evalúa la rúbrica. Las migraciones Flyway no se tocaron: cambiar su contenido alteraría el checksum y rompería el arranque sobre bases existentes.
+- **Verificación:** `mvn -B test` → **98 pruebas, 0 fallos**. Auditoría SQL sobre la base PostgreSQL real: 0 productos con stock negativo, 0 comprobantes emitidos duplicados por OT, 0 totales descuadrados, 0 cotizaciones activas duplicadas y 0 clientes con documento repetido. El volumen `pgdata` conserva los datos entre reinicios.
 
 ## 📚 2.14.1 — 2026-10-29
 

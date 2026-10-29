@@ -52,7 +52,7 @@
                     </div>
                     <div class="ag-pay-grid">
                         <div>
-                            <!-- PASO 1 -->
+                            
                             <div class="pay-pane" data-pane="1">
                                 <div class="ag-form-group">
                                     <label class="ag-form-label" for="cliSearch">Buscar cliente (documento, nombre o teléfono)</label>
@@ -90,7 +90,7 @@
                                 </div>
                                 <p class="ag-field-error" id="cliError" hidden></p>
                             </div>
-                            <!-- PASO 2 -->
+                            
                             <div class="pay-pane" data-pane="2" hidden>
                                 <div id="vehList" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.75rem;"></div>
                                 <div id="vehNewForm" hidden>
@@ -108,7 +108,7 @@
                                 </div>
                                 <p class="ag-field-error" id="vehError" hidden></p>
                             </div>
-                            <!-- PASO 3 -->
+                            
                             <div class="pay-pane" data-pane="3" hidden>
                                 <div class="ag-form-group"><label class="ag-form-label" for="probDesc">¿Qué le pasa al vehículo? *</label>
                                     <textarea class="ag-form-control" id="probDesc" rows="3" placeholder="Ej. Ruido al frenar y vibración a 80 km/h..."></textarea>
@@ -129,7 +129,7 @@
                                     <input class="ag-form-control" id="probAccesorios" placeholder="Ej. Llanta de repuesto, gata, radio"></div>
                                 <p class="ag-field-error" id="probError" hidden></p>
                             </div>
-                            <!-- PASO 4 -->
+                            
                             <div class="pay-pane" data-pane="4" hidden>
                                 <div id="recConfirmBox"></div>
                             </div>
@@ -186,7 +186,7 @@
             document.getElementById('themeToggleWrap').innerHTML = renderThemeToggle();
             initTheme();
 
-            /* Estado del wizard. Se conserva al ir Atrás; dirty avisa antes de salir. */
+            
             const W = { step: 1, clienteId: null, cliente: null, editMode: false, dirty: false,
                         vehiculoId: null, vehiculos: [], isNewVehicle: false };
             function markDirty() {
@@ -222,14 +222,14 @@
                 }
                 setStep(W.step + dir);
             }
-            window.recStep = recStep; // el wizard usa onclick en línea: debe ser global
+            window.recStep = recStep; 
             function cliError(msg) {
                 const e = document.getElementById('cliError');
                 if (!msg) { e.hidden = true; return true; }
                 e.textContent = msg; e.hidden = false; return false;
             }
 
-            /* ---------- PASO 1: cliente ---------- */
+            
             const buscarClientes = debounce(async () => {
                 const q = document.getElementById('cliSearch').value.trim();
                 const box = document.getElementById('cliResults');
@@ -391,7 +391,7 @@
                 return cliError(null);
             }
 
-            /* ---------- PASO 2: vehículo ---------- */
+            
             async function cargarVehiculos() {
                 if (!W.clienteId) { W.vehiculos = []; pintarVehiculos(); return; }
                 try {
@@ -447,7 +447,7 @@
                 return err(null);
             }
 
-            /* ---------- PASO 3: problema ---------- */
+            
             function validarPaso3() {
                 const err = (m) => { const e = document.getElementById('probError'); e.textContent = m; e.hidden = !m; return !m; };
                 if (document.getElementById('probDesc').value.trim().length < 5) return !err('Describe el problema con al menos 5 letras.'), false;
@@ -459,7 +459,7 @@
                 document.getElementById(id).addEventListener('change', updateResumen);
             });
 
-            /* ---------- PASO 4: confirmar ---------- */
+            
             function nombreClientePaso1() {
                 if (W.cliente) return W.cliente.nombre;
                 return document.getElementById('cliNombre').value.trim() || '—';
@@ -477,7 +477,7 @@
                 const p = document.getElementById('probDesc').value.trim();
                 document.getElementById('rsProblema').textContent = p ? (p.length > 40 ? p.slice(0, 40) + '…' : p) : '—';
             }
-            /* ---------- Preview del vehículo: dropdown + logo + render en vivo ---------- */
+            
             function vehMarcaValor() {
                 const sel = document.getElementById('vehMarcaSel');
                 if (sel && sel.value === '__otra') return document.getElementById('vehMarca').value.trim();
@@ -533,7 +533,7 @@
                 const btn = document.getElementById('recConfirmBtn');
                 btn.disabled = true;
                 try {
-                    /* Si editó datos del cliente existente, se guardan primero */
+                    
                     if (W.clienteId && W.editMode) {
                         await apiFetch(`/clientes/${W.clienteId}`, { method: 'PUT', body: JSON.stringify(agLimpia({
                             nombre: W.cliente.nombre,
@@ -598,7 +598,7 @@
                 setStep(1);
             }
 
-            /* ---------- Lista lateral (sin cambios) ---------- */
+            
             window.loadRecepciones = async function() {
                 const estado = document.querySelector('#estadoFilters .ag-chip.active')?.dataset.estado || '';
                 try {
@@ -642,7 +642,7 @@
                 loadRecepciones();
             });
 
-            /* Precarga desde clientes.html (?clienteId=) */
+            
             setStep(1);
             initMarcaSel();
             pintarCliente();
