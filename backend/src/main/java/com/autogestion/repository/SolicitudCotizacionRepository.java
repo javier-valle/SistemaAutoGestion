@@ -25,4 +25,6 @@ public interface SolicitudCotizacionRepository extends JpaRepository<SolicitudCo
     boolean existsByVehiculoIdAndEstado(Long vehiculoId, EstadoSolicitudCotizacion estado);
 
     long countByClienteIdAndEstado(Long clienteId, EstadoSolicitudCotizacion estado);
+
+    void deleteByClienteId(Long clienteId);
 }

@@ -96,10 +96,12 @@ SistemaAutoGestion/
 │       │   ├── config/            (Security, JWT, CORS, DataInitializer, EmpresaProperties)
 │       │   ├── entity/            (26 entidades JPA y 13 enums de dominio)
 │       │   ├── repository/        (25 repositorios Spring Data)
-│       │   ├── service/           (25 servicios con lógica de negocio)
-│       │   ├── controller/        (20 controladores REST)
-│       │   ├── dto/               (48 request/response DTOs)│       │   └── util/              (AppTime, DocumentoValidator, Like, NumeroALetras, Rangos,
-│       │                           ReporteExcelGenerator, ReportePdfGenerator, TicketPdf)│       └── resources/db/migration/   (Flyway: V1 esquema inicial, V2 fiscal/inventario/gastos,
+│       │   ├── service/           (26 servicios con lógica de negocio)
+│       │   ├── controller/        (21 controladores REST)
+│       │   ├── dto/               (56 request/response DTOs)
+│       │   └── util/              (AppTime, DocumentoValidator, Like, NumeroALetras, Rangos,
+│       │                           ReporteExcelGenerator, ReportePdfGenerator, TicketPdf)
+│       └── resources/db/migration/   (Flyway: V1 esquema inicial, V2 fiscal/inventario/gastos,
 │                                     ..., V9 solicitud de cotización, V10 cotización vigente única)
 ├── database/
 │   └── Dockerfile                 (imagen Postgres 16; el esquema lo versiona Flyway)
@@ -107,9 +109,8 @@ SistemaAutoGestion/
     ├── Dockerfile
 
     ├── nginx.conf                 (sirve la web y reenvía /api al backend)
-    ├── index.html                 (🌐 PORTAL DEL CLIENTE: identificación con documento + placa)
-    ├── portal/                    (páginas del cliente: estado, cotización, comprobantes,
-    │                               historial, mantenimiento, cita, encuesta, políticas)
+    ├── index.html                 (🌐 PORTAL DEL CLIENTE: identificación con documento + placa)    ├── portal/                    (páginas del cliente: estado, cotización, comprobantes,
+    │                               historial, mantenimiento, cita, encuesta, cuenta, políticas)
     ├── admin/                     (🔐 ACCESO DEL PERSONAL, en /admin/)
     │   ├── index.html             (login del personal)
     │   └── pages/
@@ -119,7 +120,7 @@ SistemaAutoGestion/
     │       ├── orden_trabajo.html     (órdenes de trabajo)
     │       ├── inventario.html        (gestión de inventario)
     │       ├── pago_entrega.html      (pagos, entregas, boleta/factura)
-    │       ├── clientes.html / equipo.html / reportes.html
+    │       ├── clientes.html / equipo.html / reportes.html / comentarios.html
     │       ├── mecanico.html / recepcionista.html   (paneles por rol)
     │       ├── tutorial.html          (tutorial interactivo)
     │       ├── acceso_denegado.html   (error 403)
@@ -348,6 +349,7 @@ stateDiagram-v2
 | 📦 **Inventario** | Stock con costo/margen, movimientos auditados (kardex), compra multilínea, mermas, proveedores y alertas |
 | 💳 **Pago/Entrega** | Órdenes finalizadas, wizard BOLETA/FACTURA con totales calculados en servidor, ticket/PDF (emisor, detalle, IGV, total en letras, QR), historial con filtros y anulación (solo ADMIN) |
 | 👥 **Equipo** | Personal con avatar, especialidad y carga de OT; crear, editar, desactivar y restablecer clave (solo ADMIN) |
+| 💬 **Comentarios** | Encuestas del portal con estrellas, cliente, OT, placa y texto; promedio, total y filtros por puntuación, texto libre y "solo con comentario" |
 | 📊 **Reportes** | 7 pestañas por rol (resumen, clientes, ingresos, inventario, gastos, resultado, mecánicos) con gráficos accesibles, exportación por tabla a Excel/PDF, consolidado y fórmula visible |
 | 🎓 **Tutorial y docs** | Caso guiado de 8 pasos, glosario, tours por pantalla y carpeta `docs/` |
 
@@ -421,6 +423,7 @@ El portal es la **pantalla de inicio** (`/`). El cliente se identifica con su do
 | `mantenimiento.html` | Próximos mantenimientos: sin recordatorios automáticos todavía |
 | `cita.html` | Cita: canales reales de atención (la reserva en línea no está conectada) |
 | `encuesta.html` | **Encuesta ligada a la OT**: califica una visita entregada una sola vez (`/api/portal/encuestas/pendientes`, `POST /api/portal/encuestas`) y muestra las respuestas anteriores |
+| `cuenta.html` | **Mi cuenta y privacidad**: muestra nombre, documento, contacto y vehículos, y ofrece **eliminar la cuenta** con confirmación escrita (`DELETE /api/portal/cuenta`). Borra encuestas, citas, solicitudes, consentimientos y vehículos sin visitas; los comprobantes ya emitidos quedan anonimizados |
 | `ayuda.html` | **Guía de uso**: 9 pasos, preguntas frecuentes, errores y cierre de sesión seguro |
 | `soporte.html` | **Centro de soporte**: canales configurados, reporte por correo y privacidad |
 | `politicas.html` | Políticas y consentimientos |
@@ -663,6 +666,7 @@ agFlashRow(tableRow)                                        
 | `GET` | `/api/reportes/rendimiento-mecanicos` | OT, tiempos y consumo por mecánico |
 | `GET` | `/api/reportes/export/consolidado?formato=xlsx\|pdf` | Libro Excel o PDF con las pestañas seleccionadas |
 | `POST` | `/api/reportes/export/tabla?formato=xlsx\|pdf` | Exporta una tabla visible con su formato por columna (dinero, entero, decimal) |
+| `GET` | `/api/encuestas` | Encuestas y comentarios del portal con cliente, OT, placa y puntuación (ADMIN y RECEPCIONISTA) |
 | `POST` | `/api/public/portal/identificar` | Portal: documento + placa → token CLIENTE |
 | `GET` | `/api/public/portal/documento/consultar?tipo=&numero=` | Consulta pública de nombres durante el registro (con límite por IP) |
 | `GET` | `/api/public/portal/info` | Datos públicos del taller para la guía/soporte (sin datos de clientes) |
@@ -680,6 +684,7 @@ agFlashRow(tableRow)                                        
 | `GET` | `/api/portal/encuestas/pendientes` | OT entregadas sin encuesta |
 | `GET` | `/api/portal/encuestas` | Encuestas ya respondidas |
 | `POST` | `/api/portal/encuestas` | Califica una OT entregada (una sola vez) |
+| `DELETE` | `/api/portal/cuenta` | Baja de la cuenta: exige `confirmacion="ELIMINAR"` y anonimiza al cliente |
 | `GET` | `/api/documentos/consultar?tipo=&numero=` | Consulta de nombres para el personal autenticado (ADMIN/RECEPCIONISTA/MECANICO) |
 
 </details>

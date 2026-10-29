@@ -8,6 +8,8 @@
       if (!link) return;
       const href = link.getAttribute('href');
       if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:')) return;
+      if (link.hasAttribute('download')) return;
+      if (href.startsWith('blob:') || href.startsWith('data:') || href.startsWith('javascript:')) return;
       if (link.target === '_blank') return;
       e.preventDefault();
       const page = document.querySelector('.ag-page');

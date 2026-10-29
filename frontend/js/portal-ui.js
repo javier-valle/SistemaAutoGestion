@@ -63,6 +63,7 @@
             '<div class="pu-menu">' +
               '<div class="pu-menu-head"><b>' + esc(nombre || 'Mi cuenta') + '</b><span>Sesión de cliente</span></div>' +
               '<a href="/portal/estado.html#perfil">Mis datos</a>' +
+              '<a href="/portal/cuenta.html">Mi cuenta y privacidad</a>' +
               '<a href="/portal/ayuda.html">Guía de uso</a>' +
               '<a href="/portal/soporte.html">Soporte</a>' +
               '<button type="button" class="pu-menu-danger" id="puSalirBtn">Cerrar sesión</button>' +

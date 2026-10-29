@@ -71,6 +71,7 @@ const ROLE_PAGES = {
     mecanico:      ['MECANICO'],
     recepcionista: ['RECEPCIONISTA'],
     equipo:        ['ADMIN'],
+    comentarios:   ['ADMIN', 'RECEPCIONISTA'],
     reportes:      ['ADMIN', 'RECEPCIONISTA', 'ALMACENERO'],
     tutorial:      ['ADMIN', 'MECANICO', 'ALMACENERO', 'RECEPCIONISTA'],
 };
@@ -276,18 +277,20 @@ const NAV_ICONS = {
     reportes: `${AG_SW}<path d="M4 20h16"/><rect x="6.6" y="13" width="3.2" height="7" rx="1.2"/><rect x="11" y="9" width="3.2" height="11" rx="1.2"${AG_SOFT}/><rect x="11" y="9" width="3.2" height="11" rx="1.2"/><rect x="15.4" y="5" width="3.2" height="15" rx="1.2"/></svg>`,
     clientes: `${AG_SW}<rect x="3" y="5.5" width="18" height="13.5" rx="2.5" fill="currentColor" stroke="none" opacity=".22"/><rect x="3" y="5.5" width="18" height="13.5" rx="2.5"/><circle cx="8.3" cy="11" r="2"/><path d="M5.9 15.9c.5-1.6 1.4-2.4 2.4-2.4s1.9.8 2.4 2.4"/><path d="M14 9.5h4.5M14 13h4.5"/></svg>`,
     mecanico: `${AG_SW}<path d="M5 15.5C5 11 8 8 12 8s7 3 7 7.5"${AG_SOFT}/><path d="M5 15.5C5 11 8 8 12 8s7 3 7 7.5"/><path d="M12 8V5.8"/><path d="M10.3 5.8h3.4"/><path d="M3 15.5h18"/><path d="M6.5 18.5h11"/></svg>`,
+    comentarios: `${AG_SW}<path d="M20.5 15.5a2.5 2.5 0 0 1-2.5 2.5H8l-4.5 3v-14A2.5 2.5 0 0 1 6 4.5h12a2.5 2.5 0 0 1 2.5 2.5z"${AG_SOFT}/><path d="M20.5 15.5a2.5 2.5 0 0 1-2.5 2.5H8l-4.5 3v-14A2.5 2.5 0 0 1 6 4.5h12a2.5 2.5 0 0 1 2.5 2.5z"/><path d="M8.5 10.5h7M8.5 13.5h4"/></svg>`,
     recepcionista: `${AG_SW}<path d="M4.5 14.5v-2.5a7.5 7.5 0 0 1 15 0v2.5"/><rect x="3.2" y="13.2" width="3.6" height="6" rx="1.8"${AG_SOFT}/><rect x="3.2" y="13.2" width="3.6" height="6" rx="1.8"/><rect x="17.2" y="13.2" width="3.6" height="6" rx="1.8"/><path d="M20.8 18.5c0 1.9-1.6 3-3.6 3H14"/></svg>`,
 };
 const NAV_LABELS = {
     dashboard: 'Dashboard', recepcion: 'Recepcion', cotizacion: 'Cotizacion',
     orden_trabajo: 'Ordenes', inventario: 'Inventario', pago_entrega: 'Pago / Entrega',
     mecanico: 'Panel Mecanico', recepcionista: 'Panel Recepcionista',     equipo: 'Equipo', clientes: 'Clientes', reportes: 'Reportes',
+    comentarios: 'Comentarios',
 };
 const ROLE_NAV = {
-    ADMIN: ['dashboard', 'recepcion', 'clientes', 'cotizacion', 'orden_trabajo', 'inventario', 'pago_entrega', 'reportes', 'equipo'],
+    ADMIN: ['dashboard', 'recepcion', 'clientes', 'cotizacion', 'orden_trabajo', 'inventario', 'pago_entrega', 'reportes', 'equipo', 'comentarios'],
     MECANICO: ['mecanico', 'orden_trabajo', 'inventario'],
     ALMACENERO: ['dashboard', 'inventario', 'reportes'],
-    RECEPCIONISTA: ['recepcionista', 'recepcion', 'clientes', 'cotizacion', 'orden_trabajo', 'pago_entrega', 'reportes'],
+    RECEPCIONISTA: ['recepcionista', 'recepcion', 'clientes', 'cotizacion', 'orden_trabajo', 'pago_entrega', 'reportes', 'comentarios'],
 };
 
 
@@ -296,7 +299,7 @@ const NAV_GROUPS = [
     { titulo: 'Taller', paginas: ['cotizacion', 'orden_trabajo', 'mecanico'] },
     { titulo: 'Caja', paginas: ['pago_entrega'] },
     { titulo: 'Almacén', paginas: ['inventario'] },
-    { titulo: 'Gestión', paginas: ['reportes', 'equipo'] },
+    { titulo: 'Gestión', paginas: ['reportes', 'comentarios', 'equipo'] },
     { titulo: 'Ayuda', paginas: ['tutorial'] },
 ];
 const NAV_TUTORIAL_ICON = `${AG_SW}<path d="M12 6.8C10 5 7.4 4.7 4.8 5.2v13.2c2.6-.5 5.2-.2 7.2 1.6 2-1.8 4.6-2.1 7.2-1.6V5.2c-2.6-.5-5.2-.2-7.2 1.6z" fill="currentColor" stroke="none" opacity=".22"/><path d="M12 6.8C10 5 7.4 4.7 4.8 5.2v13.2c2.6-.5 5.2-.2 7.2 1.6 2-1.8 4.6-2.1 7.2-1.6V5.2c-2.6-.5-5.2-.2-7.2 1.6z"/><path d="M12 6.8V20"/></svg>`;
