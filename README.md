@@ -96,11 +96,11 @@ SistemaAutoGestion/
 │       │   ├── config/            (Security, JWT, CORS, DataInitializer, EmpresaProperties)
 │       │   ├── entity/            (26 entidades JPA y 13 enums de dominio)
 │       │   ├── repository/        (25 repositorios Spring Data)
-│       │   ├── service/           (20 servicios con lógica de negocio)
+│       │   ├── service/           (25 servicios con lógica de negocio)
 │       │   ├── controller/        (20 controladores REST)
-│       │   ├── dto/               (48 request/response DTOs)
-│       │   └── util/              (AppTime, DocumentoValidator, NumeroALetras, Rangos, TicketPdf)
-│       └── resources/db/migration/   (Flyway: V1 esquema inicial, V2 fiscal/inventario/gastos, ..., V5 portal del cliente)
+│       │   ├── dto/               (48 request/response DTOs)│       │   └── util/              (AppTime, DocumentoValidator, Like, NumeroALetras, Rangos,
+│       │                           ReporteExcelGenerator, ReportePdfGenerator, TicketPdf)│       └── resources/db/migration/   (Flyway: V1 esquema inicial, V2 fiscal/inventario/gastos,
+│                                     ..., V9 solicitud de cotización, V10 cotización vigente única)
 ├── database/
 │   └── Dockerfile                 (imagen Postgres 16; el esquema lo versiona Flyway)
 └── frontend/
@@ -645,19 +645,23 @@ agFlashRow(tableRow)                                        
 | `GET` | `/api/inventario/alertas` | Alertas de stock bajo |
 | `POST` | `/api/proveedores` | Crear proveedor (RUC validado) |
 | `POST` | `/api/gastos` | Registrar gasto operativo (solo ADMIN) |
-| `POST` | `/api/pagos` | Registrar pago (flujo antiguo, se mantiene) |
+| `POST` | `/api/pagos` | Registrar pago (exige OT `FINALIZADA`; delega en el flujo único) |
 | `POST` | `/api/comprobantes` | Emitir boleta/factura (monto desde la cotización) |
 | `GET` | `/api/comprobantes` | Listar con filtros y paginación |
 | `GET` | `/api/comprobantes/previsualizar` | Totales y adquirente sin reservar número |
 | `POST` | `/api/comprobantes/{id}/anular` | Anular con motivo (solo ADMIN) |
+| `GET` | `/api/comprobantes/{id}/pdf` | PDF del comprobante (A4, representación impresa) |
 | `GET` | `/api/documentos/validar` | Validar DNI/RUC/CE/pasaporte en vivo |
-| `POST` | `/api/entregas/{id}` | Registrar entrega |
+| `POST` | `/api/entregas/{ordenTrabajoId}` | Compatibilidad: delega en el flujo único de pago/entrega |
+| `GET` | `/api/ordenes-trabajo/finalizadas-completa` | OT finalizadas con su saldo pendiente |
+| `POST` | `/api/pago-entrega/completa` | Pago (y entrega opcional) en una sola transacción |
 | `GET` | `/api/reportes/indicadores` | Indicadores del dashboard |
 | `GET` | `/api/reportes/clientes-por-dia` | Clientes atendidos por día (+ `/export?formato=csv`) |
 | `GET` | `/api/reportes/ingresos?agrupar=dia\|mes` | Ingresos cobrados (solo comprobantes EMITIDO) |
 | `GET` | `/api/reportes/resultado` | Utilidad = ventas sin IGV − consumos − gastos |
 | `GET` | `/api/reportes/inventario/kardex/{id}` | Kardex con saldos que cuadran |
 | `GET` | `/api/reportes/rendimiento-mecanicos` | OT, tiempos y consumo por mecánico |
+| `GET` | `/api/reportes/export/consolidado?formato=xlsx\|csv` | Libro Excel con todas las hojas del reporte |
 | `POST` | `/api/public/portal/identificar` | Portal: documento + placa → token CLIENTE |
 | `GET` | `/api/public/portal/documento/consultar?tipo=&numero=` | Consulta pública de nombres durante el registro (con límite por IP) |
 | `GET` | `/api/public/portal/info` | Datos públicos del taller para la guía/soporte (sin datos de clientes) |
@@ -667,6 +671,8 @@ agFlashRow(tableRow)                                        
 | `GET` | `/api/portal/cotizaciones/{id}` | Detalle de una cotización propia |
 | `POST` | `/api/portal/cotizaciones/{id}/aprobar` | El cliente aprueba su cotización PENDIENTE |
 | `POST` | `/api/portal/cotizaciones/{id}/rechazar` | El cliente rechaza su cotización PENDIENTE |
+| `GET` | `/api/portal/solicitudes-cotizacion` | Solicitudes de revisión del cliente |
+| `POST` | `/api/portal/solicitudes-cotizacion` | El cliente pide una revisión (sin precio) |
 | `GET` | `/api/documentos/consultar?tipo=&numero=` | Consulta de nombres para el personal autenticado (ADMIN/RECEPCIONISTA/MECANICO) |
 
 </details>
@@ -697,6 +703,8 @@ producto ─────────────────────┘   �
 Además existen tablas de proveedores, gastos operativos y las del [portal del cliente](#-portal-del-cliente). En total el backend mapea 26 entidades JPA.
 
 Las migraciones del portal son `V5__portal_cliente.sql` (`portal_acceso_log`, `cita`, `encuesta_satisfaccion`, `consentimiento`, `solicitud_arco`, `notificacion`) y `V9__solicitud_cotizacion_cliente.sql` (`solicitud_cotizacion`). `otp_codigo` ya no se crea: el acceso por código se retiró.
+
+`V10__cotizacion_vigente_unica.sql` agrega la columna `diagnostico_vigente_id` (se llena solo mientras la cotización está `PENDIENTE`, `EN_DIAGNOSTICO` o `APROBADA`) con un índice único encima: no puede existir otra cotización viva para el mismo diagnóstico. La base rechaza el duplicado aunque dos peticiones lleguen a la vez; el servicio además responde `409` con un mensaje legible.
 
 > [!TIP]
 > El pago genera un comprobante interno (serie `B001`/`F001` + correlativo + snapshot fiscal del adquirente) con constancia imprimible. Detalle en [Facturación](#-facturación-boletafactura) y en `CHANGELOG.md`.

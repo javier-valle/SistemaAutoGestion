@@ -8,7 +8,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 <br>
 
-<img src="https://img.shields.io/badge/version-2.17.0-orange?style=for-the-badge" />
+<img src="https://img.shields.io/badge/version-2.18.0-orange?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
 <img src="https://img.shields.io/badge/Spring_Boot-3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
 
@@ -20,6 +20,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 | Version | Fecha | Lo destacado |
 | :-- | :-- | :-- |
+| [2.18.0](#-2180---2026-10-29) | 2026-10-29 | 🛡️ Un solo camino de pago/entrega · una cotización vigente por diagnóstico (V10) · anular suelta el pago · refactor de cotización, rangos y Excel |
 | [2.17.0](#-2170---2026-10-29) | 2026-10-29 | 🧾 Boleta y factura en A4 con el formato de representación impresa: recuadro del emisor, tabla por columnas, importes y texto legal |
 | [2.16.0](#-2160---2026-10-29) | 2026-10-29 | 📊 Excel y PDF con portada, tablas paginadas y totales · CSV legible en Excel · Descarga sin bloqueos · Fix `no Session` en órdenes y aprobación de cotización |
 | [2.15.0](#-2150---2026-10-29) | 2026-10-29 | 🎨 Rediseño visual de los paneles: superficies planas, un solo acento, tablas y formularios más legibles, modo claro y oscuro |
@@ -45,6 +46,18 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 | [1.0.0](#-100---2026-09-14) | 2026-09-14 | 🐛 Correccion de errores fundacionales (DTOs, pagos, cache) |
 
 <img src="./readme-assets/divider.svg" width="100%" height="6" alt="" />
+
+## 🛡️ 2.18.0 — 2026-10-29
+
+### Integridad de pagos, cotizaciones y comprobantes
+- **Un solo camino de pago y entrega:** `PagoEntregaService` centraliza cobrar, entregar y vincular el pago al comprobante recién emitido. `POST /api/pagos` y `POST /api/entregas/{id}` se mantienen por compatibilidad, pero delegan en él; `OrdenTrabajoService` ya no guarda una copia propia. La entrega exige OT `FINALIZADA` (si no, `409` con mensaje claro) y fija su `fechaFin`, así que la orden y la recepción se cierran juntas.
+- **Una sola cotización vigente por diagnóstico:** `CotizacionService` responde `409` si el diagnóstico ya tiene una cotización `PENDIENTE`, `EN_DIAGNOSTICO` o `APROBADA`. La migración `V10__cotizacion_vigente_unica.sql` lo respalda en la base con la columna `diagnostico_vigente_id` y un índice único (funciona igual en PostgreSQL y en H2, que no admite índices parciales). La migración repara duplicados heredados: conserva la `APROBADA` más reciente y rechaza el resto. Convertir a OT bloquea la fila, así que dos aprobaciones simultáneas no crean dos órdenes.
+- **Anular ya no deja el pago apuntando al documento muerto:** `ComprobanteService.anular()` llama a `PagoEntregaService.desvincularComprobante()`; el pago conserva monto y fecha, pero deja de referenciar un comprobante sin validez.
+- **Refactor de cotización:** `crear()` y `crearCompleta()` comparten un único flujo; se retiran unas 150 líneas duplicadas y las variables sin uso (`cli`, `veh`).
+- **Un solo cálculo de rango:** `Rangos` resuelve fechas por defecto y valida `desde`/`hasta`; el controlador y la exportación usan esa misma regla, sin copias divergentes.
+- **Excel con columnas declaradas:** cada columna indica su tipo (dinero, entero, promedio) y si suma total, en lugar de adivinar por nombre. `Horas prom.` ya no se suma dentro de una columna de dinero.
+- **Limpieza:** `ResolutorAdquirente` sin ramas `if/else` vacías, import duplicado fuera de `ReporteService`, se elimina `frontend/js/reportes/export.js` (sin uso: `reportes.html` definía el suyo) y el Javadoc de `ComprobanteController.descargarPdf` dice A4, que es el tamaño real.
+- **Verificación:** `mvn -B test` → **119 pruebas, 0 fallos** (19 nuevas: pagos/entregas, anulación, cotización vigente y rangos). README alineado con el código contado: 26 entidades, 13 enums, 25 repositorios, 25 servicios, 20 controladores, 48 DTOs y 10 migraciones.
 
 ## 🧾 2.17.0 — 2026-10-29
 
