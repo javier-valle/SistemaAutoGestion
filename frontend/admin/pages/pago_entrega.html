@@ -15,22 +15,69 @@
     <link rel="stylesheet" href="/css/redesign.css">
     <link rel="stylesheet" href="/css/polish.css?v=20261005">
     <link rel="stylesheet" href="/css/panels-premium.css?v=20261002">
+    <link rel="stylesheet" href="/css/refresh.css?v=20261029">
     <script>
         (function(){var t=localStorage.getItem('ag-theme')||'system';if(t==='system')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',t);})();
     </script>
     <style>
         #printArea { display:none; }
-        /* Margen 0 en @page = el navegador NO imprime su header (titulo/URL) ni footer (pagina/fecha) */
-        @page { size: auto; margin: 0; }
+        @page { size: A4; margin: 10mm; }
         @media print {
             body > *:not(#printArea) { display:none !important; }
-            #printArea { display:block !important; position:static !important; padding:8mm; }
-            .ag-ticket { max-width:100%; box-shadow:none; }
-            .ag-ticket, .ag-ticket * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            #printArea { display:block !important; position:static !important; padding:0; }
+            .ag-cpe { max-width:none; font-size:8.6pt; }
+            .ag-cpe, .ag-cpe * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
-        @media print and (prefers-color-scheme: dark) {
-            .ag-ticket-body { background:#fff !important; }
+        .ag-cpe {
+            background:#fff; color:#111; margin:0 auto; max-width:640px;
+            font-family:'Helvetica Neue', Arial, Helvetica, sans-serif;
+            font-size:9px; line-height:1.35; text-align:left;
         }
+        .ag-cpe .cpe-marca { display:grid; grid-template-columns:1fr auto 1fr; font-size:0.85em; margin-bottom:7px; }
+        .ag-cpe .cpe-marca span:nth-child(2) { text-align:center; font-weight:700; }
+        .ag-cpe .cpe-hoja { border:1px solid #111; padding:12px; }
+        .ag-cpe .cpe-cab { display:grid; grid-template-columns:1fr 200px; gap:12px; padding-bottom:9px; border-bottom:1px solid #111; }
+        .ag-cpe .cpe-emisor b { display:block; font-size:1.18em; margin-bottom:3px; }
+        .ag-cpe .cpe-emisor span { display:block; font-size:0.86em; }
+        .ag-cpe .cpe-num { border:1px solid #111; padding:8px 10px; text-align:right; align-self:start; }
+        .ag-cpe .cpe-num b { display:block; font-size:0.95em; }
+        .ag-cpe .cpe-num span { display:block; font-size:0.95em; font-weight:700; }
+        .ag-cpe .cpe-num strong { display:block; font-size:1.15em; margin-top:2px; }
+        .ag-cpe .cpe-datos { padding:10px 4px; border-bottom:1px solid #111; }
+        .ag-cpe .cpe-datos > div { display:grid; grid-template-columns:112px 8px 1fr; font-size:0.92em; padding:1.5px 0; }
+        .ag-cpe .cpe-datos span { text-align:right; font-weight:700; }
+        .ag-cpe .cpe-datos i { font-style:normal; font-weight:700; text-align:center; }
+        .ag-cpe .cpe-datos b { font-weight:400; }
+        .ag-cpe table.cpe-items { width:100%; border-collapse:collapse; table-layout:fixed; }
+        .ag-cpe table.cpe-items th {
+            font-weight:400; text-align:left; vertical-align:bottom; font-size:0.86em;
+            padding:6px 3px 2px; border-bottom:1px solid #111;
+        }
+        .ag-cpe table.cpe-items td {
+            font-size:0.92em; padding:4px 3px 2px; vertical-align:top; word-break:break-word;
+        }
+        .ag-cpe .cpe-r, .ag-cpe table.cpe-items th.cpe-r { text-align:right; }
+        .ag-cpe .cpe-importes { display:flex; flex-direction:column; align-items:flex-end; gap:2px; border-top:1px solid #111; margin-top:6px; padding-top:6px; }
+        .ag-cpe .cpe-imp { display:grid; grid-template-columns:150px 96px; font-size:0.9em; }
+        .ag-cpe .cpe-imp span { text-align:right; padding-right:8px; }
+        .ag-cpe .cpe-imp b { text-align:right; font-weight:400; }
+        .ag-cpe .cpe-imp.cpe-caja b { border:1px solid #111; padding:0 6px; }
+        .ag-cpe .cpe-imp.cpe-fuerte, .ag-cpe .cpe-imp.cpe-fuerte b { font-weight:700; }
+        .ag-cpe .cpe-son { text-align:right; font-size:0.95em; font-weight:700; margin-top:5px; }
+        .ag-cpe .cpe-pie { display:grid; grid-template-columns:1fr 200px; gap:14px; border-top:1px solid #111; margin-top:9px; padding-top:9px; }
+        .ag-cpe .cpe-notas p { margin:0 0 4px; font-size:0.86em; }
+        .ag-cpe .cpe-notas .cpe-qr { font-size:0.7em; color:#8a8f96; word-break:break-all; margin-top:8px; }
+        .ag-cpe table.cpe-desg { width:100%; border-collapse:collapse; font-size:0.86em; }
+        .ag-cpe table.cpe-desg td { height:14px; padding:0 6px; }
+        .ag-cpe table.cpe-desg td:first-child { text-align:right; padding-left:0; }
+        .ag-cpe table.cpe-desg td:last-child { border:1px solid #111; text-align:right; width:96px; }
+        .ag-cpe table.cpe-desg tr.cpe-fuerte td { font-weight:700; }
+        .ag-cpe .cpe-legal { border:1px solid #111; margin-top:12px; padding:8px 14px; font-size:0.78em; font-style:italic; text-align:center; line-height:1.5; }
+        .ag-cpe .cpe-estado { text-align:center; font-size:0.95em; font-weight:700; margin-top:9px; letter-spacing:0.03em; }
+        .ag-cpe .cpe-estado.is-ok { color:#047857; }
+        .ag-cpe .cpe-estado.is-anulado { color:#b91c1c; }
+        .ag-cpe .cpe-motivo { text-align:center; font-size:0.8em; color:#b91c1c; margin-top:3px; }
+        .ag-cpe .cpe-foot { display:flex; justify-content:space-between; font-size:0.75em; color:#8a8f96; margin-top:8px; }
     </style>
 </head>
 <body>
@@ -259,7 +306,7 @@
 
     
     <div class="ag-modal-overlay" id="compModal">
-        <div class="ag-modal" style="max-width:440px;">
+        <div class="ag-modal" style="max-width:760px;">
             <div class="ag-modal-header">
                 <h3>Constancia de pago</h3>
                 <button class="ag-modal-close" onclick="cerrarCompModal()">&times;</button>
@@ -682,47 +729,141 @@
             finally { btn.disabled = false; }
         }
 
+        const UNIDADES_CPE = { ZZ: 'UNIDAD', NIU: 'UNIDAD', KGM: 'KILOGRAMO', GRM: 'GRAMO', LTR: 'LITRO', MLT: 'MILILITRO', MTR: 'METRO', MTQ: 'METRO CÚBICO', HUR: 'HORA', MIN: 'MINUTO', DZN: 'DOCENA', BX: 'CAJA', SET: 'JUEGO', GLL: 'GALÓN' };
+        const MONEDAS_CPE = { PEN: 'SOLES', USD: 'DÓLARES AMERICANOS', EUR: 'EUROS' };
+
+        function cpePartes(v) {
+            if (!v) return null;
+            const d = new Date(v);
+            return isNaN(d.getTime()) ? null : d;
+        }
+        function cpeFecha(v) {
+            const d = cpePartes(v);
+            if (!d) return '-';
+            const p = n => String(n).padStart(2, '0');
+            return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+        }
+        function cpeFechaHora(v) {
+            const d = cpePartes(v);
+            if (!d) return '-';
+            const p = n => String(n).padStart(2, '0');
+            return `${cpeFecha(v)} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+        function cpeNum(v) {
+            const n = Number(v);
+            return Number.isFinite(n) ? n.toFixed(2) : '0.00';
+        }
+        function cpeCant(v) {
+            const n = Number(v);
+            return Number.isFinite(n) ? String(parseFloat(n.toFixed(4))) : '0';
+        }
+        function cpeDinero(v) { return 'S/ ' + cpeNum(v); }
+
         function ticketHTML(comp) {
-            const isFac = comp.tipo === 'FACTURA';
-            const titulo = isFac ? 'FACTURA ELECTRÓNICA' : 'BOLETA DE VENTA ELECTRÓNICA';
+            const titulo = comp.tipo === 'FACTURA' ? 'FACTURA ELECTRÓNICA' : 'BOLETA DE VENTA ELECTRÓNICA';
             const anulado = comp.estado === 'ANULADO';
-            const lineas = (comp.detalle || []).map(d => `
-                        <tr><td>${esc(d.cantidad)} ${esc(d.unidadMedida)} · ${esc(d.descripcion)}</td><td>${formatCurrency(d.importeTotal)}</td></tr>`).join('');
-            return `<div class="ag-ticket">
-                <div class="ag-ticket-top">
-                    <div class="ag-ticket-brand">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-                    </div>
-                    <div><h2>${comp.emisorNombreComercial || comp.emisorRazonSocial}</h2><small>RUC ${comp.emisorRuc} · ${comp.emisorDireccion || ''}</small></div>
-                    <div class="ag-ticket-folio">
-                        <span class="folio-tipo">${comp.tipo}</span>
-                        <span class="folio-num">${comp.folio}</span>
-                        <span class="folio-fecha">${formatDate(comp.fechaEmision)}</span>
-                    </div>
+            const moneda = MONEDAS_CPE[comp.moneda] || 'SOLES';
+            const filas = (comp.detalle || []).map(d => `
+                <tr>
+                    <td class="cpe-r">${esc(cpeCant(d.cantidad))}</td>
+                    <td>${esc(UNIDADES_CPE[String(d.unidadMedida || '').toUpperCase()] || 'UNIDAD')}</td>
+                    <td>${esc(d.descripcion || '-')}</td>
+                    <td class="cpe-r">${cpeNum(d.valorUnitario != null ? d.valorUnitario : d.precioUnitario)}</td>
+                    <td class="cpe-r">0.00</td>
+                    <td class="cpe-r">${cpeNum(d.importeTotal)}</td>
+                    <td class="cpe-r">0.00</td>
+                </tr>`).join('');
+            const importe = (etiqueta, valor, caja, fuerte) => `
+                <div class="cpe-imp${caja ? ' cpe-caja' : ''}${fuerte ? ' cpe-fuerte' : ''}">
+                    <span>${etiqueta}</span><b>${cpeDinero(valor || 0)}</b>
+                </div>`;
+            const desglose = [
+                ['Op. Gravada :', comp.totalGravado],
+                ['Op. Exonerada :', 0],
+                ['Op. Inafecta :', 0],
+                ['ISC :', 0],
+                ['IGV :', comp.igv],
+                ['ICBPER :', 0],
+                ['Otros Cargos :', 0],
+                ['Otros Tributos :', 0],
+                ['Importe Total :', comp.total]
+            ].map(([etiqueta, valor], i, arr) =>
+                `<tr${i === arr.length - 1 ? ' class="cpe-fuerte"' : ''}>
+                    <td>${etiqueta}</td><td>${cpeDinero(valor || 0)}</td>
+                </tr>`).join('');
+            const contacto = [comp.emisorUbigeo, comp.emisorTelefono ? 'TEL ' + comp.emisorTelefono : '']
+                .filter(Boolean).join('  ·  ');
+            const letras = String(comp.totalLetras || '-');
+            const son = /^SON/i.test(letras) ? letras : 'SON: ' + letras;
+
+            return `<div class="ag-cpe">
+                <div class="cpe-marca">
+                    <span>${cpeFecha(comp.fechaEmision)}</span>
+                    <span>::: ${esc(titulo)} - Impresión :::</span>
+                    <span></span>
                 </div>
-                <div class="ag-ticket-body">
-                    <p class="ag-text-center ag-fw-700" style="margin:0 0 0.5rem;">${titulo}</p>
-                    ${anulado ? `<p class="ag-text-center"><span class="ag-badge ag-badge-danger">ANULADO: ${esc(comp.motivoAnulacion || '')}</span></p>` : ''}
-                    <div class="ag-ticket-client">
-                        <div class="row"><span>Señor(es)</span><b>${esc(comp.clienteNombre)}</b></div>
-                        <div class="row"><span>${esc(comp.clienteTipoDoc)}</span><b>${esc(comp.clienteNumDoc)}</b></div>
-                        ${comp.clienteDireccion ? `<div class="row"><span>Direccion</span><b>${esc(comp.clienteDireccion)}</b></div>` : ''}
-                        <div class="row"><span>Moneda</span><b>${esc(comp.moneda)} · ${esc(comp.formaPago)} · ${esc(comp.metodoPago)}</b></div>
-                        ${comp.observacion ? `<div class="row"><span>Observación</span><b>${esc(comp.observacion)}</b></div>` : ''}
+                <div class="cpe-hoja">
+                    <div class="cpe-cab">
+                        <div class="cpe-emisor">
+                            <b>${esc(comp.emisorRazonSocial || comp.emisorNombreComercial || '-')}</b>
+                            <span>${esc(comp.emisorDireccion || '')}</span>
+                            ${contacto ? `<span>${esc(contacto)}</span>` : ''}
+                        </div>
+                        <div class="cpe-num">
+                            <b>${esc(titulo)}</b>
+                            <span>RUC: ${esc(comp.emisorRuc || '-')}</span>
+                            <strong>${esc(comp.folio || '-')}</strong>
+                        </div>
                     </div>
-                    <table class="ag-ticket-items">${lineas}</table>
-                    <table class="ag-ticket-totals">
-                        <tr><td>Op. gravada</td><td>${formatCurrency(comp.totalGravado)}</td></tr>
-                        <tr><td>IGV 18%</td><td>${formatCurrency(comp.igv)}</td></tr>
-                        <tr class="grand"><td>IMPORTE TOTAL</td><td>${formatCurrency(comp.total)}</td></tr>
+                    <div class="cpe-datos">
+                        <div><span>Fecha de Vencimiento</span><i>:</i><b>${cpeFecha(comp.fechaEmision)}</b></div>
+                        <div><span>Fecha de Emisión</span><i>:</i><b>${cpeFechaHora(comp.fechaEmision)}</b></div>
+                        <div><span>Señor(es)</span><i>:</i><b>${esc(comp.clienteNombre || '-')}</b></div>
+                        <div><span>${esc(comp.clienteTipoDoc || 'DOC')}</span><i>:</i><b>${esc(comp.clienteNumDoc || '-')}</b></div>
+                        <div><span>Tipo de Moneda</span><i>:</i><b>${esc(moneda)}</b></div>
+                        ${comp.clienteDireccion ? `<div><span>Dirección</span><i>:</i><b>${esc(comp.clienteDireccion)}</b></div>` : ''}
+                        <div><span>Observación</span><i>:</i><b>${esc(comp.observacion || '-')}</b></div>
+                    </div>
+                    <table class="cpe-items">
+                        <colgroup>
+                            <col style="width:8%"><col style="width:11%"><col style="width:34%">
+                            <col style="width:11%"><col style="width:11%"><col style="width:12%"><col style="width:10%">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th class="cpe-r">Cantidad</th>
+                                <th>Unidad<br>Medida</th>
+                                <th>Descripción</th>
+                                <th class="cpe-r">Valor<br>Unitario(*)</th>
+                                <th class="cpe-r">Descuento(*)</th>
+                                <th class="cpe-r">Importe de<br>Venta(**)</th>
+                                <th class="cpe-r">ICBPER</th>
+                            </tr>
+                        </thead>
+                        <tbody>${filas}</tbody>
                     </table>
-                    <p style="font-size:0.72rem; margin:0.5rem 0 0;">${comp.totalLetras}</p>
-                    <p style="font-size:0.68rem; color:#64748b; word-break:break-all; margin:0.4rem 0 0;">QR: ${comp.qrContenido}<br>Hash: -</p>
+                    <div class="cpe-importes">
+                        ${importe('Otros Cargos :', 0, false, false)}
+                        ${importe('Otros Tributos :', 0, false, false)}
+                        ${importe('ICBPER :', 0, true, false)}
+                        ${importe('Importe Total :', comp.total, true, true)}
+                    </div>
+                    <div class="cpe-son">${esc(son)}</div>
+                    <div class="cpe-pie">
+                        <div class="cpe-notas">
+                            <p>(*) Sin impuestos.</p>
+                            <p>(**) Incluye impuestos, de ser Op. Gravada.</p>
+                            ${comp.qrContenido ? `<p class="cpe-qr">QR: ${esc(comp.qrContenido)}</p>` : ''}
+                        </div>
+                        <table class="cpe-desg">${desglose}</table>
+                    </div>
+                    <div class="cpe-legal">Esta es una representación impresa de un comprobante electrónico de demostración, generada por el Sistema de AutoGestión (proyecto académico). No ha sido firmada digitalmente ni remitida a SUNAT, por lo que carece de validez tributaria.</div>
+                    <div class="cpe-estado ${anulado ? 'is-anulado' : 'is-ok'}">${anulado ? 'COMPROBANTE ANULADO' : 'PAGO REGISTRADO'}</div>
+                    ${anulado && comp.motivoAnulacion ? `<div class="cpe-motivo">Motivo: ${esc(comp.motivoAnulacion)}</div>` : ''}
                 </div>
-                <div class="ag-ticket-foot">
-                    <span class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${anulado ? 'COMPROBANTE ANULADO' : 'PAGO REGISTRADO'}</span><br>
-                    Gracias por su preferencia<br>
-                    <b>Representación impresa de comprobante INTERNO (proyecto académico). Sin validez tributaria ante SUNAT.</b>
+                <div class="cpe-foot">
+                    <span>Sistema de AutoGestión · comprobante interno de demostración</span>
+                    <span>1/1</span>
                 </div>
             </div>`;
         }
