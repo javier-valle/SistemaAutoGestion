@@ -344,7 +344,8 @@
     { page: 'tutorial', label: 'Tutorial', desc: 'Aprende a usar el sistema', keywords: 'ayuda guia como usar manual faq quiz' },
     { page: 'equipo', label: 'Equipo', desc: 'Mecánicos y personal del taller', keywords: 'mecanicos personal usuarios roles especialidad' },
     { page: 'clientes', label: 'Clientes', desc: 'Personas y empresas, vehículos e historial', keywords: 'clientes buscar dni ruc razon social telefono placa' },
-    { page: 'reportes', label: 'Reportes', desc: 'Clientes, ingresos, inventario, gastos y resultado', keywords: 'reportes graficos kpi csv utilidad kardex gastos' }
+    { page: 'reportes', label: 'Reportes', desc: 'Clientes, ingresos, inventario, gastos y resultado', keywords: 'reportes graficos kpi csv utilidad kardex gastos' },
+    { page: 'comentarios', label: 'Comentarios', desc: 'Encuestas y comentarios de los clientes', keywords: 'encuesta satisfaccion comentarios estrellas opinion clientes' }
   ];
 
   let paletteOpen = false;

@@ -11,4 +11,8 @@ public interface EncuestaSatisfaccionRepository extends JpaRepository<EncuestaSa
     boolean existsByOrdenTrabajoIdAndClienteId(Long ordenTrabajoId, Long clienteId);
 
     List<EncuestaSatisfaccion> findByClienteIdOrderByCreadoEnDesc(Long clienteId);
+
+    List<EncuestaSatisfaccion> findAllByOrderByCreadoEnDesc();
+
+    void deleteByClienteId(Long clienteId);
 }

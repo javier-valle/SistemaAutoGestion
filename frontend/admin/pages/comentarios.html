@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+        <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#0f172a">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoGestion - Comentarios</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css?v=20261005">
+    <link rel="stylesheet" href="/css/animations.css?v=20261005">
+    <link rel="stylesheet" href="/css/redesign.css?v=20261005">
+    <link rel="stylesheet" href="/css/polish.css?v=20261005">
+    <link rel="stylesheet" href="/css/panels-premium.css?v=20261002">
+    <link rel="stylesheet" href="/css/refresh.css?v=20261029">
+    <script>
+        (function(){var t=localStorage.getItem('ag-theme')||'system';if(t==='system')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',t);})();
+    </script>
+    <style>
+        .cm-stars { letter-spacing:0.12em; font-size:1.02rem; color:#f59e0b; white-space:nowrap; }
+        .cm-stars .off { color:var(--ag-border, #cbd5e1); }
+        .cm-card { border:1px solid var(--ag-border, #e2e8f0); border-left:4px solid var(--ag-oil, #b45309); border-radius:10px; padding:0.95rem 1.1rem; margin-bottom:0.85rem; background:var(--ag-surface, #fff); }
+        .cm-card header { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; }
+        .cm-card header b { font-size:0.95rem; color:var(--ag-text-heading); }
+        .cm-meta { margin:0.35rem 0 0; font-size:0.78rem; color:var(--ag-text-muted); }
+        .cm-text { margin:0.6rem 0 0; padding:0.65rem 0.85rem; border-radius:8px; background:var(--ag-surface-alt, #f8fafc); font-size:0.87rem; line-height:1.5; color:var(--ag-text); }
+        .cm-text.sin { font-style:italic; color:var(--ag-text-muted); }
+        .cm-none { text-align:center; padding:2rem 1rem; color:var(--ag-text-muted); }
+    </style>
+</head>
+<body>
+    <div id="navbar"></div>
+    <div class="ag-page">
+        <div class="ag-head">
+            <div class="ag-head-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 15.5a2.5 2.5 0 0 1-2.5 2.5H8l-4.5 3v-14A2.5 2.5 0 0 1 6 4.5h12a2.5 2.5 0 0 1 2.5 2.5z" fill="currentColor" stroke="none" opacity=".28"/><path d="M20.5 15.5a2.5 2.5 0 0 1-2.5 2.5H8l-4.5 3v-14A2.5 2.5 0 0 1 6 4.5h12a2.5 2.5 0 0 1 2.5 2.5z"/><path d="M8.5 10.5h7M8.5 13.5h4"/></svg>
+            </div>
+            <div class="ag-head-titles">
+                <h1>Comentarios <span class="ag-badge ag-badge-primary">CLIENTES</span></h1>
+                <p>Lo que los clientes califican y escriben desde el portal, visita por visita</p>
+            </div>
+            <div class="ag-head-meta">
+                <button class="ag-btn ag-btn-outline" onclick="cargarComentarios()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>
+                    Actualizar
+                </button>
+            </div>
+        </div>
+        <div id="alertContainer"></div>
+
+        <div class="ag-grid ag-grid-3 ag-mb-3">
+            <div class="ag-indicator">
+                <div class="ag-indicator-icon ic-amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>
+                </div>
+                <div><div class="ag-indicator-value" id="cmPromedio">--</div><div class="ag-indicator-label">Promedio de estrellas</div></div>
+            </div>
+            <div class="ag-indicator">
+                <div class="ag-indicator-icon ic-blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 15.5a2.5 2.5 0 0 1-2.5 2.5H8l-4.5 3v-14A2.5 2.5 0 0 1 6 4.5h12a2.5 2.5 0 0 1 2.5 2.5z"/></svg>
+                </div>
+                <div><div class="ag-indicator-value" id="cmTotal">--</div><div class="ag-indicator-label">Encuestas recibidas</div></div>
+            </div>
+            <div class="ag-indicator">
+                <div class="ag-indicator-icon ic-green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V18h8v-3.3A7 7 0 0 0 12 2z"/></svg>
+                </div>
+                <div><div class="ag-indicator-value" id="cmConTexto">--</div><div class="ag-indicator-label">Con comentario escrito</div></div>
+            </div>
+        </div>
+
+        <div class="ag-section">
+            <div class="ag-section-header">
+                <h3>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="10" y2="18"/></svg>
+                    Opiniones de los clientes
+                </h3>
+                <div class="ag-d-flex ag-gap-3 ag-flex-wrap">
+                    <select class="ag-form-control" id="cmNota" onchange="pintarComentarios()" style="width:auto;">
+                        <option value="">Todas las puntuaciones</option>
+                        <option value="5">5 estrellas</option>
+                        <option value="4">4 estrellas</option>
+                        <option value="3">3 estrellas</option>
+                        <option value="2">2 estrellas</option>
+                        <option value="1">1 estrella</option>
+                    </select>
+                    <input class="ag-form-control" id="cmQ" placeholder="Cliente, placa o texto" oninput="pintarComentarios()" style="width:auto;min-width:220px;">
+                    <label class="ag-d-flex ag-gap-2" style="align-items:center;font-size:0.82rem;color:var(--ag-text-muted);">
+                        <input type="checkbox" id="cmSoloTexto" onchange="pintarComentarios()"> Solo con comentario
+                    </label>
+                </div>
+            </div>
+            <div id="cmLista" aria-live="polite">
+                <p class="cm-none">Cargando comentarios…</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="themeToggleWrap"></div>
+    <script src="/js/api.js?v=20261029"></script>
+    <script src="/js/animations.js?v=20261029"></script>
+    <script src="/js/ui-kit.js?v=20261029"></script>
+    <script src="/js/confirm-modal.js?v=20261005"></script>
+    <script>
+        if (!guardPage('comentarios')) throw new Error('Acceso denegado');
+        document.getElementById('navbar').innerHTML = renderNavbar('comentarios');
+        document.getElementById('themeToggleWrap').innerHTML = renderThemeToggle();
+        initTheme();
+
+        let comentarios = [];
+
+        function estrellas(n) {
+            const llenas = Math.max(0, Math.min(5, Number(n) || 0));
+            return '<span class="cm-stars" aria-label="' + llenas + ' de 5 estrellas">' +
+                '★'.repeat(llenas) + '<span class="off">' + '★'.repeat(5 - llenas) + '</span></span>';
+        }
+        function fecha(v) {
+            if (!v) return '—';
+            const d = new Date(v);
+            return isNaN(d) ? '—' : d.toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+        function esc(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function pintarComentarios() {
+            const nota = document.getElementById('cmNota').value;
+            const q = document.getElementById('cmQ').value.trim().toLowerCase();
+            const soloTexto = document.getElementById('cmSoloTexto').checked;
+            const lista = comentarios.filter(c => {
+                if (nota && String(c.puntuacion) !== nota) return false;
+                if (soloTexto && !(c.comentario && c.comentario.trim())) return false;
+                if (!q) return true;
+                return [c.cliente, c.documento, c.placa, c.vehiculo, c.comentario]
+                    .filter(Boolean).some(v => String(v).toLowerCase().includes(q));
+            });
+
+            const cont = document.getElementById('cmLista');
+            if (!lista.length) {
+                cont.innerHTML = '<p class="cm-none">' + (comentarios.length
+                    ? 'Ningún comentario coincide con el filtro.'
+                    : 'Todavía no hay encuestas. Aparecerán aquí cuando un cliente califique una visita entregada en el portal.') + '</p>';
+                return;
+            }
+            cont.innerHTML = lista.map(c => {
+                const texto = (c.comentario || '').trim();
+                return '<article class="cm-card">' +
+                    '<header><div><b>' + esc(c.cliente || 'Cliente') + '</b>' +
+                        (c.documento ? ' <span class="ag-badge ag-badge-secondary">' + esc(c.documento) + '</span>' : '') +
+                    '</div>' + estrellas(c.puntuacion) + '</header>' +
+                    '<p class="cm-meta">' +
+                        (c.ordenTrabajoId ? 'OT #' + c.ordenTrabajoId + ' · ' : '') +
+                        esc(c.placa || 'Sin placa') + (c.vehiculo ? ' · ' + esc(c.vehiculo) : '') +
+                        ' · ' + esc(fecha(c.creadoEn)) +
+                    '</p>' +
+                    (texto
+                        ? '<p class="cm-text">“' + esc(texto) + '”</p>'
+                        : '<p class="cm-text sin">Calificó sin dejar comentario.</p>') +
+                '</article>';
+            }).join('');
+        }
+
+        async function cargarComentarios() {
+            try {
+                comentarios = await apiFetch('/encuestas') || [];
+                const total = comentarios.length;
+                const suma = comentarios.reduce((a, c) => a + (Number(c.puntuacion) || 0), 0);
+                document.getElementById('cmPromedio').textContent = total ? (suma / total).toFixed(1) : '—';
+                document.getElementById('cmTotal').textContent = total;
+                document.getElementById('cmConTexto').textContent = comentarios.filter(c => c.comentario && c.comentario.trim()).length;
+                pintarComentarios();
+            } catch (e) {
+                document.getElementById('cmLista').innerHTML = '<p class="cm-none">No se pudieron cargar los comentarios: ' + esc(e.message) + '</p>';
+                toast('No se pudieron cargar los comentarios', 'danger');
+            }
+        }
+
+        cargarComentarios();
+    </script>
+</body>
+</html>
