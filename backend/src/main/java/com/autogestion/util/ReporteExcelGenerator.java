@@ -27,7 +27,22 @@ public final class ReporteExcelGenerator {
 
     private ReporteExcelGenerator() { }
 
-    public record Seccion(String titulo, String[] encabezados, List<Object[]> datos, String nota) { }
+    /** Tipo de columna: decide formato y si entra en la fila de totales. */
+    public enum Tipo { TEXTO, ENTERO, DINERO, DECIMAL, PROMEDIO }
+
+    public record Columna(String titulo, Tipo tipo, boolean totaliza) {
+        public static Columna texto(String titulo) { return new Columna(titulo, Tipo.TEXTO, false); }
+        public static Columna entero(String titulo, boolean totaliza) { return new Columna(titulo, Tipo.ENTERO, totaliza); }
+        public static Columna dinero(String titulo, boolean totaliza) { return new Columna(titulo, Tipo.DINERO, totaliza); }
+        public static Columna decimal(String titulo, boolean totaliza) { return new Columna(titulo, Tipo.DECIMAL, totaliza); }
+    }
+
+    public record Seccion(String titulo, List<Columna> columnas, List<Object[]> datos, String nota) {
+        public String[] encabezados() {
+            return columnas == null ? new String[0]
+                    : columnas.stream().map(Columna::titulo).toArray(String[]::new);
+        }
+    }
 
     public static byte[] generar(List<Seccion> secciones, String tituloGeneral,
                                   LocalDate desde, LocalDate hasta, String rol) {
@@ -139,7 +154,8 @@ public final class ReporteExcelGenerator {
         sh.setDisplayGridlines(false);
         sh.setDefaultRowHeightInPoints(18);
 
-        int nCols = Math.max(1, sec.encabezados() == null ? 4 : sec.encabezados().length);
+        List<Columna> columnas = sec.columnas() == null ? List.of() : sec.columnas();
+        int nCols = Math.max(1, columnas.size());
 
         Row banda = sh.createRow(0);
         banda.setHeightInPoints(30);
@@ -155,27 +171,18 @@ public final class ReporteExcelGenerator {
         csub.setCellValue(rangoTexto(desde, hasta) + "   |   Rol: " + (rol == null ? "ADMIN" : rol));
         csub.setCellStyle(st.subHoja);
 
-        if (sec.encabezados() != null && sec.encabezados().length > 0) {
+        if (!columnas.isEmpty()) {
             Row h = sh.createRow(2);
             h.setHeightInPoints(24);
-            for (int i = 0; i < sec.encabezados().length; i++) {
+            for (int i = 0; i < nCols; i++) {
                 Cell c = h.createCell(i);
-                c.setCellValue(sec.encabezados()[i]);
+                c.setCellValue(columnas.get(i).titulo());
                 c.setCellStyle(st.encabezado);
             }
         }
 
         List<Object[]> filas = sec.datos() == null ? List.of() : sec.datos();
-        boolean esResumen = esResumen(sec);
-        boolean[] numerica = new boolean[nCols];
-        boolean[] monetaria = new boolean[nCols];
-        boolean[] dinero = new boolean[nCols];
         BigDecimal[] totales = new BigDecimal[nCols];
-        if (sec.encabezados() != null) {
-            for (int i = 0; i < sec.encabezados().length && i < nCols; i++) {
-                dinero[i] = esDinero(sec.encabezados()[i]);
-            }
-        }
 
         int r = 3;
         for (int idx = 0; idx < filas.size(); idx++) {
@@ -184,20 +191,18 @@ public final class ReporteExcelGenerator {
             row.setHeightInPoints(19);
             for (int i = 0; i < nCols; i++) {
                 Object val = i < datos.length ? datos[i] : null;
+                Columna col = i < columnas.size() ? columnas.get(i) : null;
                 Cell cell = row.createCell(i);
-                boolean dineroFila = dinero[i] || (esResumen && datos.length > 0
-                        && esDinero(String.valueOf(datos[0])));
-                pintarValor(cell, val, i == 0, idx, st, dineroFila);
-                if (val instanceof Number n) {
-                    numerica[i] = true;
-                    if (val instanceof BigDecimal || dinero[i]) monetaria[i] = true;
-                    totales[i] = (totales[i] == null ? BigDecimal.ZERO : totales[i]).add(new BigDecimal(n.toString()));
+                pintarValor(cell, val, i == 0, idx, st, col == null ? Tipo.TEXTO : col.tipo());
+                if (col != null && col.totaliza() && val instanceof Number n) {
+                    totales[i] = (totales[i] == null ? BigDecimal.ZERO : totales[i])
+                            .add(new BigDecimal(n.toString()));
                 }
             }
         }
 
         int ultimaFilaDatos = r - 1;
-        boolean hayTotales = filas.size() > 1 && tieneNumericas(numerica) && !esResumen;
+        boolean hayTotales = filas.size() > 1 && columnas.stream().anyMatch(Columna::totaliza);
         if (hayTotales) {
             Row total = sh.createRow(r);
             total.setHeightInPoints(22);
@@ -206,9 +211,13 @@ public final class ReporteExcelGenerator {
                 c.setCellStyle(st.total);
                 if (i == 0) {
                     c.setCellValue("TOTAL");
-                } else if (numerica[i] && totales[i] != null) {
-                    c.setCellStyle(monetaria[i] ? st.totalNumero : st.totalEntero);
-                    escribirNumero(c, totales[i], monetaria[i] ? st.totalNumero : st.totalEntero);
+                    continue;
+                }
+                Columna col = i < columnas.size() ? columnas.get(i) : null;
+                if (col != null && col.totaliza() && totales[i] != null) {
+                    CellStyle estilo = estiloTotal(col.tipo(), st);
+                    c.setCellStyle(estilo);
+                    escribirNumero(c, totales[i], estilo);
                 }
             }
         }
@@ -231,10 +240,10 @@ public final class ReporteExcelGenerator {
             filaNota = nr;
         }
 
-        ajustarColumnas(sh, sec, filas, nCols, dinero);
-        if (sec.encabezados() != null && sec.encabezados().length > 0) {
+        ajustarColumnas(sh, sec, filas, nCols);
+        if (!columnas.isEmpty()) {
             int fin = Math.max(2, ultimaFilaDatos);
-            sh.setAutoFilter(new CellRangeAddress(2, fin, 0, Math.min(nCols, sec.encabezados().length) - 1));
+            sh.setAutoFilter(new CellRangeAddress(2, fin, 0, nCols - 1));
             sh.createFreezePane(0, 3);
             sh.setRepeatingRows(new CellRangeAddress(2, 2, 0, nCols - 1));
         }
@@ -252,16 +261,7 @@ public final class ReporteExcelGenerator {
         sh.setMargin(org.apache.poi.ss.usermodel.PageMargin.BOTTOM, 0.5);
     }
 
-    private static boolean esDinero(String encabezado) {
-        if (encabezado == null) return false;
-        String h = encabezado.toLowerCase(Locale.ROOT);
-        return h.contains("s/") || h.contains("monto") || h.contains("total") || h.contains("ingreso")
-                || h.contains("costo") || h.contains("precio") || h.contains("utilidad")
-                || h.contains("compra") || h.contains("gasto") || h.contains("inventario")
-                || h.contains("margen") || h.contains("consumo");
-    }
-
-    private static void pintarValor(Cell cell, Object val, boolean primera, int idx, Estilos st, boolean dinero) {
+    private static void pintarValor(Cell cell, Object val, boolean primera, int idx, Estilos st, Tipo tipo) {
         if (val == null || val.toString().isBlank()) {
             cell.setCellValue("-");
             cell.setCellStyle(primera ? st.celdaFuerte(idx) : st.celda(idx));
@@ -272,14 +272,20 @@ public final class ReporteExcelGenerator {
             return;
         }
         if (val instanceof Number n) {
-            if (dinero) {
-                escribirNumero(cell, new BigDecimal(n.toString()), st.moneda(idx));
-            } else if (val instanceof Double || val instanceof Float) {
-                cell.setCellValue(n.doubleValue());
-                cell.setCellStyle(st.decimal(idx));
-            } else {
-                cell.setCellValue(n.longValue());
-                cell.setCellStyle(st.entero(idx));
+            switch (tipo) {
+                case DINERO -> escribirNumero(cell, new BigDecimal(n.toString()), st.moneda(idx));
+                case ENTERO -> {
+                    cell.setCellValue(n.longValue());
+                    cell.setCellStyle(st.entero(idx));
+                }
+                case DECIMAL, PROMEDIO -> {
+                    cell.setCellValue(n.doubleValue());
+                    cell.setCellStyle(st.decimal(idx));
+                }
+                default -> {
+                    cell.setCellValue(val.toString());
+                    cell.setCellStyle(primera ? st.celdaFuerte(idx) : st.celda(idx));
+                }
             }
             return;
         }
@@ -302,27 +308,19 @@ public final class ReporteExcelGenerator {
         cell.setCellStyle(estilo);
     }
 
-    private static boolean tieneNumericas(boolean[] numerica) {
-        for (boolean b : numerica) if (b) return true;
-        return false;
+    private static CellStyle estiloTotal(Tipo tipo, Estilos st) {
+        return tipo == Tipo.DINERO ? st.totalNumero : st.totalEntero;
     }
 
-    private static boolean esResumen(Seccion sec) {
-        String t = sec.titulo() == null ? "" : sec.titulo().toLowerCase(Locale.ROOT);
-        if (t.contains("resumen") || t.contains("resultado")) return true;
-        if (sec.encabezados() == null || sec.encabezados().length == 0) return false;
-        String primera = sec.encabezados()[0].toLowerCase(Locale.ROOT);
-        return primera.equals("concepto") || primera.equals("indicador");
-    }
-
-    private static void ajustarColumnas(Sheet sh, Seccion sec, List<Object[]> filas, int nCols, boolean[] dinero) {
+    private static void ajustarColumnas(Sheet sh, Seccion sec, List<Object[]> filas, int nCols) {
+        List<Columna> columnas = sec.columnas() == null ? List.of() : sec.columnas();
         for (int i = 0; i < nCols; i++) {
-            int max = sec.encabezados() != null && i < sec.encabezados().length
-                    ? largo(sec.encabezados()[i]) : 8;
+            int max = i < columnas.size() ? largo(columnas.get(i).titulo()) : 8;
             for (Object[] fila : filas) {
                 if (i < fila.length) {
                     Object v = fila[i];
-                    String t = (dinero[i] && v instanceof Number n)
+                    boolean dinero = i < columnas.size() && columnas.get(i).tipo() == Tipo.DINERO;
+                    String t = (dinero && v instanceof Number n)
                             ? "S/ " + new BigDecimal(n.toString()).setScale(2, java.math.RoundingMode.HALF_UP)
                             : textoCelda(v);
                     max = Math.max(max, largo(t));
