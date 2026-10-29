@@ -52,9 +52,8 @@ public class ComprobanteService {
     private final SerieComprobanteRepository serieRepository;
     private final OrdenTrabajoRepository ordenTrabajoRepository;
     private final UsuarioRepository usuarioRepository;
-    private final PagoEntregaRepository pagoEntregaRepository;
-    private final RecepcionRepository recepcionRepository;
     private final EmpresaProperties empresa;
+    private final PagoEntregaService pagoEntregaService;
     private final ResolutorAdquirente adquirente;
     private final ConstructorDetalle detalle;
 
@@ -147,24 +146,12 @@ public class ComprobanteService {
         c = comprobanteRepository.save(c);
 
 
-        Optional<PagoEntrega> pagoOpt = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId());
-        PagoEntrega pago = pagoOpt.orElseGet(() -> PagoEntrega.builder().ordenTrabajo(ot).build());
-        pago.setMonto(c.getTotal());
-        pago.setFechaPago(pago.getFechaPago() != null ? pago.getFechaPago() : AppTime.ahora());
-        pago.setComprobante(c);
-        if (Boolean.TRUE.equals(req.getRegistrarEntrega()) && pago.getFechaEntrega() == null) {
-            pago.setFechaEntrega(AppTime.ahora());
-            recepcionRepository.save(estadoEntregada(ot));
+        pagoEntregaService.registrarPagoDeComprobante(ot, c.getTotal(), c);
+        if (Boolean.TRUE.equals(req.getRegistrarEntrega())) {
+            pagoEntregaService.asegurarEntrega(ot);
         }
-        pagoEntregaRepository.save(pago);
 
         return ComprobanteMapper.toDTO(comprobanteRepository.buscarCompleto(c.getId()).orElse(c));
-    }
-
-    private Recepcion estadoEntregada(OrdenTrabajo ot) {
-        Recepcion r = ot.getCotizacion().getDiagnostico().getRecepcion();
-        r.setEstado(EstadoRecepcion.ENTREGADA);
-        return r;
     }
 
     @Transactional
@@ -181,7 +168,9 @@ public class ComprobanteService {
         }
         c.setEstado(EstadoComprobante.ANULADO);
         c.setMotivoAnulacion(motivo.trim());
-        return ComprobanteMapper.toDTO(comprobanteRepository.save(c));
+        Comprobante anulado = comprobanteRepository.save(c);
+        pagoEntregaService.desvincularComprobante(anulado);
+        return ComprobanteMapper.toDTO(anulado);
     }
 
     @Transactional(readOnly = true)

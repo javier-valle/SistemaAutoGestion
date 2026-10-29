@@ -131,15 +131,25 @@ async function apiFetch(endpoint, options = {}) {
 
 
 
-async function apiFetchBlob(endpoint) {
+async function apiFetchBlob(endpoint, timeoutMs = 90000) {
     const token = getToken();
     const headers = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
+    const ctrl = new AbortController();
+    const reloj = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
-        const response = await fetch(`${API_BASE}${endpoint}`, { headers });
+        const response = await fetch(`${API_BASE}${endpoint}`, { headers, signal: ctrl.signal });
         await agFalla(response);
         return await response.blob();
-    } catch (error) { console.error('API Error:', error); throw error; }
+    } catch (error) {
+        if (error && error.name === 'AbortError') {
+            throw new Error('La generacion tardo demasiado. Prueba con un rango de fechas mas corto.');
+        }
+        console.error('API Error:', error);
+        throw error;
+    } finally {
+        clearTimeout(reloj);
+    }
 }
 
 
@@ -147,12 +157,16 @@ async function apiFetchBlob(endpoint) {
 
 async function apiDescargar(endpoint, nombre) {
     const blob = await apiFetchBlob(endpoint);
+    if (!blob || blob.size === 0) throw new Error('El servidor devolvio un archivo vacio');
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = url;
     a.download = nombre;
+    a.rel = 'noopener';
+    a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+    setTimeout(() => { try { a.remove(); URL.revokeObjectURL(url); } catch (_) {  } }, 1500);
     return blob;
 }
 

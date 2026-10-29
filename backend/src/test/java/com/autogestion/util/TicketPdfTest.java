@@ -75,13 +75,53 @@ class TicketPdfTest {
     @Test
     void incluyeLosDatosFiscalesDelComprobante() {
         String pdf = new String(TicketPdf.generar(comprobante()), StandardCharsets.ISO_8859_1);
-        assertTrue(pdf.contains("BOLETA DE VENTA ELECTRONICA"));
+        assertTrue(pdf.contains("BOLETA DE VENTA ELECTRÓNICA"));
         assertTrue(pdf.contains("B001-000001"));
-        assertTrue(pdf.contains("20123456786"), "RUC del emisor");
-        assertTrue(pdf.contains("DNI 45123698"), "Documento del adquirente");
+        assertTrue(pdf.contains("RUC: 20123456786"), "RUC del emisor");
+        assertTrue(pdf.contains("(DNI)"), "Tipo de documento del adquirente");
+        assertTrue(pdf.contains("(45123698)"), "Número de documento del adquirente");
         assertTrue(pdf.contains("S/ 80.00"), "Importe total");
-        assertTrue(pdf.contains("OCHENTA CON 00/100 SOLES"));
-        assertTrue(pdf.contains("2/10/2026 15:30"), "Fecha de emisión");
+        assertTrue(pdf.contains("SON: OCHENTA CON 00/100 SOLES"));
+        assertTrue(pdf.contains("02/10/2026 15:30"), "Fecha de emisión");
+    }
+
+    @Test
+    void usaLaEstructuraDeLaRepresentacionImpresa() {
+        String pdf = new String(TicketPdf.generar(comprobante()), StandardCharsets.ISO_8859_1);
+        assertTrue(pdf.contains("::: BOLETA DE VENTA ELECTRÓNICA - Impresión :::"));
+        assertTrue(pdf.contains("Valor"), "Cabecera de la columna de valor unitario");
+        assertTrue(pdf.contains("Unitario\\(*\\)"), "Los paréntesis viajan escapados en el PDF");
+        assertTrue(pdf.contains("Importe de"));
+        assertTrue(pdf.contains("Venta\\(**\\)"));
+        assertTrue(pdf.contains("Op. Gravada :"));
+        assertTrue(pdf.contains("Importe Total :"));
+        assertTrue(pdf.contains("Tipo de Moneda"));
+        assertTrue(pdf.contains("SOLES"));
+        assertTrue(pdf.contains("\\(*\\) Sin impuestos"), "Nota al pie de la tabla");
+        assertTrue(pdf.contains("representación impresa"), "Texto legal enmarcado");
+    }
+
+    @Test
+    void laFacturaCambiaElTituloYElDetalleLargoNoSeSale() {
+        var c = comprobante();
+        c.setTipo("FACTURA");
+        c.setDetalle(java.util.stream.IntStream.rangeClosed(1, 45).mapToObj(i ->
+                ComprobanteResponseDTO.DetalleDTO.builder()
+                        .item(i)
+                        .codigo("P" + i)
+                        .descripcion("Repuesto de freno delantero con pastillas y discos")
+                        .unidadMedida("NIU")
+                        .cantidad(BigDecimal.ONE)
+                        .valorUnitario(new BigDecimal("10.00"))
+                        .importeTotal(new BigDecimal("11.80"))
+                        .build()).toList());
+        String pdf = new String(TicketPdf.generar(c), StandardCharsets.ISO_8859_1);
+        assertTrue(pdf.contains("FACTURA ELECTRÓNICA"));
+        assertFalse(pdf.contains("BOLETA DE VENTA ELECTRÓNICA"));
+        assertTrue(pdf.contains("Continúa en la hoja siguiente"),
+                "45 líneas no caben en una hoja: debe paginar");
+        assertTrue(pdf.lines().filter(l -> l.contains("/Type /Page ")).count() >= 2,
+                "Debe repartir el detalle en varias páginas");
     }
 
     @Test
@@ -92,6 +132,23 @@ class TicketPdfTest {
         String pdf = new String(TicketPdf.generar(c), StandardCharsets.ISO_8859_1);
         assertTrue(pdf.contains("\\(general\\)"), "Los paréntesis deben venir escapados");
         assertTrue(pdf.contains("Ñuñoir"), "Las tildes/ñ viajan en WinAnsi");
+    }
+
+    @Test
+    void elQrSeDibujaComoVectoresDentroDelPdf() {
+        String pdf = new String(TicketPdf.generar(comprobante()), StandardCharsets.ISO_8859_1);
+        assertTrue(pdf.contains("Escanea el QR"), "El documento debe invitar a escanear el código");
+        int modulos = pdf.split(" re f", -1).length - 1;
+        assertTrue(modulos > 80,
+                "Un QR 33x33 deja decenas de módulos pintados; se encontraron " + modulos);
+    }
+
+    @Test
+    void sinContenidoDeQrNoSeDibujaNada() {
+        var c = comprobante();
+        c.setQrContenido(null);
+        String pdf = new String(TicketPdf.generar(c), StandardCharsets.ISO_8859_1);
+        assertFalse(pdf.contains("Escanea el QR"));
     }
 
     @Test

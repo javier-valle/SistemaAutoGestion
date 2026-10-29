@@ -8,7 +8,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 <br>
 
-<img src="https://img.shields.io/badge/version-2.14.2-orange?style=for-the-badge" />
+<img src="https://img.shields.io/badge/version-2.19.0-orange?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
 <img src="https://img.shields.io/badge/Spring_Boot-3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
 
@@ -20,6 +20,11 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 | Version | Fecha | Lo destacado |
 | :-- | :-- | :-- |
+| [2.19.0](#-2190---2026-10-29) | 2026-10-29 | 🌐 Portal con comprobantes, historial y encuesta reales · QR vectorial en el PDF · Exportación por tabla a Excel/PDF sin CSV crudo |
+| [2.18.0](#-2180---2026-10-29) | 2026-10-29 | 🛡️ Un solo camino de pago/entrega · una cotización vigente por diagnóstico (V10) · anular suelta el pago · refactor de cotización, rangos y Excel |
+| [2.17.0](#-2170---2026-10-29) | 2026-10-29 | 🧾 Boleta y factura en A4 con el formato de representación impresa: recuadro del emisor, tabla por columnas, importes y texto legal |
+| [2.16.0](#-2160---2026-10-29) | 2026-10-29 | 📊 Excel y PDF con portada, tablas paginadas y totales · CSV legible en Excel · Descarga sin bloqueos · Fix `no Session` en órdenes y aprobación de cotización |
+| [2.15.0](#-2150---2026-10-29) | 2026-10-29 | 🎨 Rediseño visual de los paneles: superficies planas, un solo acento, tablas y formularios más legibles, modo claro y oscuro |
 | [2.14.2](#-2142---2026-10-29) | 2026-10-29 | 🛡️ Auditoría final: stock y pagos serializados con bloqueo de fila · doble clic ya no duplica registros · base real sin descuadres |
 | [2.14.1](#-2141---2026-10-29) | 2026-10-29 | 📚 Documentación de `docs/` reescrita (guía, manual, permisos, políticas) · Notas de defensa retiradas · Caja autorizada a recepción, como ya mostraba el menú |
 | [2.14.0](#-2140---2026-10-29) | 2026-10-29 | 🧪 Avance 3: Guava y Commons Lang3 en el límite de consultas · Logback con archivo rotativo · Javadoc configurado · Migraciones compatibles con H2 · 98/98 pruebas en verde |
@@ -42,6 +47,64 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 | [1.0.0](#-100---2026-09-14) | 2026-09-14 | 🐛 Correccion de errores fundacionales (DTOs, pagos, cache) |
 
 <img src="./readme-assets/divider.svg" width="100%" height="6" alt="" />
+
+## 🔌 2.19.0 — 2026-10-29
+
+### Portal conectado, QR real y exportaciones prolijas
+- **Comprobantes en el portal (`comprobantes.html`):** el cliente ve sus boletas y facturas con fecha, placa, total y estado, y descarga el mismo PDF A4 que emite el taller. `GET /api/portal/comprobantes/{id}/pdf` comprueba que el documento sea del cliente del token: uno ajeno responde `404`, sin revelar si existe.
+- **Historial por vehículo (`historial.html`):** visitas ya entregadas agrupadas por placa, con fecha de ingreso y cierre, servicios de la cotización, total y folio del comprobante cuando se emitió. Solo se listan órdenes `FINALIZADA` del cliente autenticado.
+- **Encuesta ligada a la OT (`encuesta.html`):** el portal ofrece únicamente visitas entregadas sin encuesta, guarda una calificación de 1 a 5 con comentario y luego muestra la respuesta. Repetirla o calificar una orden abierta o ajena se rechaza con `409`/`404` explicados.
+- **QR real en el comprobante:** se agrega ZXing (`core`) y el código se dibuja como **módulos vectoriales** dentro del PDF, sin imagen incrustada: queda nítido a cualquier zoom y el archivo no engorda. Reemplaza al texto `QR: ...` que se imprimía antes; la hoja invita a escanearlo.
+- **Exportación por tabla (`POST /api/reportes/export/tabla`):** cada tabla de la pantalla se exporta con el diseño de los reportes: Excel de una hoja con banda de título, encabezado fijo, filtro, panel congelado, moneda con formato y área A4 horizontal; o PDF A4. El backend recibe el tipo de cada columna (texto, entero, dinero, decimal o promedio), así que los importes siguen siendo números y no texto.
+- **Se acabó el CSV crudo:** se retira la descarga `dato;dato;;` que armaba el navegador y los botones pasan a **Excel** y **PDF** por tabla; el consolidado sigue disponible para varias pestañas. Los avisos ahora dicen que la exportación trae todas las filas, no solo las cien visibles.
+- **Gráficos accesibles:** cada gráfico de barras lleva `title` y `desc` con la serie completa, además de su etiqueta, para que un lector de pantalla anuncie qué muestra.
+- **Verificación:** `mvn -B test` → **134 pruebas, 0 fallos** (15 nuevas: historial, comprobante ajeno, encuesta duplicada/ajena/abierta, Excel y PDF de una tabla, contrato del endpoint de exportación, su rol y el QR presente/ausente).
+
+## 🛡️ 2.18.0 — 2026-10-29
+
+### Integridad de pagos, cotizaciones y comprobantes
+- **Un solo camino de pago y entrega:** `PagoEntregaService` centraliza cobrar, entregar y vincular el pago al comprobante recién emitido. `POST /api/pagos` y `POST /api/entregas/{id}` se mantienen por compatibilidad, pero delegan en él; `OrdenTrabajoService` ya no guarda una copia propia. La entrega exige OT `FINALIZADA` (si no, `409` con mensaje claro) y fija su `fechaFin`, así que la orden y la recepción se cierran juntas.
+- **Una sola cotización vigente por diagnóstico:** `CotizacionService` responde `409` si el diagnóstico ya tiene una cotización `PENDIENTE`, `EN_DIAGNOSTICO` o `APROBADA`. La migración `V10__cotizacion_vigente_unica.sql` lo respalda en la base con la columna `diagnostico_vigente_id` y un índice único (funciona igual en PostgreSQL y en H2, que no admite índices parciales). La migración repara duplicados heredados: conserva la `APROBADA` más reciente y rechaza el resto. Convertir a OT bloquea la fila, así que dos aprobaciones simultáneas no crean dos órdenes.
+- **Anular ya no deja el pago apuntando al documento muerto:** `ComprobanteService.anular()` llama a `PagoEntregaService.desvincularComprobante()`; el pago conserva monto y fecha, pero deja de referenciar un comprobante sin validez.
+- **Refactor de cotización:** `crear()` y `crearCompleta()` comparten un único flujo; se retiran unas 150 líneas duplicadas y las variables sin uso (`cli`, `veh`).
+- **Un solo cálculo de rango:** `Rangos` resuelve fechas por defecto y valida `desde`/`hasta`; el controlador y la exportación usan esa misma regla, sin copias divergentes.
+- **Excel con columnas declaradas:** cada columna indica su tipo (dinero, entero, promedio) y si suma total, en lugar de adivinar por nombre. `Horas prom.` ya no se suma dentro de una columna de dinero.
+- **Limpieza:** `ResolutorAdquirente` sin ramas `if/else` vacías, import duplicado fuera de `ReporteService`, se elimina `frontend/js/reportes/export.js` (sin uso: `reportes.html` definía el suyo) y el Javadoc de `ComprobanteController.descargarPdf` dice A4, que es el tamaño real.
+- **Verificación:** `mvn -B test` → **119 pruebas, 0 fallos** (19 nuevas: pagos/entregas, anulación, cotización vigente y rangos). README alineado con el código contado: 26 entidades, 13 enums, 25 repositorios, 25 servicios, 20 controladores, 48 DTOs y 10 migraciones.
+
+## 🧾 2.17.0 — 2026-10-29
+
+### Representación impresa del comprobante en A4
+- **Formato de boleta/factura electrónica (`TicketPdf`):** el ticket de 80 mm pasa a una hoja A4 con la estructura habitual del comprobante: fecha de impresión y título `::: BOLETA DE VENTA ELECTRÓNICA - Impresión :::`, recuadro del emisor con su RUC y dirección, caja del número de serie, bloque de datos del adquirente (vencimiento, emisión, señor(es), documento, moneda, dirección y observación), tabla de detalle por columnas (`Cantidad`, `Unidad Medida`, `Descripción`, `Valor Unitario(*)`, `Descuento(*)`, `Importe de Venta(**)`, `ICBPER`), bloque de importes con `SON:` en letras, desglose de tributos en casillas y texto legal enmarcado con el pie de página.
+- **Alineación medida, no estimada:** se incorporan las tablas de ancho de Helvetica y Helvetica-Bold, así que las columnas numéricas quedan alineadas al dígito y ningún texto se sale del marco. Las descripciones largas se reparten en dos líneas y, si no alcanzan, se recortan con puntos suspensivos.
+- **Paginación:** el detalle se reparte solo en varias hojas cuando no cabe, con `Continúa en la hoja siguiente` y la numeración `1/2` en el pie.
+- **Estado del comprobante:** `PAGO REGISTRADO` en verde o `COMPROBANTE ANULADO` en rojo con el motivo, ambos dentro del marco y en el pie.
+- **Texto legal honesto:** el recuadro indica que es una representación de demostración del proyecto académico, que no fue firmada ni remitida a SUNAT y que carece de validez tributaria.
+- **Vista previa igual al PDF (`pago_entrega.html`):** la constancia en pantalla y la impresión del navegador usan la misma estructura, con `@page A4`, márgenes de 10 mm y helpers propios de fecha, moneda y unidad de medida. El modal pasa a 760 px para leer el documento completo.
+- **`SON:` sin duplicar:** el texto en letras de la base ya venía con el prefijo y se imprimía `SON: SON: ...`; ahora se detecta y se respeta.
+- **Limpieza:** se retira el CSS `.ag-ticket` de `polish.css`, que quedó sin uso al cambiar el formato.
+- **Verificación:** `mvn -B test` → **100 pruebas, 0 fallos** (2 nuevas: estructura del documento y paginación de 45 líneas). El PDF descargado desde el endpoint real mide A4 (595×842 pt), cabe en una hoja y no tiene texto fuera del marco; revisado también con la boleta, la factura y la anulada renderizadas.
+
+## 📊 2.16.0 — 2026-10-29
+
+### Exportaciones y flujo de órdenes
+- **Excel rediseñado (`ReporteExcelGenerator`):** portada con banda de marca y contenido del reporte, una hoja por sección, título y subtítulo con rango y rol, encabezado ámbar, filas alternas, bordes finos, moneda con formato `S/ #,##0.00`, conteos enteros, totales con línea superior, filtro y paneles congelados, anchos calculados y área de impresión A4 horizontal. Los nombres de hoja se limpian y se recortan a 31 caracteres.
+- **PDF rediseñado (`ReportePdfGenerator`):** A4 horizontal con portada de marca, tabla con columnas proporcionadas, ajuste de texto por celda, filas alternas, repetición de encabezado al pasar de página, notas al pie de cada sección y numeración `Página X de Y`. El texto se normaliza a WinAnsi para que acentos y símbolos no rompan la generación.
+- **CSV legible:** el export del backend incluye BOM UTF-8 (Excel ya no muestra `DÃ­a`); los CSV de las tablas salen con encabezados en lenguaje natural, números sin comillas y decimal con coma, y solo se entrecomilla lo que contiene `;`, comillas o saltos de línea.
+- **Descarga sin bloqueo:** el modal de exportación deshabilita el botón mientras genera, muestra `Generando...`, cierra siempre al terminar (también si hay error) y la petición tiene un límite de 90 s con mensaje claro. El enlace de descarga se elimina solo después de disparar el archivo.
+- **Fix `LazyInitializationException` en órdenes:** el controlador respondía con la entidad fuera de la transacción y Hibernate ya no podía leer `Vehiculo`/`Cliente` (`could not initialize proxy - no Session`). Ahora responde con el DTO que construye el servicio dentro de su transacción, tanto al crear la OT como al cambiar de estado.
+- **Flujo de cotización:** al aprobar, el wizard marca los tres pasos con ✓, deja de mostrar “falta el diagnóstico” y el aviso cambia a “Cotización aprobada — continúa en Órdenes de Trabajo”.
+- **Verificación:** `mvn -B test` → **98 pruebas, 0 fallos**. Flujo completo probado contra PostgreSQL y la interfaz: recepción → diagnóstico → cotización → aprobación → OT → cambio a EN_PROCESO, sin `no Session`; los registros de prueba se eliminaron y la base demo quedó intacta.
+
+## 🎨 2.15.0 — 2026-10-29
+
+### Rediseño visual de los paneles
+- **Sistema unificado (`css/refresh.css`):** superficies planas, un solo acento ámbar, bordes finos, radios de 12 px y jerarquía tipográfica más limpia. Se retiran las barras de gradiente, los brillos y las animaciones de entrada que hacían ruidosa la interfaz.
+- **Dashboard:** los KPI usan chips de icono neutros con color solo cuando aporta significado; las tarjetas dejan de competir con sombras y bordes de colores. La guía superior queda compacta y el flujo del taller se mantiene legible.
+- **Tablas y formularios:** cabeceras fijas, filas legibles al instante (se corrigió la opacidad que dejaban las animaciones al desactivarlas), inputs y botones de 8 px, y badges de tipo de producto neutros.
+- **Modo claro y oscuro:** ambos usan los mismos tokens; el marco (barra superior y menú) se mantiene oscuro para conservar el contraste y la identidad del taller.
+- **Alcance:** solo CSS y el enlace en las 13 páginas del panel. No cambian flujos, permisos, endpoints ni datos.
+- **Verificación:** las 13 páginas responden 200, sin elementos invisibles ni desbordes en el flujo de pago; capturas en `docs/evidencia/rediseno-dashboard.png` y `docs/evidencia/rediseno-dashboard-claro.png`.
 
 ## 🛡️ 2.14.2 — 2026-10-29
 

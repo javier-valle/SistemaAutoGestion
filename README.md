@@ -96,11 +96,11 @@ SistemaAutoGestion/
 │       │   ├── config/            (Security, JWT, CORS, DataInitializer, EmpresaProperties)
 │       │   ├── entity/            (26 entidades JPA y 13 enums de dominio)
 │       │   ├── repository/        (25 repositorios Spring Data)
-│       │   ├── service/           (20 servicios con lógica de negocio)
+│       │   ├── service/           (25 servicios con lógica de negocio)
 │       │   ├── controller/        (20 controladores REST)
-│       │   ├── dto/               (48 request/response DTOs)
-│       │   └── util/              (AppTime, DocumentoValidator, NumeroALetras, Rangos, TicketPdf)
-│       └── resources/db/migration/   (Flyway: V1 esquema inicial, V2 fiscal/inventario/gastos, ..., V5 portal del cliente)
+│       │   ├── dto/               (48 request/response DTOs)│       │   └── util/              (AppTime, DocumentoValidator, Like, NumeroALetras, Rangos,
+│       │                           ReporteExcelGenerator, ReportePdfGenerator, TicketPdf)│       └── resources/db/migration/   (Flyway: V1 esquema inicial, V2 fiscal/inventario/gastos,
+│                                     ..., V9 solicitud de cotización, V10 cotización vigente única)
 ├── database/
 │   └── Dockerfile                 (imagen Postgres 16; el esquema lo versiona Flyway)
 └── frontend/
@@ -348,7 +348,7 @@ stateDiagram-v2
 | 📦 **Inventario** | Stock con costo/margen, movimientos auditados (kardex), compra multilínea, mermas, proveedores y alertas |
 | 💳 **Pago/Entrega** | Órdenes finalizadas, wizard BOLETA/FACTURA con totales calculados en servidor, ticket/PDF (emisor, detalle, IGV, total en letras, QR), historial con filtros y anulación (solo ADMIN) |
 | 👥 **Equipo** | Personal con avatar, especialidad y carga de OT; crear, editar, desactivar y restablecer clave (solo ADMIN) |
-| 📊 **Reportes** | 7 pestañas por rol (resumen, clientes, ingresos, inventario, gastos, resultado, mecánicos) con gráficos, exportación CSV y fórmula visible |
+| 📊 **Reportes** | 7 pestañas por rol (resumen, clientes, ingresos, inventario, gastos, resultado, mecánicos) con gráficos accesibles, exportación por tabla a Excel/PDF, consolidado y fórmula visible |
 | 🎓 **Tutorial y docs** | Caso guiado de 8 pasos, glosario, tours por pantalla y carpeta `docs/` |
 
 ![](readme-assets/divider.svg)
@@ -363,7 +363,7 @@ El comprobante vive en la base de datos (`comprobante` + `serie_comprobante` con
 - IGV 18 %
 - Total en letras
 - Folio correlativo por serie (`B001-00000001`, `F001-00000001`)
-- Ticket con QR
+- Ticket con QR vectorial verificable
 - Anulación con motivo (solo ADMIN)
 
 > [!WARNING]
@@ -416,11 +416,11 @@ El portal es la **pantalla de inicio** (`/`). El cliente se identifica con su do
 |:--|:--|
 | `estado.html` | **Panel del cliente**: resumen de cuenta, órdenes, vehículos, pasos de la OT y edición de celular/correo (`/api/portal/me`, `PATCH /api/portal/me/contacto`) |
 | `cotizacion.html` | **Solicitud y cotizaciones reales**: el cliente pide una revisión (`/api/portal/solicitudes-cotizacion`), ve el estado y aprueba o rechaza la cotización con precios (`/api/portal/cotizaciones`) |
-| `comprobantes.html` | Boletas y facturas: indica que la descarga en línea aún no está habilitada |
-| `historial.html` | Historial: estado vacío explicativo (sin datos inventados) |
+| `comprobantes.html` | **Comprobantes reales**: boletas y facturas emitidas al cliente (`/api/portal/comprobantes`) con su PDF A4 descargable y QR verificable (`/api/portal/comprobantes/{id}/pdf`) |
+| `historial.html` | **Historial por vehículo**: visitas entregadas, servicios realizados, total y comprobante asociado (`/api/portal/historial`) |
 | `mantenimiento.html` | Próximos mantenimientos: sin recordatorios automáticos todavía |
 | `cita.html` | Cita: canales reales de atención (la reserva en línea no está conectada) |
-| `encuesta.html` | Encuesta: indica que aún no está conectada a la orden |
+| `encuesta.html` | **Encuesta ligada a la OT**: califica una visita entregada una sola vez (`/api/portal/encuestas/pendientes`, `POST /api/portal/encuestas`) y muestra las respuestas anteriores |
 | `ayuda.html` | **Guía de uso**: 9 pasos, preguntas frecuentes, errores y cierre de sesión seguro |
 | `soporte.html` | **Centro de soporte**: canales configurados, reporte por correo y privacidad |
 | `politicas.html` | Políticas y consentimientos |
@@ -429,7 +429,7 @@ Para **crear una cotización**, el cliente entra a `cotizacion.html`, elige su v
 
 Tablas del portal: `V5__portal_cliente.sql` (`portal_acceso_log`, `cita`, `encuesta_satisfaccion`, `consentimiento`, `solicitud_arco`, `notificacion`) y `V9__solicitud_cotizacion_cliente.sql` (`solicitud_cotizacion`).
 
-El login, el panel, la guía y el soporte comparten `css/portal-ui.css` y `js/portal-ui.js` (cabecera, menú de cuenta, cierre de sesión con confirmación y diseño adaptable). Las pantallas que aún no tienen endpoint muestran un estado vacío claro: **no se muestran montos, citas ni nombres de ejemplo**.
+El login, el panel, la guía y el soporte comparten `css/portal-ui.css` y `js/portal-ui.js` (cabecera, menú de cuenta, cierre de sesión con confirmación y diseño adaptable). `mantenimiento.html` y `cita.html` siguen siendo informativas porque no tienen endpoint propio; en ellas **no se muestran montos, citas ni nombres de ejemplo**.
 
 <details>
 <summary><b>🪪 Consulta de DNI/RUC: fuentes, límites y variables (ver detalle)</b></summary>
@@ -645,19 +645,24 @@ agFlashRow(tableRow)                                        
 | `GET` | `/api/inventario/alertas` | Alertas de stock bajo |
 | `POST` | `/api/proveedores` | Crear proveedor (RUC validado) |
 | `POST` | `/api/gastos` | Registrar gasto operativo (solo ADMIN) |
-| `POST` | `/api/pagos` | Registrar pago (flujo antiguo, se mantiene) |
+| `POST` | `/api/pagos` | Registrar pago (exige OT `FINALIZADA`; delega en el flujo único) |
 | `POST` | `/api/comprobantes` | Emitir boleta/factura (monto desde la cotización) |
 | `GET` | `/api/comprobantes` | Listar con filtros y paginación |
 | `GET` | `/api/comprobantes/previsualizar` | Totales y adquirente sin reservar número |
 | `POST` | `/api/comprobantes/{id}/anular` | Anular con motivo (solo ADMIN) |
+| `GET` | `/api/comprobantes/{id}/pdf` | PDF del comprobante (A4, representación impresa) |
 | `GET` | `/api/documentos/validar` | Validar DNI/RUC/CE/pasaporte en vivo |
-| `POST` | `/api/entregas/{id}` | Registrar entrega |
+| `POST` | `/api/entregas/{ordenTrabajoId}` | Compatibilidad: delega en el flujo único de pago/entrega |
+| `GET` | `/api/ordenes-trabajo/finalizadas-completa` | OT finalizadas con su saldo pendiente |
+| `POST` | `/api/pago-entrega/completa` | Pago (y entrega opcional) en una sola transacción |
 | `GET` | `/api/reportes/indicadores` | Indicadores del dashboard |
-| `GET` | `/api/reportes/clientes-por-dia` | Clientes atendidos por día (+ `/export?formato=csv`) |
+| `GET` | `/api/reportes/clientes-por-dia` | Clientes atendidos por día (+ `/export?formato=csv` histórico) |
 | `GET` | `/api/reportes/ingresos?agrupar=dia\|mes` | Ingresos cobrados (solo comprobantes EMITIDO) |
 | `GET` | `/api/reportes/resultado` | Utilidad = ventas sin IGV − consumos − gastos |
 | `GET` | `/api/reportes/inventario/kardex/{id}` | Kardex con saldos que cuadran |
 | `GET` | `/api/reportes/rendimiento-mecanicos` | OT, tiempos y consumo por mecánico |
+| `GET` | `/api/reportes/export/consolidado?formato=xlsx\|pdf` | Libro Excel o PDF con las pestañas seleccionadas |
+| `POST` | `/api/reportes/export/tabla?formato=xlsx\|pdf` | Exporta una tabla visible con su formato por columna (dinero, entero, decimal) |
 | `POST` | `/api/public/portal/identificar` | Portal: documento + placa → token CLIENTE |
 | `GET` | `/api/public/portal/documento/consultar?tipo=&numero=` | Consulta pública de nombres durante el registro (con límite por IP) |
 | `GET` | `/api/public/portal/info` | Datos públicos del taller para la guía/soporte (sin datos de clientes) |
@@ -667,6 +672,14 @@ agFlashRow(tableRow)                                        
 | `GET` | `/api/portal/cotizaciones/{id}` | Detalle de una cotización propia |
 | `POST` | `/api/portal/cotizaciones/{id}/aprobar` | El cliente aprueba su cotización PENDIENTE |
 | `POST` | `/api/portal/cotizaciones/{id}/rechazar` | El cliente rechaza su cotización PENDIENTE |
+| `GET` | `/api/portal/solicitudes-cotizacion` | Solicitudes de revisión del cliente |
+| `POST` | `/api/portal/solicitudes-cotizacion` | El cliente pide una revisión (sin precio) |
+| `GET` | `/api/portal/comprobantes` | Comprobantes emitidos a nombre del cliente |
+| `GET` | `/api/portal/comprobantes/{id}/pdf` | PDF del comprobante propio (ajeno → 404) |
+| `GET` | `/api/portal/historial` | Visitas entregadas con servicios y comprobante |
+| `GET` | `/api/portal/encuestas/pendientes` | OT entregadas sin encuesta |
+| `GET` | `/api/portal/encuestas` | Encuestas ya respondidas |
+| `POST` | `/api/portal/encuestas` | Califica una OT entregada (una sola vez) |
 | `GET` | `/api/documentos/consultar?tipo=&numero=` | Consulta de nombres para el personal autenticado (ADMIN/RECEPCIONISTA/MECANICO) |
 
 </details>
@@ -697,6 +710,8 @@ producto ─────────────────────┘   �
 Además existen tablas de proveedores, gastos operativos y las del [portal del cliente](#-portal-del-cliente). En total el backend mapea 26 entidades JPA.
 
 Las migraciones del portal son `V5__portal_cliente.sql` (`portal_acceso_log`, `cita`, `encuesta_satisfaccion`, `consentimiento`, `solicitud_arco`, `notificacion`) y `V9__solicitud_cotizacion_cliente.sql` (`solicitud_cotizacion`). `otp_codigo` ya no se crea: el acceso por código se retiró.
+
+`V10__cotizacion_vigente_unica.sql` agrega la columna `diagnostico_vigente_id` (se llena solo mientras la cotización está `PENDIENTE`, `EN_DIAGNOSTICO` o `APROBADA`) con un índice único encima: no puede existir otra cotización viva para el mismo diagnóstico. La base rechaza el duplicado aunque dos peticiones lleguen a la vez; el servicio además responde `409` con un mensaje legible.
 
 > [!TIP]
 > El pago genera un comprobante interno (serie `B001`/`F001` + correlativo + snapshot fiscal del adquirente) con constancia imprimible. Detalle en [Facturación](#-facturación-boletafactura) y en `CHANGELOG.md`.

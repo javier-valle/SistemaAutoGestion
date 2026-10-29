@@ -18,6 +18,15 @@ public class Cotizacion {
     @JoinColumn(name = "diagnostico_id", nullable = false)
     private Diagnostico diagnostico;
 
+    /**
+     * Igual a diagnostico_id solo mientras la cotización está viva (PENDIENTE,
+     * EN_DIAGNOSTICO o APROBADA). El índice único sobre esta columna impide dos
+     * cotizaciones vigentes para el mismo diagnóstico; al rechazar o convertir
+     * se limpia y el diagnóstico queda libre para renegociar.
+     */
+    @Column(name = "diagnostico_vigente_id")
+    private Long diagnosticoVigenteId;
+
     @Builder.Default
     @Column(nullable = false)
     private BigDecimal total = BigDecimal.ZERO;

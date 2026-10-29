@@ -61,7 +61,7 @@ public class ComprobanteController {
     }
 
     /**
-     * Constancia en PDF (ticket de 80 mm): la dibuja el backend, el navegador
+     * Representación impresa en PDF (A4): la dibuja el backend, el navegador
      * solo la descarga. Así la representación impresa no depende del JS cliente.
      */
     @GetMapping("/{id}/pdf")

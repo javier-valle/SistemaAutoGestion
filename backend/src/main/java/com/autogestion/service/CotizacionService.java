@@ -8,11 +8,12 @@ import com.autogestion.exception.BusinessException;
 import com.autogestion.repository.*;
 import com.autogestion.util.AppTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,225 +29,89 @@ public class CotizacionService {
     private final ProductoRepository productoRepository;
     private final RecepcionRepository recepcionRepository;
 
+    /** Estados que ocupan el diagnóstico: mientras exista uno, no se crea otra cotización. */
+    private static final List<EstadoCotizacion> VIGENTES = List.of(
+            EstadoCotizacion.PENDIENTE, EstadoCotizacion.EN_DIAGNOSTICO, EstadoCotizacion.APROBADA);
+
+    private record ServicioItem(Long servicioId, BigDecimal precio) { }
+
+    private record ProductoItem(Long productoId, Integer cantidadEstimada, BigDecimal precioUnitario) { }
+
     @Transactional
     public CotizacionResponseDTO crear(CotizacionRequest request) {
-        try {
-            Diagnostico diagnostico = diagnosticoRepository.findById(request.getDiagnosticoId())
-                    .orElseThrow(() -> new BusinessException("Diagnóstico no encontrado: " + request.getDiagnosticoId()));
-
-        
-        Cotizacion cotizacion = Cotizacion.builder()
-                .diagnostico(diagnostico)
-                .total(BigDecimal.ZERO)
-                .estado(EstadoCotizacion.PENDIENTE)
-                .fecha(AppTime.ahora())
-                .build();
-        cotizacion = cotizacionRepository.save(cotizacion);
-
-        BigDecimal total = BigDecimal.ZERO;
-
-
-        if (request.getServicios() != null) {
-            for (CotizacionRequest.ServicioCotizacion sc : request.getServicios()) {
-                Servicio servicio = servicioRepository.findById(sc.getServicioId())
-                        .orElseThrow(() -> new BusinessException("Servicio no encontrado: " + sc.getServicioId()));
-
-                BigDecimal precio = sc.getPrecio() != null
-                        ? sc.getPrecio()
-                        : servicio.getPrecioBase();
-
-                CotizacionServicio cs = CotizacionServicio.builder()
-                        .cotizacion(cotizacion)
-                        .servicio(servicio)
-                        .precio(precio)
-                        .build();
-                cotizacionServicioRepository.save(cs);
-                total = total.add(precio);
-            }
-        }
-
-        
-        if (request.getProductos() != null) {
-            for (CotizacionRequest.ProductoCotizacion pc : request.getProductos()) {
-                Producto producto = productoRepository.findById(pc.getProductoId())
-                        .orElseThrow(() -> new BusinessException("Producto no encontrado: " + pc.getProductoId()));
-
-                BigDecimal precioUnitario = pc.getPrecioUnitario() != null
-                        ? pc.getPrecioUnitario()
-                        : producto.getPrecioUnitario();
-
-                BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(pc.getCantidadEstimada()));
-
-                CotizacionProducto cp = CotizacionProducto.builder()
-                        .cotizacion(cotizacion)
-                        .producto(producto)
-                        .cantidadEstimada(pc.getCantidadEstimada())
-                        .precioUnitario(precioUnitario)
-                        .build();
-                cotizacionProductoRepository.save(cp);
-                total = total.add(subtotal);
-            }
-        }
-
-        
-        cotizacion.setTotal(total);
-        Cotizacion saved = cotizacionRepository.save(cotizacion);
-
-        
-        Diagnostico diag = saved.getDiagnostico();
-        Recepcion recep = diag.getRecepcion();
-        Vehiculo veh = recep.getVehiculo();
-        Cliente cli = veh.getCliente();
-
-        List<CotizacionServicio> cotizacionServicios = cotizacionServicioRepository.findByCotizacionId(saved.getId());
-        List<CotizacionProducto> cotizacionProductos = cotizacionProductoRepository.findByCotizacionId(saved.getId());
-
-        List<CotizacionResponseDTO.CotizacionServicioDTO> servicios = cotizacionServicios.stream()
-            .map(cs -> CotizacionResponseDTO.CotizacionServicioDTO.builder()
-                .servicioId(cs.getServicio().getId())
-                .servicioNombre(cs.getServicio().getNombre())
-                .precio(cs.getPrecio())
-                .build())
-            .collect(Collectors.toList());
-
-        List<CotizacionResponseDTO.CotizacionProductoDTO> productos = cotizacionProductos.stream()
-            .map(cp -> CotizacionResponseDTO.CotizacionProductoDTO.builder()
-                .productoId(cp.getProducto().getId())
-                .productoNombre(cp.getProducto().getNombre())
-                .cantidadEstimada(cp.getCantidadEstimada())
-                .precioUnitario(cp.getPrecioUnitario())
-                .build())
-            .collect(Collectors.toList());
-
-        return CotizacionResponseDTO.builder()
-            .id(saved.getId())
-            .diagnosticoId(saved.getDiagnostico().getId())
-            .diagnosticoDescripcion(saved.getDiagnostico().getDescripcion())
-            .mecanicoId(saved.getDiagnostico().getMecanico() != null ? saved.getDiagnostico().getMecanico().getId() : null)
-            .mecanicoNombre(saved.getDiagnostico().getMecanico() != null ? saved.getDiagnostico().getMecanico().getNombreCompleto() : null)
-            .recepcionId(String.valueOf(saved.getDiagnostico().getRecepcion().getId()))
-            .vehiculoPlaca(saved.getDiagnostico().getRecepcion().getVehiculo().getPlaca())
-            .clienteNombre(saved.getDiagnostico().getRecepcion().getVehiculo().getCliente().getNombre())
-            .total(saved.getTotal())
-            .estado(saved.getEstado().name())
-            .fecha(saved.getFecha())
-            .servicios(servicios)
-            .productos(productos)
-            .build();
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException("Error al crear cotización: " + e.getMessage(),
-                    org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return crearInterno(request.getDiagnosticoId(),
+                request.getServicios() == null ? List.of() : request.getServicios().stream()
+                        .map(s -> new ServicioItem(s.getServicioId(), s.getPrecio())).toList(),
+                request.getProductos() == null ? List.of() : request.getProductos().stream()
+                        .map(p -> new ProductoItem(p.getProductoId(), p.getCantidadEstimada(),
+                                p.getPrecioUnitario())).toList());
     }
 
     @Transactional
     public CotizacionResponseDTO crearCompleta(CotizacionCompletaRequest request) {
+        return crearInterno(request.getDiagnosticoId(),
+                request.getServicios() == null ? List.of() : request.getServicios().stream()
+                        .map(s -> new ServicioItem(s.getServicioId(), s.getPrecio())).toList(),
+                request.getProductos() == null ? List.of() : request.getProductos().stream()
+                        .map(p -> new ProductoItem(p.getProductoId(), p.getCantidadEstimada(),
+                                p.getPrecioUnitario())).toList());
+    }
+
+    /**
+     * Único camino de creación: valida la vigencia, guarda líneas y devuelve el
+     * DTO. Las dos variantes de request solo cambian la forma de entrar.
+     */
+    private CotizacionResponseDTO crearInterno(Long diagnosticoId, List<ServicioItem> servicios,
+                                               List<ProductoItem> productos) {
         try {
-            Diagnostico diagnostico = diagnosticoRepository.findById(request.getDiagnosticoId())
-                    .orElseThrow(() -> new BusinessException("Diagnóstico no encontrado: " + request.getDiagnosticoId()));
+            Diagnostico diagnostico = diagnosticoRepository.findById(diagnosticoId)
+                    .orElseThrow(() -> new BusinessException("Diagnóstico no encontrado: " + diagnosticoId));
 
-        Cotizacion cotizacion = Cotizacion.builder()
-                .diagnostico(diagnostico)
-                .total(BigDecimal.ZERO)
-                .estado(EstadoCotizacion.PENDIENTE)
-                .fecha(AppTime.ahora())
-                .build();
-        cotizacion = cotizacionRepository.save(cotizacion);
+            exigirCotizacionUnica(diagnostico.getId());
 
-        BigDecimal total = BigDecimal.ZERO;
+            Cotizacion cotizacion = cotizacionRepository.save(Cotizacion.builder()
+                    .diagnostico(diagnostico)
+                    .diagnosticoVigenteId(diagnostico.getId())
+                    .total(BigDecimal.ZERO)
+                    .estado(EstadoCotizacion.PENDIENTE)
+                    .fecha(AppTime.ahora())
+                    .build());
 
-        if (request.getServicios() != null) {
-            for (CotizacionCompletaRequest.ServicioItem item : request.getServicios()) {
-                Servicio servicio = servicioRepository.findById(item.getServicioId())
-                        .orElseThrow(() -> new BusinessException("Servicio no encontrado: " + item.getServicioId()));
-
-                BigDecimal precio = item.getPrecio() != null
-                        ? item.getPrecio()
-                        : servicio.getPrecioBase();
-
-                CotizacionServicio cs = CotizacionServicio.builder()
+            BigDecimal total = BigDecimal.ZERO;
+            for (ServicioItem item : servicios) {
+                Servicio servicio = servicioRepository.findById(item.servicioId())
+                        .orElseThrow(() -> new BusinessException("Servicio no encontrado: " + item.servicioId()));
+                BigDecimal precio = item.precio() != null ? item.precio() : servicio.getPrecioBase();
+                cotizacionServicioRepository.save(CotizacionServicio.builder()
                         .cotizacion(cotizacion)
                         .servicio(servicio)
                         .precio(precio)
-                        .build();
-                cotizacionServicioRepository.save(cs);
+                        .build());
                 total = total.add(precio);
             }
-        }
 
-        if (request.getProductos() != null) {
-            for (CotizacionCompletaRequest.ProductoItem item : request.getProductos()) {
-                Producto producto = productoRepository.findById(item.getProductoId())
-                        .orElseThrow(() -> new BusinessException("Producto no encontrado: " + item.getProductoId()));
-
-                BigDecimal precioUnitario = item.getPrecioUnitario() != null
-                        ? item.getPrecioUnitario()
-                        : producto.getPrecioUnitario();
-
-                BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(item.getCantidadEstimada()));
-
-                CotizacionProducto cp = CotizacionProducto.builder()
+            for (ProductoItem item : productos) {
+                Producto producto = productoRepository.findById(item.productoId())
+                        .orElseThrow(() -> new BusinessException("Producto no encontrado: " + item.productoId()));
+                BigDecimal precioUnitario = item.precioUnitario() != null
+                        ? item.precioUnitario() : producto.getPrecioUnitario();
+                BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(item.cantidadEstimada()));
+                cotizacionProductoRepository.save(CotizacionProducto.builder()
                         .cotizacion(cotizacion)
                         .producto(producto)
-                        .cantidadEstimada(item.getCantidadEstimada())
+                        .cantidadEstimada(item.cantidadEstimada())
                         .precioUnitario(precioUnitario)
-                        .build();
-                cotizacionProductoRepository.save(cp);
+                        .build());
                 total = total.add(subtotal);
             }
-        }
 
-        cotizacion.setTotal(total);
-        cotizacion = cotizacionRepository.save(cotizacion);
-        
-        
-        Diagnostico diag = cotizacion.getDiagnostico();
-        Recepcion recep = diag.getRecepcion();
-        Vehiculo veh = recep.getVehiculo();
-        Cliente cli = veh.getCliente();
-        
-        List<CotizacionServicio> cotizacionServicios = cotizacionServicioRepository.findByCotizacionId(cotizacion.getId());
-        List<CotizacionProducto> cotizacionProductos = cotizacionProductoRepository.findByCotizacionId(cotizacion.getId());
-        
-        List<CotizacionResponseDTO.CotizacionServicioDTO> servicios = cotizacionServicios.stream()
-            .map(cs -> CotizacionResponseDTO.CotizacionServicioDTO.builder()
-                .servicioId(cs.getServicio().getId())
-                .servicioNombre(cs.getServicio().getNombre())
-                .precio(cs.getPrecio())
-                .build())
-            .collect(Collectors.toList());
-        
-        List<CotizacionResponseDTO.CotizacionProductoDTO> productos = cotizacionProductos.stream()
-            .map(cp -> CotizacionResponseDTO.CotizacionProductoDTO.builder()
-                .productoId(cp.getProducto().getId())
-                .productoNombre(cp.getProducto().getNombre())
-                .cantidadEstimada(cp.getCantidadEstimada())
-                .precioUnitario(cp.getPrecioUnitario())
-                .build())
-            .collect(Collectors.toList());
-        
-        return CotizacionResponseDTO.builder()
-            .id(cotizacion.getId())
-            .diagnosticoId(cotizacion.getDiagnostico().getId())
-            .diagnosticoDescripcion(cotizacion.getDiagnostico().getDescripcion())
-            .mecanicoId(cotizacion.getDiagnostico().getMecanico() != null ? cotizacion.getDiagnostico().getMecanico().getId() : null)
-            .mecanicoNombre(cotizacion.getDiagnostico().getMecanico() != null ? cotizacion.getDiagnostico().getMecanico().getNombreCompleto() : null)
-            .recepcionId(String.valueOf(cotizacion.getDiagnostico().getRecepcion().getId()))
-            .vehiculoPlaca(cotizacion.getDiagnostico().getRecepcion().getVehiculo().getPlaca())
-            .clienteNombre(cotizacion.getDiagnostico().getRecepcion().getVehiculo().getCliente().getNombre())
-            .total(cotizacion.getTotal())
-            .estado(cotizacion.getEstado().name())
-            .fecha(cotizacion.getFecha())
-            .servicios(servicios)
-            .productos(productos)
-            .build();
+            cotizacion.setTotal(total);
+            return toResponseDTO(cotizacionRepository.save(cotizacion));
         } catch (BusinessException e) {
             throw e;
-        } catch (Exception e) {
-            throw new BusinessException("Error al crear cotización completa: " + e.getMessage(),
-                    org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException("Este diagnóstico ya tiene una cotización vigente.", "diagnosticoId",
+                    "Recházala o conviértela antes de crear otra.", HttpStatus.CONFLICT);
         }
     }
 
@@ -257,7 +122,7 @@ public class CotizacionService {
 
         if (cotizacion.getEstado() != EstadoCotizacion.PENDIENTE) {
             throw new BusinessException("Solo se pueden aprobar cotizaciones pendientes.", "estado",
-                    null, org.springframework.http.HttpStatus.CONFLICT);
+                    null, HttpStatus.CONFLICT);
         }
 
         cotizacion.setEstado(EstadoCotizacion.APROBADA);
@@ -280,10 +145,11 @@ public class CotizacionService {
 
         if (cotizacion.getEstado() != EstadoCotizacion.PENDIENTE) {
             throw new BusinessException("Solo se pueden rechazar cotizaciones pendientes.", "estado",
-                    null, org.springframework.http.HttpStatus.CONFLICT);
+                    null, HttpStatus.CONFLICT);
         }
 
         cotizacion.setEstado(EstadoCotizacion.RECHAZADA);
+        cotizacion.setDiagnosticoVigenteId(null);
         cotizacion = cotizacionRepository.save(cotizacion);
 
         Cotizacion saved = cotizacionRepository.findById(cotizacion.getId())
@@ -322,7 +188,7 @@ public class CotizacionService {
     @Transactional(readOnly = true)
     public CotizacionResponseDTO obtenerDeCliente(Long clienteId, Long id) {
         Cotizacion cotizacion = cotizacionRepository.findByIdAndClienteId(id, clienteId)
-                .orElseThrow(() -> new BusinessException("Cotización no encontrada", org.springframework.http.HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException("Cotización no encontrada", HttpStatus.NOT_FOUND));
         return toResponseDTO(cotizacion);
     }
 
@@ -330,14 +196,14 @@ public class CotizacionService {
     @Transactional
     public CotizacionResponseDTO aprobarDeCliente(Long clienteId, Long id) {
         Cotizacion cotizacion = cotizacionRepository.findByIdAndClienteId(id, clienteId)
-                .orElseThrow(() -> new BusinessException("Cotización no encontrada", org.springframework.http.HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException("Cotización no encontrada", HttpStatus.NOT_FOUND));
         return aprobar(cotizacion.getId());
     }
 
     @Transactional
     public CotizacionResponseDTO rechazarDeCliente(Long clienteId, Long id) {
         Cotizacion cotizacion = cotizacionRepository.findByIdAndClienteId(id, clienteId)
-                .orElseThrow(() -> new BusinessException("Cotización no encontrada", org.springframework.http.HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException("Cotización no encontrada", HttpStatus.NOT_FOUND));
         return rechazar(cotizacion.getId());
     }
 
@@ -362,6 +228,14 @@ public class CotizacionService {
                         .precioUnitario(cp.getPrecioUnitario())
                         .build())
                 .toList();
+    }
+
+    /** Un diagnóstico puede renegociarse, pero solo con una cotización viva a la vez. */
+    private void exigirCotizacionUnica(Long diagnosticoId) {
+        if (cotizacionRepository.existsByDiagnosticoIdAndEstadoIn(diagnosticoId, VIGENTES)) {
+            throw new BusinessException("Este diagnóstico ya tiene una cotización vigente.", "diagnosticoId",
+                    "Recházala o conviértela antes de crear otra.", HttpStatus.CONFLICT);
+        }
     }
 
     private CotizacionResponseDTO toResponseDTO(Cotizacion cotizacion) {
@@ -391,13 +265,13 @@ public class CotizacionService {
 
         return CotizacionResponseDTO.builder()
             .id(cotizacion.getId())
-            .diagnosticoId(cotizacion.getDiagnostico().getId())
-            .diagnosticoDescripcion(cotizacion.getDiagnostico().getDescripcion())
-            .mecanicoId(cotizacion.getDiagnostico().getMecanico() != null ? cotizacion.getDiagnostico().getMecanico().getId() : null)
-            .mecanicoNombre(cotizacion.getDiagnostico().getMecanico() != null ? cotizacion.getDiagnostico().getMecanico().getNombreCompleto() : null)
-            .recepcionId(String.valueOf(cotizacion.getDiagnostico().getRecepcion().getId()))
-            .vehiculoPlaca(cotizacion.getDiagnostico().getRecepcion().getVehiculo().getPlaca())
-            .clienteNombre(cotizacion.getDiagnostico().getRecepcion().getVehiculo().getCliente().getNombre())
+            .diagnosticoId(diag.getId())
+            .diagnosticoDescripcion(diag.getDescripcion())
+            .mecanicoId(diag.getMecanico() != null ? diag.getMecanico().getId() : null)
+            .mecanicoNombre(diag.getMecanico() != null ? diag.getMecanico().getNombreCompleto() : null)
+            .recepcionId(String.valueOf(recep.getId()))
+            .vehiculoPlaca(veh.getPlaca())
+            .clienteNombre(veh.getCliente().getNombre())
             .total(cotizacion.getTotal())
             .estado(cotizacion.getEstado().name())
             .fecha(cotizacion.getFecha())

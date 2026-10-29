@@ -2,6 +2,7 @@ package com.autogestion.util;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 
 /**
  * Rango por defecto de los listados, en un solo lugar.
@@ -42,6 +43,21 @@ public final class Rangos {
     /** Fin exclusivo de un rango que ya llega con hora; si no llega hasta, mañana. */
     public static LocalDateTime fin(LocalDateTime hasta) {
         return hasta != null ? hasta : AppTime.ahora().plusDays(1);
+    }
+
+    /**
+     * Rango de los reportes: mes actual si no llega nada; el extremo superior se
+     * devuelve exclusivo (día siguiente) para comparar con "&lt;".
+     */
+    public static LocalDate[] rangoReporte(LocalDate desde, LocalDate hasta) {
+        if (desde == null && hasta == null) {
+            YearMonth mes = YearMonth.now(AppTime.ZONA);
+            return new LocalDate[]{mes.atDay(1), mes.plusMonths(1).atDay(1)};
+        }
+        LocalDate h = hasta != null ? hasta.plusDays(1)
+                : YearMonth.now(AppTime.ZONA).plusMonths(1).atDay(1);
+        LocalDate d = desde != null ? desde : h.minusMonths(1).withDayOfMonth(1);
+        return new LocalDate[]{d, h};
     }
 
     /**

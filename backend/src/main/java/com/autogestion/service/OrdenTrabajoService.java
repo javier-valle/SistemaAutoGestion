@@ -47,6 +47,7 @@ public class OrdenTrabajoService {
         OrdenTrabajo ot = abrirOrden(cotizacion, mecanico);
 
         cotizacion.setEstado(EstadoCotizacion.CONVERTIDA);
+        cotizacion.setDiagnosticoVigenteId(null);
         cotizacionRepository.save(cotizacion);
 
         return ot;
@@ -65,6 +66,7 @@ public class OrdenTrabajoService {
         }
 
         if (request.getPagoEntrega() != null && request.getPagoEntrega().getMonto() != null) {
+            cerrarParaCobro(ot);
             registrarPagoInterno(ot, request.getPagoEntrega().getMonto());
             if (Boolean.TRUE.equals(request.getPagoEntrega().getRegistrarEntrega())) {
                 registrarEntregaInterno(ot);
@@ -72,6 +74,7 @@ public class OrdenTrabajoService {
         }
 
         cotizacion.setEstado(EstadoCotizacion.CONVERTIDA);
+        cotizacion.setDiagnosticoVigenteId(null);
         cotizacionRepository.save(cotizacion);
 
         return ordenTrabajoRepository.save(ot);
@@ -144,34 +147,18 @@ public class OrdenTrabajoService {
     }
 
     private void registrarPagoInterno(OrdenTrabajo ot, BigDecimal monto) {
-        PagoEntrega pago = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId()).orElse(null);
-        if (pago == null) {
-            pago = PagoEntrega.builder()
-                    .ordenTrabajo(ot)
-                    .build();
-        } else if (pago.getFechaPago() != null) {
-            throw new BusinessException("Esta OT ya tiene un pago registrado el " + pago.getFechaPago() + ".",
-                    "ordenTrabajoId", null, HttpStatus.CONFLICT);
-        }
-        pago.setMonto(monto);
-        pago.setFechaPago(AppTime.ahora());
-        pagoEntregaRepository.save(pago);
+        pagoEntregaService.registrarPago(ot, monto);
     }
 
     private void registrarEntregaInterno(OrdenTrabajo ot) {
-        PagoEntrega pago = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId()).orElse(null);
-        if (pago == null) {
-            pago = PagoEntrega.builder()
-                    .ordenTrabajo(ot)
-                    .monto(BigDecimal.ZERO)
-                    .build();
-        }
-        pago.setFechaEntrega(AppTime.ahora());
-        pagoEntregaRepository.save(pago);
+        pagoEntregaService.registrarEntrega(ot);
+    }
 
+    /** Una OT creada ya ejecutada se cierra antes de cobrarla, nunca al revés. */
+    private void cerrarParaCobro(OrdenTrabajo ot) {
+        if (ot.getEstado() == EstadoOT.FINALIZADA) return;
         ot.setEstado(EstadoOT.FINALIZADA);
-        ot.setFechaFin(AppTime.ahora());
-
+        if (ot.getFechaFin() == null) ot.setFechaFin(AppTime.ahora());
         Recepcion recepcion = ot.getCotizacion().getDiagnostico().getRecepcion();
         recepcion.setEstado(EstadoRecepcion.FINALIZADA);
         recepcionRepository.save(recepcion);

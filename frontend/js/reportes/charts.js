@@ -4,7 +4,10 @@ function svgBars(el, labels, values, color) {
     const max = Math.max(1, ...values);
     const n = values.length;
     const bw = n ? Math.min(46, (W - pad * 2) / n * 0.6) : 0;
-    let s = `<svg class="ag-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de barras con ${n} categorías">`;
+    const resumen = values.map((v, i) => `${labels[i]}: ${formatCurrency(v)}`).join('; ');
+    let s = `<svg class="ag-chart" viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="chart-title-${el}" aria-describedby="chart-desc-${el}">
+        <title id="chart-title-${el}">Gráfico de barras</title>
+        <desc id="chart-desc-${el}">${esc(resumen || 'Sin datos en el rango')}</desc>`;
     for (let g = 0; g <= 3; g++) {
         const y = pad + (H - pad * 2) * g / 3;
         s += `<line x1="${pad}" y1="${y}" x2="${W - 8}" y2="${y}" stroke="var(--ag-border)" stroke-width="1"/>`;

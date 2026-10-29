@@ -33,6 +33,31 @@ function portalGuard() {
     return true;
 }
 
+/** Descarga autenticada: el token va en la cabecera, nunca en la URL. */
+async function portalDescargar(endpoint, nombre) {
+    const token = portalToken();
+    const res = await fetch(PORTAL_API + endpoint, {
+        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+    });
+    if (res.status === 401 && token) { portalSalir(); throw new Error('Sesión vencida'); }
+    if (!res.ok) {
+        const err = new Error('No se pudo descargar el archivo (' + res.status + ')');
+        err.status = res.status;
+        throw err;
+    }
+    const blob = await res.blob();
+    if (!blob || !blob.size) throw new Error('El archivo llegó vacío');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { try { a.remove(); URL.revokeObjectURL(url); } catch (_) { } }, 1500);
+}
+
 async function portalFetch(endpoint, options = {}) {
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
     const token = portalToken();

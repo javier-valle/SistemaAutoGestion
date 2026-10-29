@@ -2,6 +2,8 @@ package com.autogestion.service;
 
 import com.autogestion.dto.PagoEntregaResponseDTO;
 import com.autogestion.dto.PagoRequest;
+import com.autogestion.entity.Comprobante;
+import com.autogestion.entity.EstadoOT;
 import com.autogestion.entity.EstadoRecepcion;
 import com.autogestion.entity.OrdenTrabajo;
 import com.autogestion.entity.PagoEntrega;
@@ -15,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -27,27 +28,43 @@ public class PagoEntregaService {
 
     @Transactional
     public PagoEntregaResponseDTO registrarPago(PagoRequest request) {
-        if (request.getMonto() == null || request.getMonto().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessException("El monto debe ser mayor a 0.", "monto", null);
-        }
-
         OrdenTrabajo ot = ordenTrabajoRepository.bloquearPorId(request.getOrdenTrabajoId())
                 .orElseThrow(() -> new BusinessException("Orden de trabajo no encontrada.", "ordenTrabajoId",
                         null, HttpStatus.NOT_FOUND));
+        return toResponseDTO(registrarPago(ot, request.getMonto()));
+    }
 
-        Optional<PagoEntrega> existente = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId());
-        if (existente.isPresent()) {
-            throw new BusinessException("Ya existe un registro de pago para esta OT.", "ordenTrabajoId",
-                    null, HttpStatus.CONFLICT);
+    /** Cobra la OT. Solo se cobra una orden FINALIZADA: no se cobra trabajo abierto. */
+    @Transactional
+    public PagoEntrega registrarPago(OrdenTrabajo ot, BigDecimal monto) {
+        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("El monto debe ser mayor a 0.", "monto", null);
         }
+        exigirFinalizada(ot);
 
-        PagoEntrega pago = PagoEntrega.builder()
-                .ordenTrabajo(ot)
-                .monto(request.getMonto())
-                .fechaPago(AppTime.ahora())
-                .build();
-        pago = pagoEntregaRepository.save(pago);
-        return toResponseDTO(pago);
+        PagoEntrega pago = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId())
+                .orElseGet(() -> PagoEntrega.builder().ordenTrabajo(ot).build());
+        if (pago.getFechaPago() != null) {
+            throw new BusinessException("Esta OT ya tiene un pago registrado el " + pago.getFechaPago() + ".",
+                    "ordenTrabajoId", null, HttpStatus.CONFLICT);
+        }
+        pago.setMonto(monto);
+        pago.setFechaPago(AppTime.ahora());
+        return pagoEntregaRepository.save(pago);
+    }
+
+    /** Pago ligado al comprobante recién emitido: el monto cobrado queda en el snapshot. */
+    @Transactional
+    public PagoEntrega registrarPagoDeComprobante(OrdenTrabajo ot, BigDecimal monto, Comprobante comprobante) {
+        exigirFinalizada(ot);
+        PagoEntrega pago = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId())
+                .orElseGet(() -> PagoEntrega.builder().ordenTrabajo(ot).build());
+        pago.setMonto(monto);
+        if (pago.getFechaPago() == null) {
+            pago.setFechaPago(AppTime.ahora());
+        }
+        pago.setComprobante(comprobante);
+        return pagoEntregaRepository.save(pago);
     }
 
     @Transactional
@@ -55,23 +72,70 @@ public class PagoEntregaService {
         OrdenTrabajo ot = ordenTrabajoRepository.bloquearPorId(ordenTrabajoId)
                 .orElseThrow(() -> new BusinessException("Orden de trabajo no encontrada.", "ordenTrabajoId",
                         null, HttpStatus.NOT_FOUND));
+        return toResponseDTO(registrarEntrega(ot));
+    }
+
+    /**
+     * Entrega física del vehículo: exige pago previo y cierra la OT (fechaFin)
+     * y la recepción en una sola pasada.
+     */
+    @Transactional
+    public PagoEntrega registrarEntrega(OrdenTrabajo ot) {
+        exigirFinalizada(ot);
 
         PagoEntrega pago = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId())
                 .orElseThrow(() -> new BusinessException("Debe registrar pago antes de entrega.", "ordenTrabajoId",
                         "Cobra la OT primero.", HttpStatus.CONFLICT));
-
+        if (pago.getFechaPago() == null) {
+            throw new BusinessException("Debe registrar pago antes de entrega.", "ordenTrabajoId",
+                    "Cobra la OT primero.", HttpStatus.CONFLICT);
+        }
         if (pago.getFechaEntrega() != null) {
             throw new BusinessException("Esta OT ya fue entregada.", "ordenTrabajoId",
                     null, HttpStatus.CONFLICT);
         }
 
         pago.setFechaEntrega(AppTime.ahora());
+        if (ot.getFechaFin() == null) {
+            ot.setFechaFin(pago.getFechaEntrega());
+        }
 
         var recepcion = ot.getCotizacion().getDiagnostico().getRecepcion();
         recepcion.setEstado(EstadoRecepcion.ENTREGADA);
 
-        pago = pagoEntregaRepository.save(pago);
-        return toResponseDTO(pago);
+        return pagoEntregaRepository.save(pago);
+    }
+
+    /**
+     * Al anular, el pago deja de apuntar al documento sin validez. El comprobante
+     * anulado sigue existiendo como historial y la OT puede emitir otro.
+     */
+    @Transactional
+    public void desvincularComprobante(Comprobante comprobante) {
+        if (comprobante == null || comprobante.getOrdenTrabajo() == null) return;
+        pagoEntregaRepository.findByOrdenTrabajoId(comprobante.getOrdenTrabajo().getId())
+                .filter(p -> p.getComprobante() != null
+                        && p.getComprobante().getId().equals(comprobante.getId()))
+                .ifPresent(p -> {
+                    p.setComprobante(null);
+                    pagoEntregaRepository.save(p);
+                });
+    }
+
+    /** Entrega idempotente para el flujo de emisión: no falla si ya estaba entregada. */
+    @Transactional
+    public PagoEntrega asegurarEntrega(OrdenTrabajo ot) {
+        PagoEntrega pago = pagoEntregaRepository.findByOrdenTrabajoId(ot.getId())
+                .orElseThrow(() -> new BusinessException("Debe registrar pago antes de entrega.", "ordenTrabajoId",
+                        "Cobra la OT primero.", HttpStatus.CONFLICT));
+        return pago.getFechaEntrega() != null ? pago : registrarEntrega(ot);
+    }
+
+    private void exigirFinalizada(OrdenTrabajo ot) {
+        if (ot.getEstado() != EstadoOT.FINALIZADA) {
+            throw new BusinessException("La OT #" + ot.getId() + " aún no está finalizada.", "ordenTrabajoId",
+                    "Finaliza la OT antes de cobrar o entregar.", HttpStatus.CONFLICT);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -98,4 +162,5 @@ public class PagoEntregaService {
                 .fechaEntrega(pago.getFechaEntrega())
                 .build();
     }
+
 }

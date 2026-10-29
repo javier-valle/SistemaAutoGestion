@@ -2,7 +2,12 @@ package com.autogestion.controller;
 
 import com.autogestion.config.EmpresaProperties;
 import com.autogestion.config.PortalTokenService;
+import com.autogestion.dto.PortalComprobanteDTO;
 import com.autogestion.dto.PortalContactoRequest;
+import com.autogestion.dto.PortalEncuestaDTO;
+import com.autogestion.dto.PortalEncuestaPendienteDTO;
+import com.autogestion.dto.PortalEncuestaRequest;
+import com.autogestion.dto.PortalHistorialDTO;
 import com.autogestion.dto.PortalIdentificarRequest;
 import com.autogestion.dto.PortalInfoDTO;
 import com.autogestion.dto.PortalRegistroRequest;
@@ -17,10 +22,13 @@ import com.autogestion.dto.SolicitudCotizacionResponseDTO;
 import com.autogestion.entity.Cliente;
 import com.autogestion.service.PortalService;
 import com.autogestion.service.SolicitudCotizacionService;
+import com.autogestion.util.TicketPdf;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -138,6 +146,47 @@ public class PortalController {
     @PostMapping("/api/portal/cotizaciones/{id}/rechazar")
     public CotizacionResponseDTO rechazarCotizacion(@PathVariable Long id, Authentication auth) {
         return cotizacionService.rechazarDeCliente(PortalTokenService.clienteIdDe(auth), id);
+    }
+
+    /** Comprobantes emitidos a nombre del cliente (solo los suyos). */
+    @GetMapping("/api/portal/comprobantes")
+    public List<PortalComprobanteDTO> comprobantes(Authentication auth) {
+        return portalService.comprobantes(PortalTokenService.clienteIdDe(auth));
+    }
+
+    /** Mismo PDF que usa el personal, pero solo si el comprobante es del cliente del token. */
+    @GetMapping("/api/portal/comprobantes/{id}/pdf")
+    public ResponseEntity<byte[]> descargarComprobante(@PathVariable Long id, Authentication auth) {
+        var c = portalService.comprobanteDeCliente(PortalTokenService.clienteIdDe(auth), id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + c.getTipo() + "-" + c.getFolio() + ".pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(TicketPdf.generar(c));
+    }
+
+    /** Historial de visitas cerradas, con los servicios realizados. */
+    @GetMapping("/api/portal/historial")
+    public List<PortalHistorialDTO> historial(Authentication auth) {
+        return portalService.historial(PortalTokenService.clienteIdDe(auth));
+    }
+
+    /** OTs entregadas que el cliente todavía puede calificar. */
+    @GetMapping("/api/portal/encuestas/pendientes")
+    public List<PortalEncuestaPendienteDTO> encuestasPendientes(Authentication auth) {
+        return portalService.encuestasPendientes(PortalTokenService.clienteIdDe(auth));
+    }
+
+    @GetMapping("/api/portal/encuestas")
+    public List<PortalEncuestaDTO> encuestas(Authentication auth) {
+        return portalService.encuestasRespondidas(PortalTokenService.clienteIdDe(auth));
+    }
+
+    @PostMapping("/api/portal/encuestas")
+    public ResponseEntity<PortalEncuestaDTO> responderEncuesta(
+            @Valid @RequestBody PortalEncuestaRequest req, Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(portalService.responderEncuesta(PortalTokenService.clienteIdDe(auth), req));
     }
 
     /** Solicitudes del cliente: avisan al taller que revise el vehículo y prepare la cotización. */
