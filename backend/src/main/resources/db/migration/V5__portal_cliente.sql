@@ -3,27 +3,13 @@ CREATE TABLE IF NOT EXISTS portal_acceso_log (
     cliente_id BIGINT REFERENCES cliente(id) ON DELETE SET NULL,
     documento_hash VARCHAR(64) NOT NULL,
     resultado VARCHAR(20) NOT NULL, -- IDENTIFICADO / FALLIDO / BLOQUEADO
-    tipo VARCHAR(10) NOT NULL DEFAULT 'A', -- A=placa, B=OTP
+    tipo VARCHAR(10) NOT NULL DEFAULT 'A', -- A=documento + placa
     ip_hash VARCHAR(64),
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_portal_log_cliente ON portal_acceso_log(cliente_id);
 CREATE INDEX IF NOT EXISTS idx_portal_log_doc ON portal_acceso_log(documento_hash);
 CREATE INDEX IF NOT EXISTS idx_portal_log_fecha ON portal_acceso_log(creado_en);
-
-CREATE TABLE IF NOT EXISTS otp_codigo (
-    id BIGSERIAL PRIMARY KEY,
-    documento VARCHAR(20) NOT NULL,
-    tipo_documento VARCHAR(10) NOT NULL,
-    codigo VARCHAR(10) NOT NULL,
-    hash_codigo VARCHAR(64) NOT NULL,
-    expira_en TIMESTAMP NOT NULL,
-    intentos INTEGER DEFAULT 0,
-    usado BOOLEAN DEFAULT FALSE,
-    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_otp_activo ON otp_codigo(documento, tipo_documento) WHERE (usado = FALSE);
-CREATE INDEX IF NOT EXISTS idx_otp_doc ON otp_codigo(documento, tipo_documento);
 
 CREATE TABLE IF NOT EXISTS cita (
     id BIGSERIAL PRIMARY KEY,
@@ -69,7 +55,7 @@ CREATE TABLE IF NOT EXISTS solicitud_arco (
     descripcion VARCHAR(1000) NOT NULL,
     verificacion VARCHAR(255),
     estado VARCHAR(20) DEFAULT 'RECIBIDA', -- RECIBIDA, EN_PROCESO, ATENDIDA, RECHAZADA
-    numero_solicitud VARCHAR(32) UNIQUE NOT NULL DEFAULT gen_random_uuid(),
+    numero_solicitud VARCHAR(32) UNIQUE NOT NULL, -- lo genera la entidad (UUID) para no depender de funciones de cada motor
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

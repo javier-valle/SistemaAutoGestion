@@ -16,6 +16,7 @@ CREATE INDEX IF NOT EXISTS idx_solicitud_cot_cliente ON solicitud_cotizacion(cli
 CREATE INDEX IF NOT EXISTS idx_solicitud_cot_estado ON solicitud_cotizacion(estado);
 CREATE INDEX IF NOT EXISTS idx_solicitud_cot_vehiculo ON solicitud_cotizacion(vehiculo_id);
 
--- Una sola solicitud pendiente por vehículo: evita que el cliente duplique el aviso.
-CREATE UNIQUE INDEX IF NOT EXISTS unq_solicitud_cot_pendiente
-    ON solicitud_cotizacion(vehiculo_id) WHERE estado = 'PENDIENTE';
+-- Una sola solicitud pendiente por vehículo: se valida en SolicitudCotizacionService
+-- (existsByVehiculoIdAndEstado) porque los índices parciales no existen en H2 y
+-- las pruebas de integración corren sobre H2 en modo PostgreSQL.
+CREATE INDEX IF NOT EXISTS idx_solicitud_cot_pendiente ON solicitud_cotizacion(vehiculo_id, estado);
