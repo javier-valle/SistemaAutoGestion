@@ -44,6 +44,9 @@ public class PortalService {
     private final CotizacionServicioRepository cotizacionServicioRepository;
     private final EncuestaSatisfaccionRepository encuestaSatisfaccionRepository;
     private final ComprobanteService comprobanteService;
+    private final CitaRepository citaRepository;
+    private final SolicitudCotizacionRepository solicitudCotizacionRepository;
+    private final RecepcionRepository recepcionRepository;
 
     /**
      * Modo A: documento + placa. La placa tiene que ser DEL cliente
@@ -250,6 +253,45 @@ public class PortalService {
     }
 
 
+
+    /**
+     * Baja de la cuenta del portal. Borra los datos personales y los registros
+     * que solo existen para el portal; lo que ya está emitido (comprobantes y
+     * órdenes) se conserva anonimizado por obligación contable.
+     */
+    @Transactional
+    public void eliminarCuenta(Long clienteId, com.autogestion.dto.PortalBajaRequest req) {
+        Cliente cliente = clienteActivo(clienteId);
+        if (req == null || !"ELIMINAR".equalsIgnoreCase(texto(req.getConfirmacion()))) {
+            throw new BusinessException("Escribe ELIMINAR para confirmar la baja de tu cuenta.",
+                    "confirmacion", "La confirmación evita borrar tu cuenta por error.", HttpStatus.BAD_REQUEST);
+        }
+
+        encuestaSatisfaccionRepository.deleteByClienteId(clienteId);
+        consentimientoRepository.deleteByClienteId(clienteId);
+        citaRepository.deleteByClienteId(clienteId);
+        solicitudCotizacionRepository.deleteByClienteId(clienteId);
+        portalAccesoLogRepository.deleteByClienteId(clienteId);
+
+        for (Vehiculo v : vehiculoRepository.findByClienteId(clienteId)) {
+            if (recepcionRepository.countByVehiculoId(v.getId()) == 0) {
+                vehiculoRepository.delete(v);
+            }
+        }
+
+        cliente.setNombre("Cliente dado de baja");
+        cliente.setDocumento(null);
+        cliente.setTelefono(null);
+        cliente.setEmail(null);
+        cliente.setDireccion(null);
+        cliente.setRazonSocial(null);
+        cliente.setGenero(null);
+        cliente.setDocumentoVerificado(false);
+        cliente.setFuenteVerificacion(null);
+        cliente.setActivo(false);
+        clienteRepository.save(cliente);
+        log.info("Baja de cuenta del portal solicitada por el cliente {}", clienteId);
+    }
 
     private Cliente clienteActivo(Long clienteId) {
         return clienteRepository.findById(clienteId)

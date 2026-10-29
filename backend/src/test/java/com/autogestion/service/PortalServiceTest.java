@@ -35,6 +35,9 @@ class PortalServiceTest {
     @Mock private CotizacionServicioRepository cotizacionServicioRepository;
     @Mock private EncuestaSatisfaccionRepository encuestaSatisfaccionRepository;
     @Mock private ComprobanteService comprobanteService;
+    @Mock private CitaRepository citaRepository;
+    @Mock private SolicitudCotizacionRepository solicitudCotizacionRepository;
+    @Mock private RecepcionRepository recepcionRepository;
 
     @InjectMocks
     private PortalService portalService;
@@ -168,6 +171,57 @@ class PortalServiceTest {
         when(encuestaSatisfaccionRepository.existsByOrdenTrabajoIdAndClienteId(6L, 1L)).thenReturn(true);
 
         assertTrue(portalService.encuestasPendientes(1L).isEmpty());
+    }
+
+    @Test
+    void bajaSinConfirmacionNoBorraNiAnonimiza() {
+        com.autogestion.dto.PortalBajaRequest req = new com.autogestion.dto.PortalBajaRequest();
+        req.setConfirmacion("quizas");
+
+        BusinessException e = assertThrows(BusinessException.class,
+                () -> portalService.eliminarCuenta(1L, req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, e.getEstado());
+        assertEquals("confirmacion", e.getCampo());
+        verify(encuestaSatisfaccionRepository, never()).deleteByClienteId(any());
+        verify(clienteRepository, never()).save(any());
+        assertEquals(Boolean.TRUE, cliente.getActivo());
+        assertEquals("Ana Torres", cliente.getNombre());
+    }
+
+    @Test
+    void bajaBorraDatosDelPortalYAnonimizaConservandoElHistorial() {
+        when(vehiculoRepository.findByClienteId(1L)).thenReturn(List.of(vehiculo));
+        when(recepcionRepository.countByVehiculoId(2L)).thenReturn(1L);
+        com.autogestion.dto.PortalBajaRequest req = new com.autogestion.dto.PortalBajaRequest();
+        req.setConfirmacion("eliminar");
+
+        portalService.eliminarCuenta(1L, req);
+
+        verify(encuestaSatisfaccionRepository).deleteByClienteId(1L);
+        verify(consentimientoRepository).deleteByClienteId(1L);
+        verify(citaRepository).deleteByClienteId(1L);
+        verify(solicitudCotizacionRepository).deleteByClienteId(1L);
+        verify(portalAccesoLogRepository).deleteByClienteId(1L);
+        verify(vehiculoRepository, never()).delete(any());
+        verify(clienteRepository).save(cliente);
+
+        assertEquals("Cliente dado de baja", cliente.getNombre());
+        assertNull(cliente.getDocumento());
+        assertFalse(cliente.getActivo());
+        assertEquals(1L, cliente.getId());
+    }
+
+    @Test
+    void bajaEliminaLosVehiculosSinVisitasRegistradas() {
+        when(vehiculoRepository.findByClienteId(1L)).thenReturn(List.of(vehiculo));
+        when(recepcionRepository.countByVehiculoId(2L)).thenReturn(0L);
+        com.autogestion.dto.PortalBajaRequest req = new com.autogestion.dto.PortalBajaRequest();
+        req.setConfirmacion("ELIMINAR");
+
+        portalService.eliminarCuenta(1L, req);
+
+        verify(vehiculoRepository).delete(vehiculo);
     }
 
     private static PortalEncuestaRequest solicitud(int puntuacion, String comentario) {

@@ -34,4 +34,6 @@ public interface RecepcionRepository extends JpaRepository<Recepcion, Long> {
 
     @Query("SELECT r.estado, COUNT(r) FROM Recepcion r GROUP BY r.estado")
     List<Object[]> porEstado();
+
+    long countByVehiculoId(Long vehiculoId);
 }

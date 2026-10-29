@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi cuenta — Portal del Cliente</title>
+<meta name="description" content="Revisa los datos de tu cuenta y, si lo decides, elimínala con todos tus datos personales.">
+<meta name="theme-color" content="#0a1120">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/css/styles.css?v=3">
+<link rel="stylesheet" href="/css/portal-ui.css?v=4">
+<script src="/js/portal-ui.js?v=5" defer></script>
+<style>
+  .ct-dato { display:flex; justify-content:space-between; gap:1rem; padding:0.55rem 0; border-bottom:1px solid rgba(148,163,184,0.18); font-size:0.9rem; }
+  .ct-dato:last-child { border-bottom:0; }
+  .ct-dato span:first-child { color:var(--pu-mut); }
+  .ct-riesgo { border:1px solid rgba(248,113,113,0.45); border-radius:12px; padding:1.1rem 1.25rem; background:rgba(248,113,113,0.06); margin-top:1rem; }
+  .ct-riesgo h2 { color:var(--pu-err); }
+  .ct-lista { margin:0.5rem 0 1rem; padding-left:1.1rem; font-size:0.86rem; color:var(--pu-mut); line-height:1.55; }
+  .pu-dialog input { width:100%; margin-top:0.5rem; }
+</style>
+</head>
+<body>
+<main class="ag-wrap" id="contenido">
+  <header class="ph-hero">
+    <h1>Mi cuenta</h1>
+    <p class="sub">Tus datos de contacto y el control de tu cuenta en el portal.</p>
+  </header>
+
+  <section class="pd-card" aria-labelledby="ct-datos">
+    <h2 id="ct-datos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c.7-3.6 3.7-5.5 7.5-5.5s6.8 1.9 7.5 5.5"/></svg>
+      Datos de la cuenta
+    </h2>
+    <div id="ctDatos"><p class="pu-empty">Cargando tus datos…</p></div>
+    <p class="card-sub" style="margin-top:0.8rem;">El nombre y el documento los administra el taller. Tu celular y correo los puedes cambiar en <a href="/portal/estado.html#perfil">Mis datos</a>.</p>
+  </section>
+
+  <section class="pd-card ct-riesgo" aria-labelledby="ct-baja">
+    <h2 id="ct-baja">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/></svg>
+      Eliminar mi cuenta
+    </h2>
+    <p class="card-sub">Si eliminas tu cuenta se borran tus datos personales y ya no podrás entrar al portal con tu documento y placa.</p>
+    <ul class="ct-lista">
+      <li>Se borran tus encuestas, citas, solicitudes y consentimientos.</li>
+      <li>Se eliminan tus vehículos que no tengan visitas registradas.</li>
+      <li>Los comprobantes y órdenes ya emitidos se conservan sin tus datos personales, por obligación contable.</li>
+    </ul>
+    <div class="pu-alert" id="ctAlerta" role="alert"></div>
+    <button type="button" class="pu-btn" id="ctEliminar" style="background:var(--pu-err);color:#2a0a10 !important;">Eliminar mi cuenta</button>
+  </section>
+</main>
+<script src="/js/portal-api.js?v=4"></script>
+<script>
+portalGuard();
+
+function aviso(texto, tipo) {
+  const box = document.getElementById('ctAlerta');
+  if (!texto) { box.className = 'pu-alert'; box.textContent = ''; return; }
+  box.className = 'pu-alert is-visible is-' + (tipo || 'error');
+  box.textContent = texto;
+}
+
+function dato(etiqueta, valor) {
+  return '<div class="ct-dato"><span>' + portalEsc(etiqueta) + '</span><b>' + portalEsc(valor || '—') + '</b></div>';
+}
+
+async function cargarCuenta() {
+  try {
+    const me = await portalFetch('/portal/me');
+    document.getElementById('ctDatos').innerHTML =
+      dato('Nombre', me.nombre) +
+      dato('Documento', (me.tipoDocumento || '') + ' ' + (me.documento || '')) +
+      dato('Correo', me.email) +
+      dato('Celular', me.telefono) +
+      dato('Vehículos', (me.vehiculos || []).map(v => v.placa).join(', '));
+  } catch (e) {
+    document.getElementById('ctDatos').innerHTML = '<p class="pu-empty">No pudimos cargar tus datos. Recarga la página.</p>';
+  }
+}
+
+function abrirConfirmacion() {
+  let dlg = document.getElementById('ctBajaDlg');
+  if (!dlg) {
+    dlg = document.createElement('dialog');
+    dlg.id = 'ctBajaDlg';
+    dlg.className = 'pu-dialog';
+    dlg.innerHTML =
+      '<div class="dlg-body">' +
+        '<h3>¿Eliminar tu cuenta?</h3>' +
+        '<p>Esta acción no se puede deshacer. Se borrarán tus datos personales, encuestas, citas y solicitudes del portal.</p>' +
+        '<label for="ctConfirmar">Escribe <b>ELIMINAR</b> para confirmar</label>' +
+        '<input id="ctConfirmar" type="text" autocomplete="off" placeholder="ELIMINAR">' +
+        '<p class="pu-alert" id="ctError" role="alert"></p>' +
+      '</div>' +
+      '<div class="dlg-foot">' +
+        '<button type="button" class="pu-btn pu-btn-secondary" id="ctCancelar">Mejor no</button>' +
+        '<button type="button" class="pu-btn" id="ctConfirmarBtn" disabled style="background:var(--pu-err);color:#2a0a10 !important;">Sí, eliminar mi cuenta</button>' +
+      '</div>';
+    document.body.appendChild(dlg);
+    const input = dlg.querySelector('#ctConfirmar');
+    const boton = dlg.querySelector('#ctConfirmarBtn');
+    input.addEventListener('input', () => {
+      boton.disabled = input.value.trim().toUpperCase() !== 'ELIMINAR';
+    });
+    dlg.querySelector('#ctCancelar').addEventListener('click', () => dlg.close());
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    boton.addEventListener('click', eliminarCuenta);
+  }
+  dlg.querySelector('#ctConfirmar').value = '';
+  dlg.querySelector('#ctConfirmarBtn').disabled = true;
+  dlg.querySelector('#ctError').textContent = '';
+  if (typeof dlg.showModal === 'function') dlg.showModal();
+}
+
+async function eliminarCuenta() {
+  const dlg = document.getElementById('ctBajaDlg');
+  const error = dlg.querySelector('#ctError');
+  const boton = dlg.querySelector('#ctConfirmarBtn');
+  boton.disabled = true;
+  boton.textContent = 'Eliminando…';
+  try {
+    await portalFetch('/portal/cuenta', {
+      method: 'DELETE',
+      body: JSON.stringify({ confirmacion: dlg.querySelector('#ctConfirmar').value.trim() })
+    });
+    dlg.close();
+    sessionStorage.removeItem('ag_portal_token');
+    sessionStorage.removeItem('ag_portal_nombre');
+    document.querySelector('main').innerHTML =
+      '<section class="pd-card" style="text-align:center;">' +
+        '<h1>Tu cuenta fue eliminada</h1>' +
+        '<p class="card-sub">Borramos tus datos personales del portal. Si vuelves al taller, puedes registrarte otra vez con tu documento y placa.</p>' +
+        '<p><a class="pu-btn" href="/">Volver al inicio</a></p>' +
+      '</section>';
+  } catch (e) {
+    boton.disabled = false;
+    boton.textContent = 'Sí, eliminar mi cuenta';
+    error.className = 'pu-alert is-visible is-error';
+    error.textContent = e.detalle || e.message || 'No se pudo eliminar la cuenta.';
+  }
+}
+
+document.getElementById('ctEliminar').addEventListener('click', abrirConfirmacion);
+cargarCuenta();
+</script>
+</body>
+</html>

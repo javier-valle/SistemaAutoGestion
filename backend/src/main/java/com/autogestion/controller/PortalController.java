@@ -126,6 +126,14 @@ public class PortalController {
         return portalService.actualizarContacto(PortalTokenService.clienteIdDe(auth), req);
     }
 
+    /** Baja de la cuenta: borra sus datos personales y cierra la sesión del portal. */
+    @DeleteMapping("/api/portal/cuenta")
+    public ResponseEntity<Void> eliminarCuenta(@Valid @RequestBody com.autogestion.dto.PortalBajaRequest req,
+                                              Authentication auth) {
+        portalService.eliminarCuenta(PortalTokenService.clienteIdDe(auth), req);
+        return ResponseEntity.noContent().build();
+    }
+
     /** Cotizaciones del cliente autenticado (solo lectura). */
     @GetMapping("/api/portal/cotizaciones")
     public List<CotizacionResponseDTO> cotizaciones(Authentication auth) {
