@@ -9,6 +9,7 @@
     ['/portal/cotizacion.html', 'Cotización', true],
     ['/portal/comprobantes.html', 'Comprobantes', true],
     ['/portal/cita.html', 'Citas', true],
+    ['/portal/encuesta.html', 'Encuesta', true],
     ['/portal/ayuda.html', 'Ayuda', false],
     ['/portal/soporte.html', 'Soporte', false]
   ];

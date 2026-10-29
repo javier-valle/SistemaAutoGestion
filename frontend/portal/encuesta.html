@@ -4,36 +4,178 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Encuesta de satisfacción — Portal del Cliente</title>
-<meta name="description" content="Cuéntanos cómo fue tu experiencia en el taller.">
+<meta name="description" content="Califica la atención de tus visitas entregadas.">
 <meta name="theme-color" content="#0a1120">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="/css/styles.css?v=3">
-<link rel="stylesheet" href="/css/portal-ui.css?v=3">
-<script src="/js/portal-ui.js?v=3" defer></script>
+<link rel="stylesheet" href="/css/portal-ui.css?v=4">
+<script src="/js/portal-ui.js?v=4" defer></script>
 </head>
 <body>
 <main class="ag-wrap" id="contenido">
   <header class="ph-hero">
     <h1>Encuesta de satisfacción</h1>
-    <p class="sub">Tu opinión ayuda a mejorar la atención del taller.</p>
+    <p class="sub">Una calificación por visita entregada. Tu opinión queda ligada a la orden real.</p>
   </header>
 
   <section class="pd-card" aria-labelledby="enc-titulo">
     <h2 id="enc-titulo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>
-      Encuesta en línea
+      Visitas por calificar
     </h2>
-    <p class="pu-empty-strong">La encuesta todavía no está habilitada en el portal.</p>
-    <p class="pu-empty">Se envía una sola vez por orden finalizada. Mientras no exista el formulario conectado, el taller puede tomarte la opinión al entregarte el vehículo.</p>
-    <p class="pu-note" style="margin-top:1rem;">No mostramos una encuesta que no se guarda en ningún lado: si ves un formulario aquí en el futuro, estará conectado a tu orden real.</p>
-    <div class="pu-btn-row" style="max-width:420px;margin-top:1rem;">
-      <a class="pu-btn pu-btn-secondary" href="/portal/estado.html">Volver al panel</a>
-      <a class="pu-btn" href="/portal/soporte.html">Comentar una atención</a>
+    <p class="card-sub">Solo aparecen las órdenes ya entregadas y sin encuesta. No se puede calificar dos veces la misma visita.</p>
+
+    <div class="pu-alert" id="encAlerta" role="alert"></div>
+    <div id="encPendientes" aria-live="polite">
+      <p class="pu-empty">Buscando visitas por calificar…</p>
+    </div>
+  </section>
+
+  <section class="pd-card" aria-labelledby="enc-hechas" style="margin-top:1rem;">
+    <h2 id="enc-hechas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+      Tus respuestas
+    </h2>
+    <div id="encRespondidas" aria-live="polite">
+      <p class="pu-empty">Todavía no has calificado ninguna visita.</p>
     </div>
   </section>
 </main>
-<script src="/js/portal-api.js?v=3"></script>
-<script>portalGuard();</script>
+<script src="/js/portal-api.js?v=4"></script>
+<script>
+portalGuard();
+
+function aviso(texto, tipo) {
+  const box = document.getElementById('encAlerta');
+  if (!texto) { box.className = 'pu-alert'; box.textContent = ''; return; }
+  box.className = 'pu-alert is-visible is-' + (tipo || 'error');
+  box.textContent = texto;
+}
+function dia(v) {
+  if (!v) return '—';
+  const d = new Date(v);
+  return isNaN(d) ? String(v) : d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+function estrellas(n) {
+  const llenas = Math.max(0, Math.min(5, Number(n) || 0));
+  return '★'.repeat(llenas) + '☆'.repeat(5 - llenas);
+}
+
+function formulario(v) {
+  const id = 'ot-' + v.ordenTrabajoId;
+  return '<article class="pu-survey" data-ot="' + v.ordenTrabajoId + '">' +
+    '<header><b class="pu-mono">' + portalEsc(v.placa || '—') + '</b>' +
+      '<span>' + portalEsc(v.vehiculo || 'Vehículo') + ' · entregado el ' + portalEsc(dia(v.fechaFin)) + '</span></header>' +
+    '<form class="pu-form" novalidate>' +
+      '<div class="pu-field">' +
+        '<label for="' + id + '-nota">¿Cómo calificas la atención?</label>' +
+        '<select id="' + id + '-nota" name="puntuacion" required>' +
+          '<option value="">Elige una puntuación</option>' +
+          '<option value="5">5 · Excelente</option>' +
+          '<option value="4">4 · Muy buena</option>' +
+          '<option value="3">3 · Buena</option>' +
+          '<option value="2">2 · Regular</option>' +
+          '<option value="1">1 · Mala</option>' +
+        '</select>' +
+        '<p class="pu-stars-preview" data-preview aria-hidden="true">☆☆☆☆☆</p>' +
+      '</div>' +
+      '<div class="pu-field">' +
+        '<label for="' + id + '-com">Comentario <span style="font-weight:400;color:var(--pu-mut);">(opcional)</span></label>' +
+        '<textarea id="' + id + '-com" name="comentario" rows="3" maxlength="1000" ' +
+          'placeholder="¿Qué podemos mejorar? Cuéntanos del trato, el tiempo o el trabajo."></textarea>' +
+      '</div>' +
+      '<p class="pu-field-hint" data-error role="alert" hidden></p>' +
+      '<div class="pu-btn-row" style="max-width:320px;">' +
+        '<button type="submit" class="pu-btn">Enviar encuesta</button>' +
+      '</div>' +
+    '</form>' +
+  '</article>';
+}
+
+function conectar(host) {
+  host.querySelectorAll('.pu-survey').forEach(card => {
+    const form = card.querySelector('form');
+    const select = form.querySelector('select[name="puntuacion"]');
+    const preview = form.querySelector('[data-preview]');
+    const error = form.querySelector('[data-error]');
+
+    select.addEventListener('change', () => {
+      preview.textContent = select.value ? estrellas(select.value) : '☆☆☆☆☆';
+    });
+
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      error.hidden = true;
+      if (!select.value) {
+        error.textContent = 'Elige una puntuación de 1 a 5 antes de enviar.';
+        error.hidden = false;
+        select.focus();
+        return;
+      }
+      const boton = form.querySelector('button[type="submit"]');
+      const original = boton.textContent;
+      boton.disabled = true;
+      boton.textContent = 'Enviando…';
+      try {
+        await portalFetch('/portal/encuestas', {
+          method: 'POST',
+          body: JSON.stringify({
+            ordenTrabajoId: Number(card.dataset.ot),
+            puntuacion: Number(select.value),
+            comentario: form.comentario.value.trim() || null
+          })
+        });
+        aviso('¡Gracias! Tu calificación quedó registrada.', 'ok');
+        await cargar();
+      } catch (e) {
+        error.textContent = e.detalle || e.message || 'No se pudo enviar la encuesta.';
+        error.hidden = false;
+        boton.disabled = false;
+        boton.textContent = original;
+      }
+    });
+  });
+}
+
+async function cargar() {
+  const pendientes = document.getElementById('encPendientes');
+  const respondidas = document.getElementById('encRespondidas');
+  try {
+    const [porCalificar, hechas] = await Promise.all([
+      portalFetch('/portal/encuestas/pendientes'),
+      portalFetch('/portal/encuestas')
+    ]);
+
+    if (!Array.isArray(porCalificar) || !porCalificar.length) {
+      pendientes.innerHTML = '<p class="pu-empty-strong">No tienes visitas pendientes de calificar.</p>' +
+        '<p class="pu-empty">Cuando se entregue tu vehículo podrás calificar esa visita desde aquí.</p>';
+    } else {
+      pendientes.innerHTML = porCalificar.map(formulario).join('');
+      conectar(pendientes);
+    }
+
+    if (!Array.isArray(hechas) || !hechas.length) {
+      respondidas.innerHTML = '<p class="pu-empty">Todavía no has calificado ninguna visita.</p>';
+    } else {
+      respondidas.innerHTML = '<ul class="pu-hist">' + hechas.map(e =>
+        '<li class="pu-hist-item">' +
+          '<div class="pu-hist-head">' +
+            '<b class="pu-mono">' + portalEsc(e.placa || '—') + '</b>' +
+            '<span class="pu-stars" aria-label="' + (e.puntuacion || 0) + ' de 5">' + estrellas(e.puntuacion) + '</span>' +
+            '<span class="pu-hist-total">' + portalEsc(dia(e.creadoEn)) + '</span>' +
+          '</div>' +
+          (e.comentario ? '<p class="pu-hist-meta">“' + portalEsc(e.comentario) + '”</p>' : '') +
+        '</li>'
+      ).join('') + '</ul>';
+    }
+  } catch (e) {
+    aviso('No pudimos cargar las encuestas: ' + e.message, 'error');
+    pendientes.innerHTML = '<p class="pu-empty">Vuelve a intentarlo en un momento.</p>';
+  }
+}
+
+cargar();
+</script>
 </body>
 </html>

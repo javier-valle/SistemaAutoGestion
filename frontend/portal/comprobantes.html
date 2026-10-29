@@ -4,36 +4,128 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mis comprobantes — Portal del Cliente</title>
-<meta name="description" content="Boletas y facturas de tus servicios.">
+<meta name="description" content="Boletas y facturas de tus servicios, con su PDF descargable.">
 <meta name="theme-color" content="#0a1120">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="/css/styles.css?v=3">
-<link rel="stylesheet" href="/css/portal-ui.css?v=3">
-<script src="/js/portal-ui.js?v=3" defer></script>
+<link rel="stylesheet" href="/css/portal-ui.css?v=4">
+<script src="/js/portal-ui.js?v=4" defer></script>
 </head>
 <body>
 <main class="ag-wrap" id="contenido">
   <header class="ph-hero">
     <h1>Mis comprobantes</h1>
-    <p class="sub">Boletas y facturas emitidas por el taller.</p>
+    <p class="sub">Boletas y facturas emitidas a tu nombre, listas para descargar.</p>
   </header>
 
   <section class="pd-card" aria-labelledby="comp-titulo">
     <h2 id="comp-titulo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>
-      Descarga en línea
+      Documentos emitidos
     </h2>
-    <p class="pu-empty-strong">La consulta de comprobantes en el portal aún no está habilitada.</p>
-    <p class="pu-empty">Tu boleta o factura se entrega al registrar el pago en el taller. Si necesitas una copia, acércate a recepción con tu placa o el número de comprobante.</p>
-    <p class="pu-note" style="margin-top:1rem;">No inventamos comprobantes ni montos: en esta pantalla solo aparecerán documentos emitidos a tu nombre cuando el taller habilite la descarga.</p>
+    <p class="card-sub">Solo ves los comprobantes de tu cuenta. Si pagaste en el taller y todavía no aparece, pídelo en recepción con tu placa.</p>
+
+    <div class="pu-alert" id="compAlerta" role="alert"></div>
+    <div id="compLista" aria-live="polite">
+      <p class="pu-empty">Cargando tus comprobantes…</p>
+    </div>
+  </section>
+
+  <section class="pd-card" aria-labelledby="comp-ayuda" style="margin-top:1rem;">
+    <h2 id="comp-ayuda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 1-1 1.7v.5"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>
+      ¿Cómo leo mi comprobante?
+    </h2>
+    <p class="pu-empty">El PDF es la representación impresa del documento: incluye el detalle de los servicios, el desglose del IGV y el total en letras. El QR permite verificar los datos del comprobante.</p>
+    <p class="pu-note">Este comprobante es de demostración académica: no fue firmado ni enviado a SUNAT, por lo que no reemplaza a una boleta electrónica oficial.</p>
     <div class="pu-btn-row" style="max-width:420px;margin-top:1rem;">
       <a class="pu-btn pu-btn-secondary" href="/portal/estado.html">Volver al panel</a>
-      <a class="pu-btn" href="/portal/soporte.html">Pedir una copia</a>
+      <a class="pu-btn" href="/portal/soporte.html">Pedir ayuda</a>
     </div>
   </section>
 </main>
-<script src="/js/portal-api.js?v=3"></script>
-<script>portalGuard();</script>
+<script src="/js/portal-api.js?v=4"></script>
+<script>
+portalGuard();
+
+const TIPOS = { BOLETA: 'Boleta', FACTURA: 'Factura' };
+const ESTADOS = { EMITIDO: ['Vigente', 'ag-badge-success'], ANULADO: ['Anulado', 'ag-badge-danger'] };
+
+function aviso(texto, tipo) {
+  const box = document.getElementById('compAlerta');
+  if (!texto) { box.className = 'pu-alert'; box.textContent = ''; return; }
+  box.className = 'pu-alert is-visible is-' + (tipo || 'error');
+  box.textContent = texto;
+}
+
+function dinero(v) {
+  return new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(Number(v || 0));
+}
+function fecha(v) {
+  if (!v) return '—';
+  const d = new Date(v);
+  return isNaN(d) ? String(v) : d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+async function descargar(id, tipo, folio, boton) {
+  const original = boton.textContent;
+  boton.disabled = true;
+  boton.textContent = 'Generando…';
+  try {
+    await portalDescargar('/portal/comprobantes/' + id + '/pdf', tipo + '-' + folio + '.pdf');
+    aviso('', null);
+  } catch (e) {
+    aviso('No pudimos generar el PDF: ' + e.message, 'error');
+  } finally {
+    boton.disabled = false;
+    boton.textContent = original;
+  }
+}
+
+function pintar(lista) {
+  const host = document.getElementById('compLista');
+  if (!Array.isArray(lista) || !lista.length) {
+    host.innerHTML = '<p class="pu-empty-strong">Todavía no tienes comprobantes.</p>' +
+      '<p class="pu-empty">Cuando se registre el pago de un servicio a tu nombre, la boleta o factura aparecerá aquí.</p>';
+    return;
+  }
+  const filas = lista.map(c => {
+    const est = ESTADOS[c.estado] || [c.estado, 'ag-badge-info'];
+    return '<tr>' +
+      '<td><b>' + portalEsc(TIPOS[c.tipo] || c.tipo) + '</b><br><span class="pu-mono">' + portalEsc(c.folio) + '</span></td>' +
+      '<td>' + portalEsc(fecha(c.fechaEmision)) + '</td>' +
+      '<td><span class="pu-mono">' + portalEsc(c.placa || '—') + '</span></td>' +
+      '<td class="col-num">' + portalEsc(dinero(c.total)) + '</td>' +
+      '<td><span class="ag-badge ' + est[1] + '">' + portalEsc(est[0]) + '</span></td>' +
+      '<td class="col-num">' +
+        '<button type="button" class="pu-btn pu-btn-secondary pu-btn-sm" data-id="' + c.id + '" data-tipo="' + portalEsc(c.tipo) + '" data-folio="' + portalEsc(c.folio) + '">PDF</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  host.innerHTML =
+    '<div class="ag-table-wrap"><table class="ag-table">' +
+      '<caption class="pu-sr">Comprobantes emitidos a tu nombre</caption>' +
+      '<thead><tr><th scope="col">Documento</th><th scope="col">Emisión</th><th scope="col">Placa</th>' +
+      '<th scope="col" class="col-num">Total</th><th scope="col">Estado</th><th scope="col" class="col-num">PDF</th></tr></thead>' +
+      '<tbody>' + filas + '</tbody>' +
+    '</table></div>';
+
+  host.querySelectorAll('button[data-id]').forEach(b => {
+    b.addEventListener('click', () => descargar(b.dataset.id, b.dataset.tipo, b.dataset.folio, b));
+  });
+}
+
+(async function cargar() {
+  try {
+    const lista = await portalFetch('/portal/comprobantes');
+    pintar(lista || []);
+  } catch (e) {
+    aviso('No pudimos cargar tus comprobantes: ' + e.message, 'error');
+    document.getElementById('compLista').innerHTML = '<p class="pu-empty">Vuelve a intentarlo en un momento.</p>';
+  }
+})();
+</script>
 </body>
 </html>

@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Historial del vehículo — Portal del Cliente</title>
-<meta name="description" content="Servicios anteriores de tus vehículos.">
+<title>Historial de mis vehículos — Portal del Cliente</title>
+<meta name="description" content="Servicios realizados en tus vehículos, con su detalle y comprobante.">
 <meta name="theme-color" content="#0a1120">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="/css/styles.css?v=3">
-<link rel="stylesheet" href="/css/portal-ui.css?v=3">
-<script src="/js/portal-ui.js?v=3" defer></script>
+<link rel="stylesheet" href="/css/portal-ui.css?v=4">
+<script src="/js/portal-ui.js?v=4" defer></script>
 </head>
 <body>
 <main class="ag-wrap" id="contenido">
   <header class="ph-hero">
     <h1>Historial</h1>
-    <p class="sub">Los servicios que el taller ha realizado en tus vehículos.</p>
+    <p class="sub">Cada visita cerrada del taller, agrupada por vehículo y con lo que se hizo.</p>
   </header>
 
   <section class="pd-card" aria-labelledby="hist-titulo">
@@ -24,16 +24,108 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 3 3 8 8 8"/><polyline points="12 7 12 12 15 14"/></svg>
       Servicios anteriores
     </h2>
-    <p class="pu-empty-strong">El historial detallado todavía no se muestra en el portal.</p>
-    <p class="pu-empty">En <a href="/portal/estado.html">tu panel</a> puedes ver las órdenes de trabajo recientes y su estado. Para el detalle de visitas anteriores, pídelo en recepción indicando tu placa.</p>
-    <p class="pu-note" style="margin-top:1rem;">Cuando el taller habilite esta sección, verás solo los servicios de los vehículos registrados a tu nombre.</p>
+    <p class="card-sub">Solo aparecen las órdenes ya entregadas de los vehículos registrados a tu nombre.</p>
+
+    <div id="histResumen" class="pu-grid" aria-live="polite"></div>
+    <div class="pu-alert" id="histAlerta" role="alert"></div>
+    <div id="histLista" aria-live="polite">
+      <p class="pu-empty">Cargando tu historial…</p>
+    </div>
+  </section>
+
+  <section class="pd-card" aria-labelledby="hist-ayuda" style="margin-top:1rem;">
+    <h2 id="hist-ayuda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 1-1 1.7v.5"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>
+      Para tu próximo mantenimiento
+    </h2>
+    <p class="pu-empty">Usa la última visita como referencia: el kilometraje y la fecha te ayudan a saber cuándo toca el siguiente servicio. Recepción puede revisar el desgaste y programarlo contigo.</p>
     <div class="pu-btn-row" style="max-width:420px;margin-top:1rem;">
       <a class="pu-btn pu-btn-secondary" href="/portal/estado.html">Volver al panel</a>
-      <a class="pu-btn" href="/portal/soporte.html">Solicitar historial</a>
+      <a class="pu-btn" href="/portal/soporte.html">Agendar revisión</a>
     </div>
   </section>
 </main>
-<script src="/js/portal-api.js?v=3"></script>
-<script>portalGuard();</script>
+<script src="/js/portal-api.js?v=4"></script>
+<script>
+portalGuard();
+
+function aviso(texto) {
+  const box = document.getElementById('histAlerta');
+  if (!texto) { box.className = 'pu-alert'; box.textContent = ''; return; }
+  box.className = 'pu-alert is-visible is-error';
+  box.textContent = texto;
+}
+function dinero(v) {
+  return new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(Number(v || 0));
+}
+function dia(v) {
+  if (!v) return '—';
+  const d = new Date(v);
+  return isNaN(d) ? String(v) : d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function visita(v) {
+  const servicios = (v.servicios || []).length
+    ? v.servicios.map(s => '<span class="pu-chip">' + portalEsc(s) + '</span>').join('')
+    : '<span class="pu-empty">Sin servicios registrados en la cotización.</span>';
+  const comprobante = v.comprobanteFolio
+    ? 'Comprobante <span class="pu-mono">' + portalEsc(v.comprobanteFolio) + '</span>'
+    : 'Sin comprobante emitido';
+  return '<li class="pu-hist-item">' +
+    '<div class="pu-hist-head">' +
+      '<b>' + portalEsc(dia(v.fechaIngreso)) + '</b>' +
+      '<span class="ag-badge ag-badge-success">Entregado</span>' +
+      '<span class="pu-hist-total">' + portalEsc(dinero(v.total)) + '</span>' +
+    '</div>' +
+    '<p class="pu-hist-meta">' + comprobante + ' · Cierre: ' + portalEsc(dia(v.fechaFin)) + '</p>' +
+    '<div class="pu-chips">' + servicios + '</div>' +
+  '</li>';
+}
+
+function pintar(lista) {
+  const host = document.getElementById('histLista');
+  const resumen = document.getElementById('histResumen');
+
+  if (!Array.isArray(lista) || !lista.length) {
+    resumen.innerHTML = '';
+    host.innerHTML = '<p class="pu-empty-strong">Todavía no hay visitas cerradas.</p>' +
+      '<p class="pu-empty">Cuando entreguemos tu vehículo después de un servicio, la visita aparecerá aquí con su detalle.</p>';
+    return;
+  }
+
+  const grupos = new Map();
+  lista.forEach(v => {
+    const clave = v.placa || 'Sin placa';
+    if (!grupos.has(clave)) grupos.set(clave, { placa: clave, vehiculo: v.vehiculo, visitas: [] });
+    grupos.get(clave).visitas.push(v);
+  });
+
+  const total = lista.reduce((a, v) => a + Number(v.total || 0), 0);
+  resumen.innerHTML =
+    '<div class="pu-kpi"><small>Vehículos atendidos</small><b>' + grupos.size + '</b></div>' +
+    '<div class="pu-kpi"><small>Visitas entregadas</small><b>' + lista.length + '</b></div>' +
+    '<div class="pu-kpi"><small>Total de tus servicios</small><b>' + portalEsc(dinero(total)) + '</b></div>';
+
+  host.innerHTML = Array.from(grupos.values()).map(g =>
+    '<article class="pu-hist-grupo">' +
+      '<header class="pu-hist-grupo-head">' +
+        '<div><b class="pu-mono">' + portalEsc(g.placa) + '</b><span>' + portalEsc(g.vehiculo || 'Vehículo') + '</span></div>' +
+        '<span class="pu-chip">' + g.visitas.length + (g.visitas.length === 1 ? ' visita' : ' visitas') + '</span>' +
+      '</header>' +
+      '<ul class="pu-hist">' + g.visitas.map(visita).join('') + '</ul>' +
+    '</article>'
+  ).join('');
+}
+
+(async function cargar() {
+  try {
+    const lista = await portalFetch('/portal/historial');
+    pintar(lista || []);
+  } catch (e) {
+    aviso('No pudimos cargar tu historial: ' + e.message);
+    document.getElementById('histLista').innerHTML = '<p class="pu-empty">Vuelve a intentarlo en un momento.</p>';
+  }
+})();
+</script>
 </body>
 </html>

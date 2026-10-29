@@ -1,6 +1,12 @@
 package com.autogestion.service;
 
+import com.autogestion.dto.ComprobanteResponseDTO;
+import com.autogestion.dto.PortalComprobanteDTO;
 import com.autogestion.dto.PortalContactoRequest;
+import com.autogestion.dto.PortalEncuestaDTO;
+import com.autogestion.dto.PortalEncuestaPendienteDTO;
+import com.autogestion.dto.PortalEncuestaRequest;
+import com.autogestion.dto.PortalHistorialDTO;
 import com.autogestion.dto.PortalRegistroRequest;
 import com.autogestion.dto.PortalResumenDTO;
 import com.autogestion.entity.*;
@@ -19,7 +25,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +40,10 @@ public class PortalService {
     private final OrdenTrabajoRepository ordenTrabajoRepository;
     private final ConsentimientoRepository consentimientoRepository;
     private final ConsultaDocumentoService consultaDocumentoService;
+    private final ComprobanteRepository comprobanteRepository;
+    private final CotizacionServicioRepository cotizacionServicioRepository;
+    private final EncuestaSatisfaccionRepository encuestaSatisfaccionRepository;
+    private final ComprobanteService comprobanteService;
 
     /**
      * Modo A: documento + placa. La placa tiene que ser DEL cliente
@@ -79,6 +91,138 @@ public class PortalService {
     }
 
     /**
+     * Comprobantes emitidos a nombre del cliente. El id sale del token y la
+     * consulta filtra por él: no hay forma de pedir el documento de otro.
+     */
+    @Transactional(readOnly = true)
+    public List<PortalComprobanteDTO> comprobantes(Long clienteId) {
+        clienteActivo(clienteId);
+        return comprobanteRepository.findByClienteIdOrderByFechaEmisionDesc(clienteId).stream()
+                .map(c -> new PortalComprobanteDTO(
+                        c.getId(),
+                        c.getOrdenTrabajo().getId(),
+                        c.getTipo().name(),
+                        c.folio(),
+                        c.getFechaEmision(),
+                        c.getTotal(),
+                        c.getEstado().name(),
+                        c.getOrdenTrabajo().getCotizacion().getDiagnostico()
+                                .getRecepcion().getVehiculo().getPlaca()))
+                .toList();
+    }
+
+    /** Un comprobante propio, listo para generar el PDF. Ajeno = 404, sin filtrar si existe. */
+    @Transactional(readOnly = true)
+    public ComprobanteResponseDTO comprobanteDeCliente(Long clienteId, Long comprobanteId) {
+        ComprobanteResponseDTO c = comprobanteService.obtener(comprobanteId);
+        if (c.getClienteId() == null || !c.getClienteId().equals(clienteId)) {
+            throw new BusinessException("Comprobante no encontrado.", HttpStatus.NOT_FOUND);
+        }
+        return c;
+    }
+
+    /** Visitas cerradas, con lo que se hizo y el comprobante si se emitió. */
+    @Transactional(readOnly = true)
+    public List<PortalHistorialDTO> historial(Long clienteId) {
+        clienteActivo(clienteId);
+        Map<Long, String> folios = comprobanteRepository.findByClienteIdOrderByFechaEmisionDesc(clienteId)
+                .stream()
+                .filter(c -> c.getEstado() == EstadoComprobante.EMITIDO)
+                .collect(Collectors.toMap(
+                        c -> c.getOrdenTrabajo().getId(),
+                        Comprobante::folio,
+                        (primero, segundo) -> primero));
+
+        return ordenTrabajoRepository.findByClienteId(clienteId).stream()
+                .filter(ot -> ot.getEstado() == EstadoOT.FINALIZADA)
+                .map(ot -> {
+                    Cotizacion cotizacion = ot.getCotizacion();
+                    Vehiculo vehiculo = cotizacion.getDiagnostico().getRecepcion().getVehiculo();
+                    List<String> servicios = cotizacionServicioRepository
+                            .findByCotizacionId(cotizacion.getId()).stream()
+                            .map(cs -> cs.getServicio().getNombre())
+                            .toList();
+                    return new PortalHistorialDTO(
+                            ot.getId(),
+                            vehiculo.getPlaca(),
+                            vehiculoTexto(vehiculo),
+                            cotizacion.getDiagnostico().getRecepcion().getFechaIngreso(),
+                            ot.getFechaFin(),
+                            ot.getEstado().name(),
+                            cotizacion.getTotal(),
+                            folios.get(ot.getId()),
+                            servicios);
+                })
+                .toList();
+    }
+
+    /** OT entregadas que todavía no tienen encuesta. */
+    @Transactional(readOnly = true)
+    public List<PortalEncuestaPendienteDTO> encuestasPendientes(Long clienteId) {
+        clienteActivo(clienteId);
+        return ordenTrabajoRepository.findByClienteId(clienteId).stream()
+                .filter(ot -> ot.getEstado() == EstadoOT.FINALIZADA)
+                .filter(ot -> !encuestaSatisfaccionRepository
+                        .existsByOrdenTrabajoIdAndClienteId(ot.getId(), clienteId))
+                .map(ot -> {
+                    Vehiculo v = ot.getCotizacion().getDiagnostico().getRecepcion().getVehiculo();
+                    return new PortalEncuestaPendienteDTO(ot.getId(), v.getPlaca(), vehiculoTexto(v), ot.getFechaFin());
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PortalEncuestaDTO> encuestasRespondidas(Long clienteId) {
+        clienteActivo(clienteId);
+        return encuestaSatisfaccionRepository.findByClienteIdOrderByCreadoEnDesc(clienteId).stream()
+                .map(e -> new PortalEncuestaDTO(
+                        e.getId(),
+                        e.getOrdenTrabajo() == null ? null : e.getOrdenTrabajo().getId(),
+                        e.getOrdenTrabajo() == null ? null : placaDe(e.getOrdenTrabajo()),
+                        e.getPuntuacion(),
+                        e.getComentario(),
+                        e.getCreadoEn()))
+                .toList();
+    }
+
+    /** Una calificación por OT entregada; el dueño sale del token, nunca del body. */
+    @Transactional
+    public PortalEncuestaDTO responderEncuesta(Long clienteId, PortalEncuestaRequest req) {
+        Cliente cliente = clienteActivo(clienteId);
+        OrdenTrabajo ot = ordenTrabajoRepository.findById(req.getOrdenTrabajoId())
+                .orElseThrow(() -> new BusinessException("No encontramos esa orden de trabajo.",
+                        HttpStatus.NOT_FOUND));
+
+        Long dueno = ot.getCotizacion().getDiagnostico().getRecepcion()
+                .getVehiculo().getCliente().getId();
+        if (!clienteId.equals(dueno)) {
+            throw new BusinessException("No encontramos esa orden de trabajo.", HttpStatus.NOT_FOUND);
+        }
+        if (ot.getEstado() != EstadoOT.FINALIZADA) {
+            throw new BusinessException("Solo puedes calificar una orden ya entregada.", HttpStatus.CONFLICT);
+        }
+        if (encuestaSatisfaccionRepository.existsByOrdenTrabajoIdAndClienteId(ot.getId(), clienteId)) {
+            throw new BusinessException("Ya calificaste esta visita. ¡Gracias!", HttpStatus.CONFLICT);
+        }
+
+        EncuestaSatisfaccion encuesta = encuestaSatisfaccionRepository.save(
+                EncuestaSatisfaccion.builder()
+                        .cliente(cliente)
+                        .ordenTrabajo(ot)
+                        .puntuacion(req.getPuntuacion())
+                        .comentario(texto(req.getComentario()))
+                        .build());
+
+        return new PortalEncuestaDTO(
+                encuesta.getId(),
+                ot.getId(),
+                placaDe(ot),
+                encuesta.getPuntuacion(),
+                encuesta.getComentario(),
+                encuesta.getCreadoEn());
+    }
+
+    /**
      * El cliente actualiza solo sus datos de contacto. El nombre y el documento
      * quedan fuera a propósito: identifican la cuenta y los administra el taller.
      */
@@ -106,6 +250,26 @@ public class PortalService {
     }
 
 
+
+    private Cliente clienteActivo(Long clienteId) {
+        return clienteRepository.findById(clienteId)
+                .filter(c -> Boolean.TRUE.equals(c.getActivo()))
+                .orElseThrow(() -> new BusinessException("Sesión no válida", HttpStatus.UNAUTHORIZED));
+    }
+
+    private static String placaDe(OrdenTrabajo ot) {
+        return ot.getCotizacion().getDiagnostico().getRecepcion().getVehiculo().getPlaca();
+    }
+
+    private static String vehiculoTexto(Vehiculo v) {
+        String marca = v.getMarca() == null ? "" : v.getMarca().trim();
+        String modelo = v.getModelo() == null ? "" : v.getModelo().trim();
+        String nombre = (marca + " " + modelo).trim();
+        if (v.getAnio() != null) {
+            nombre = (nombre + " " + v.getAnio()).trim();
+        }
+        return nombre.isBlank() ? v.getPlaca() : nombre;
+    }
 
     private Optional<Cliente> buscarCliente(String documento, String tipoDocumento) {
         TipoDocumento td = TipoDocumento.desde(tipoDocumento);
