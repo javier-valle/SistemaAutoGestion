@@ -94,11 +94,11 @@ SistemaAutoGestion/
 │       ├── java/com/autogestion/
 │       │   ├── AutogestionApplication.java
 │       │   ├── config/            (Security, JWT, CORS, DataInitializer, EmpresaProperties)
-│       │   ├── entity/            (30 entidades JPA)
-│       │   ├── repository/        (18 repositorios Spring Data)
-│       │   ├── service/           (14 servicios con lógica de negocio)
-│       │   ├── controller/        (17 controladores REST)
-│       │   ├── dto/               (37 request/response DTOs)
+│       │   ├── entity/            (26 entidades JPA y 13 enums de dominio)
+│       │   ├── repository/        (25 repositorios Spring Data)
+│       │   ├── service/           (20 servicios con lógica de negocio)
+│       │   ├── controller/        (20 controladores REST)
+│       │   ├── dto/               (48 request/response DTOs)
 │       │   └── util/              (AppTime, DocumentoValidator, NumeroALetras, Rangos, TicketPdf)
 │       └── resources/db/migration/   (Flyway: V1 esquema inicial, V2 fiscal/inventario/gastos, ..., V5 portal del cliente)
 ├── database/
@@ -151,6 +151,17 @@ SistemaAutoGestion/
 | 👥 **Roles** | `ADMIN` · `MECANICO` · `RECEPCIONISTA` · `ALMACENERO` |
 | 📦 **Despliegue** | Docker Compose (db + backend + frontend con Nginx) |
 
+### Librerías de apoyo a la codificación
+
+Las cuatro librerías del curso están integradas y cada una resuelve algo concreto del sistema, no está puesta de adorno:
+
+| Librería | Versión | Dónde se usa | Para qué |
+|:--|:--|:--|:--|
+| 🍬 **Google Guava** | 33.3.1-jre | `ConsultaDocumentoRateLimit` | `Cache` con `maximumSize(10_000)` y `expireAfterAccess`: las IPs inactivas se expulsan solas y la memoria no crece sin límite. `Preconditions` valida la ventana al construir el bean |
+| 🧰 **Apache Commons Lang3** | la administra el BOM de Spring Boot | `ConsultaDocumentoRateLimit` | `StringUtils.defaultIfBlank` normaliza la IP: nula, vacía o solo espacios caen en una única clave |
+| 📊 **Apache POI** (con PDFBox) | 5.3.0 (PDFBox 3.0.3) | `ReporteExcelGenerator`, `ReportePdfGenerator`, `TicketPdf` | Reportes `.xlsx` con estilos, filtro automático y totales; PDF de ticket y comprobante |
+| 📝 **Logback** | vía `spring-boot-starter-logging` | `logback-spring.xml` | Consola + archivo rotativo (`logs/autogestion.log`, 10 MB por archivo, 14 días) sin contraseñas, tokens ni documentos completos |
+
 ![](readme-assets/divider.svg)
 
 <a id="ejecutar"></a>
@@ -199,6 +210,34 @@ Se construyen e inician 3 contenedores. Flyway crea o actualiza el esquema al ar
 ```
 Login → Dashboard → Recepción → Cotización → Órdenes de Trabajo → Inventario → Pago/Entrega
 ```
+
+### Paso 5 — Compilar el backend: el JAR (opcional)
+
+El backend se empaqueta en **un solo archivo ejecutable** que ya lleva dentro todas sus dependencias (Spring, Hibernate, Flyway, Guava, POI, Logback). La imagen de Docker lo genera por dentro, así que **no lo necesitas para levantar el sistema**: sirve para entregar el producto, probarlo en otra PC o comprobar que compila.
+
+Con Docker (no hace falta instalar Maven):
+
+```bash
+cd backend
+docker run --rm -v "$(pwd):/app" -v "$HOME/.m2:/root/.m2" -w /app \
+  maven:3.9-eclipse-temurin-21 mvn -B package
+```
+
+En PowerShell (Windows):
+
+```powershell
+cd backend
+docker run --rm -v "${PWD}:/app" -v "$env:USERPROFILE\.m2:/root/.m2" -w /app maven:3.9-eclipse-temurin-21 mvn -B package
+```
+
+`package` corre las pruebas antes de empaquetar: si alguna falla, no hay JAR (con `-DskipTests` se salta ese paso). El archivo queda como `backend/target/autogestion-backend-1.0.0.jar` y se ejecuta con:
+
+```bash
+java -jar backend/target/autogestion-backend-1.0.0.jar
+```
+
+> [!NOTE]
+> `target/` está en `.gitignore`: el JAR es un producto de la compilación, no una fuente, y no se sube al repositorio. Borrarlo no rompe nada — se regenera con el comando de arriba.
 
 ![](readme-assets/divider.svg)
 
@@ -388,7 +427,7 @@ El portal es la **pantalla de inicio** (`/`). El cliente se identifica con su do
 
 Para **crear una cotización**, el cliente entra a `cotizacion.html`, elige su vehículo y describe el problema: se crea una **solicitud** en estado `PENDIENTE` (sin precios). El personal la ve en `/admin/` → **Cotización** → **Solicitudes del portal** y la marca como atendida o rechazada con una nota. Para el presupuesto real, el personal registra la **Recepción**, crea el **Diagnóstico** y agrega servicios/repuestos; recién entonces el cliente ve el detalle con montos para aprobarlo o rechazarlo. El cliente nunca fija precios ni crea cargos a su nombre.
 
-Tablas del portal: `V5__portal_cliente.sql` (`portal_acceso_log`, `otp_codigo`, `cita`, `encuesta_satisfaccion`, `consentimiento`, `solicitud_arco`, `notificacion`) y `V9__solicitud_cotizacion_cliente.sql` (`solicitud_cotizacion`).
+Tablas del portal: `V5__portal_cliente.sql` (`portal_acceso_log`, `cita`, `encuesta_satisfaccion`, `consentimiento`, `solicitud_arco`, `notificacion`) y `V9__solicitud_cotizacion_cliente.sql` (`solicitud_cotizacion`).
 
 El login, el panel, la guía y el soporte comparten `css/portal-ui.css` y `js/portal-ui.js` (cabecera, menú de cuenta, cierre de sesión con confirmación y diseño adaptable). Las pantallas que aún no tienen endpoint muestran un estado vacío claro: **no se muestran montos, citas ni nombres de ejemplo**.
 
@@ -655,7 +694,9 @@ producto ─────────────────────┘   �
                            pago_entrega ── comprobante / serie_comprobante
 ```
 
-Además existen tablas de proveedores, gastos operativos y las del [portal del cliente](#-portal-del-cliente). En total el backend mapea 30 entidades JPA.
+Además existen tablas de proveedores, gastos operativos y las del [portal del cliente](#-portal-del-cliente). En total el backend mapea 26 entidades JPA.
+
+Las migraciones del portal son `V5__portal_cliente.sql` (`portal_acceso_log`, `cita`, `encuesta_satisfaccion`, `consentimiento`, `solicitud_arco`, `notificacion`) y `V9__solicitud_cotizacion_cliente.sql` (`solicitud_cotizacion`). `otp_codigo` ya no se crea: el acceso por código se retiró.
 
 > [!TIP]
 > El pago genera un comprobante interno (serie `B001`/`F001` + correlativo + snapshot fiscal del adquirente) con constancia imprimible. Detalle en [Facturación](#-facturación-boletafactura) y en `CHANGELOG.md`.

@@ -8,7 +8,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 <br>
 
-<img src="https://img.shields.io/badge/version-2.13.0-orange?style=for-the-badge" />
+<img src="https://img.shields.io/badge/version-2.14.0-orange?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
 <img src="https://img.shields.io/badge/Spring_Boot-3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
 
@@ -20,6 +20,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 
 | Version | Fecha | Lo destacado |
 | :-- | :-- | :-- |
+| [2.14.0](#-2140---2026-10-29) | 2026-10-29 | 🧪 Avance 3: Guava y Commons Lang3 en el límite de consultas · Logback con archivo rotativo · Javadoc configurado · Migraciones compatibles con H2 · 98/98 pruebas en verde |
 | [2.13.0](#-2130---2026-10-28) | 2026-10-28 | 🆓 DNI y RUC sin token: dniperu.com y openruc.com consultados desde el backend · CORS para `file://` y cualquier puerto local · Fin del “La fuente de consulta no respondió” por bloqueo del navegador |
 | [2.12.0](#-2120---2026-10-28) | 2026-10-28 | 🧭 Login y panel del cliente rediseñados · Guía de uso y soporte · Fix real del autocompletado de DNI (sin datos de ejemplo) · Cotizaciones y solicitudes en el portal · Límite anti-enumeración · `fuente_verificacion` |
 | [2.11.0](#-2110---2026-10-26) | 2026-10-26 | 🪟 Cliente primero: `/` = portal del cliente, `/admin/` = acceso del personal · Token real de cliente (rol `CLIENTE`) · Nginx reenvía `/api` (sin CORS) · Límite de intentos en identificación/OTP · Fix: la placa debe pertenecer al cliente · OTP seguro |
@@ -39,6 +40,19 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 | [1.0.0](#-100---2026-09-14) | 2026-09-14 | 🐛 Correccion de errores fundacionales (DTOs, pagos, cache) |
 
 <img src="./readme-assets/divider.svg" width="100%" height="6" alt="" />
+
+## 🧪 2.14.0 — 2026-10-29
+
+### Librerías de apoyo, registro de logs y documentación
+- **Google Guava en el límite de consultas (`ConsultaDocumentoRateLimit`):** el `ConcurrentHashMap` con limpieza manual pasa a un `Cache` de Guava con `maximumSize(10_000)` y `expireAfterAccess(ventana)`: las IPs inactivas se expulsan solas, sin recorrer el mapa entero, y la memoria no crece sin control. `Preconditions.checkArgument` rechaza al arrancar una ventana mayor a 24 horas. Sigue siendo por instancia; para varias réplicas el contador debe ir a Redis o a Nginx.
+- **Apache Commons Lang3 en la misma clase:** `StringUtils.defaultIfBlank(ip, "desconocida")` agrupa IP nula y en blanco en una sola clave (antes `isBlank` dejaba pasar cadenas de espacios con otra identidad).
+- **Logback con archivo rotativo (`logback-spring.xml`):** mantiene la consola y añade `logs/autogestion.log` con rotación por tamaño y fecha — 10 MB por archivo, 14 días, 200 MB en total, comprimido en `.gz`. Los paquetes de Hibernate bajan a `WARN` para que el SQL no inunde el archivo. `logs/` quedó en `.gitignore`. El registro no incluye contraseñas, tokens ni documentos completos: los proveedores ya los enmascaran.
+- **Javadoc configurado (`maven-javadoc-plugin` 3.10.1):** `mvn javadoc:javadoc` genera el anexo de documentación técnica en `backend/target/site/apidocs/` con `doclint=none` y UTF-8, para que los acentos del código no rompan la generación.
+- **Pruebas del límite (TDD):** `ConsultaDocumentoRateLimitTest` — permite N consultas por ventana y bloquea la siguiente, cada IP lleva su propio contador, y `null` o espacios caen en la misma clave.
+- **Migraciones que también corren en H2:** V5 deja de crear `otp_codigo` (el acceso por código se retiró) y quita el `DEFAULT gen_random_uuid()` de `solicitud_arco` (lo genera la entidad); V9 cambia el índice único parcial por uno normal sobre `(vehiculo_id, estado)` y el duplicado se valida en `SolicitudCotizacionService`. Motivo: las pruebas de integración corren sobre H2, donde ni los índices parciales ni esa función existen. En PostgreSQL el comportamiento es el mismo.
+- **README alineado con el código:** tabla nueva con las cuatro librerías (versión, clase donde se usan y para qué sirve cada una) y un Paso 5 que explica cómo generar el JAR del backend con Docker, dónde queda y cómo ejecutarlo.
+- **Limpieza:** se eliminan la entidad `SolicitudArco` y su repositorio, sin uso desde que se retiró el flujo de eliminación de cuenta; nada los inyectaba salvo una aserción del test de contexto, que también se limpió. La tabla `solicitud_arco` se queda en la migración V5 porque ya está aplicada (borrarla cambiaría el checksum de Flyway).
+- **Verificación:** `mvn -B test` sobre Java 21 → **98 pruebas, 0 fallos**; `docker compose up --build` levanta el stack con las 9 migraciones validadas y el portal respondiendo en http://localhost:5501.
 
 ## 🆓 2.13.0 — 2026-10-28
 
@@ -77,7 +91,7 @@ Lo nuevo arriba, lo viejo abajo. Sin humo: lo pendiente se marca ⏳.
 - `mvn -Dtest=SolicitudCotizacionServiceTest test`: en verde (creación con vehículo propio, rechazo de placa ajena, bloqueo de duplicados y de una solicitud ya atendida).
 - Stack real con PostgreSQL + Flyway V1→V8: login, dashboard, edición de contacto con validación, logout, registro manual, cambio de documento que limpia nombres, guía/soporte, autocompletado del personal y límite 429.
 - Ruta de éxito con un mock local autorizado: el nombre falso enviado por el cliente fue ignorado y se guardó el nombre de la fuente con `fuente_verificacion`.
-- **Limitación del entorno:** la suite completa sigue con fallos previos ajenos a este cambio (V5 usa un índice parcial no soportado por H2; dos tests de PDF/Excel esperan salidas antiguas). Se verificaron los cambios en PostgreSQL, que es el motor de despliegue.
+- **Suite completa:** 98/98 en verde después de corregir los fallos de entorno (índices parciales en V5/V9 y `DEFAULT gen_random_uuid()`, no soportados por H2, y dos aserciones de PDF/Excel con formatos antiguos).
 - **Ruta real de SUNAT:** padrón oficial importado (18.491.506 filas, 2.4 GB); `GET /api/public/portal/documento/consultar?tipo=DNI&numero=...` devuelve `NO_ENCONTRADO` para un DNI sin RUC 10 y `OK` con `fuente=SUNAT · Padrón Reducido (RUC 10)` cuando existe. La prueba de éxito usó una fila sintética y se eliminó después.
 
 ### Pendiente ⏳
