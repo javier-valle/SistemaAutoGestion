@@ -20,8 +20,6 @@ class PortalContextTest {
     @Autowired
     private ConsentimientoRepository consentimientoRepo;
     @Autowired
-    private SolicitudArcoRepository arcoRepo;
-    @Autowired
     private NotificacionRepository notificacionRepo;
 
     @Test
@@ -30,7 +28,6 @@ class PortalContextTest {
         assertNotNull(citaRepo);
         assertNotNull(encuestaRepo);
         assertNotNull(consentimientoRepo);
-        assertNotNull(arcoRepo);
         assertNotNull(notificacionRepo);
     }
 }
