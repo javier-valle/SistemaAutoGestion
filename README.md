@@ -131,7 +131,7 @@ SistemaAutoGestion/
         ├── portal-api.js          (cliente API del CLIENTE, token en sessionStorage)
         ├── animations.js · ui-kit.js · confirm-modal.js
         ├── vehiculos.js · vehiculo3d.js · vendor/three.module.min.js
-        └── reportes/              (api-reportes, charts, export, tablas)
+        └── reportes/              (api-reportes, charts, tablas)
 
 ```
 
@@ -447,7 +447,7 @@ El proyecto implementa una cadena de fuentes y **nunca rellena nombres de ejempl
 1. **SUNAT, sin API key** (`SunatDniProvider`): convierte el DNI en su RUC 10 (`10` + DNI + dígito verificador) y busca ese RUC en el **Padrón Reducido RUC** local. Si la persona tiene RUC 10 y el padrón está importado, devuelve la razón social publicada por SUNAT. Es la única vía automática que no requiere token ni envía el DNI a un tercero.
 2. **Scrall, plan API Básico gratuito** (`SCRALL_API_KEY` configurada): consulta DNI→nombres y apellidos. Es un tercero, no RENIEC, y exige registro y clave; el código no llama a su endpoint sin autenticación aunque responda, porque sus términos exigen usuario autenticado.
 3. **Proveedor RENIEC autorizado** (`RENIEC_DNI_TOKEN` configurado): consulta la URL de `RENIEC_DNI_URL` (por defecto un proveedor compatible con Decolecta). Sin token, este paso se salta.
-4. **dniperu.com, gratis y sin clave** (`DniPeruProvider`, habilitado por defecto): replica el flujo de `example DNI and RUC search` **en el backend**, no en el navegador. Calienta la cookie de sesión, pide el token antirrobot (`cc_get_tokens`) cuando el sitio lo exige y repite la consulta con `cc_token`/`cc_sig`; luego parsea el mensaje `Clave: valor`. Es un tercero no oficial: puede cambiar o dejar de responder, y sus términos restringen la consulta automatizada (léelos antes de usarlo en producción). Se apaga con `DNIPERU_DNI_HABILITADO=false`.
+4. **dniperu.com, gratis y sin clave** (`DniPeruProvider`, habilitado por defecto): reproduce la consulta pública de ese sitio **en el backend**, no en el navegador. Calienta la cookie de sesión, pide el token antirrobot (`cc_get_tokens`) cuando el sitio lo exige y repite la consulta con `cc_token`/`cc_sig`; luego parsea el mensaje `Clave: valor`. Es un tercero no oficial: puede cambiar o dejar de responder, y sus términos restringen la consulta automatizada (léelos antes de usarlo en producción). Se apaga con `DNIPERU_DNI_HABILITADO=false`.
 5. **Modo manual**: si ninguna fuente tiene el documento, `motivo=SIN_FUENTE` o `NO_ENCONTRADO` y el registro continúa para escribir los nombres.
 
 Para **RUC**, además del Padrón Reducido local (`PadronRucProvider`), está `OpenRucProvider` (`openruc.com`, API pública sin clave, habilitada por defecto): devuelve razón social, estado, condición y dirección. Se apaga con `OPENRUC_RUC_HABILITADO=false`.
@@ -479,7 +479,7 @@ Luego `docker compose up -d backend`. La importación corre en segundo plano y p
 
 #### Fuente gratuita de DNI: dniperu.com (tercero, no oficial)
 
-`DniPeruProvider` reproduce el flujo de `example DNI and RUC search/file-ssu.py`, pero del lado del servidor: calienta la cookie de sesión, pide el token antirrobot (`cc_get_tokens`) y repite la consulta con `cc_token`/`cc_sig`. Está **habilitado por defecto** para que el registro no dependa de una clave.
+`DniPeruProvider` reproduce esa consulta pública, pero del lado del servidor: calienta la cookie de sesión, pide el token antirrobot (`cc_get_tokens`) y repite la consulta con `cc_token`/`cc_sig`. Está **habilitado por defecto** para que el registro no dependa de una clave.
 
 Riesgos que asumes al dejarlo activo:
 

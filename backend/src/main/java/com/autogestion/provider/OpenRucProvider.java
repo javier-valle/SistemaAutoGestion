@@ -16,8 +16,7 @@ import java.time.Duration;
 import java.util.Optional;
 
 /**
- * RUC gratis desde openruc.com (API pública, sin clave), igual que la
- * herramienta "example DNI and RUC search" pero ejecutada en el servidor.
+ * RUC gratis desde openruc.com (API pública, sin clave), resuelto en el servidor.
  *
  * Se usa cuando el Padrón Reducido RUC no está importado o no tiene ese RUC.
  * El navegador no puede llamarlo directamente por CORS; el backend sí.

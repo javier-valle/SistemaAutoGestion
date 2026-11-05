@@ -25,8 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * DNI gratis desde dniperu.com (tercero, NO oficial), igual que la herramienta
- * "example DNI and RUC search" pero ejecutado en el servidor.
+ * DNI gratis desde dniperu.com (tercero, NO oficial), resuelto en el servidor.
  *
  * Por qué vive aquí y no en el navegador: el sitio de origen no envía cabeceras
  * CORS, así que el navegador bloquea la llamada (el mensaje "Solicitud de origen

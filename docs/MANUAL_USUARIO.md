@@ -1,145 +1,268 @@
-# Manual de usuario — AutoGestión
+# Manual de Usuario — AutoGestión
 
-Uso del sistema por rol. La referencia técnica está en
-[GUIA_DESARROLLO.md](GUIA_DESARROLLO.md) y la matriz de permisos en
-[permisos.md](permisos.md).
+Sistema AutoGestión — Taller San Martín  
+Versión 2.0 — Noviembre 2026
 
-## 1. Acceso
+<!-- contenido -->
 
-| Perfil | Dirección | Credencial |
-| :-- | :-- | :-- |
-| Personal del taller | `http://localhost:8081/admin/` | Usuario y contraseña asignados por el administrador |
-| Cliente | `http://localhost:8081/` | Documento + código enviado al registrar, o consulta sin cuenta |
+# 1. ¿Qué es AutoGestión?
 
-Atajos comunes: `Ctrl+K` abre el buscador de páginas y el botón **¿Cómo usar?** inicia el
-recorrido guiado de la pantalla en la que estás. Cada pantalla trae un banner de tres pasos
-que se puede ocultar.
+AutoGestión es el sistema del Taller San Martín para manejar todo el proceso de atención de un vehículo: desde que el cliente lo deja hasta que se lo entrega reparado y con su comprobante de pago.
 
-## 2. Recepcionista
+Tiene dos portales:
 
-**Recibir un vehículo.** Recepción → busca al cliente por documento, nombre o teléfono. Si
-ya existe, elige su tarjeta y su vehículo; si no, créalo con el documento validado. Registra
-problema, combustible, kilometraje, daños y accesorios, y confirma. Anota el número de
-recepción y continúa en Cotización para el diagnóstico.
+**Portal del Cliente** — para que el dueño del vehículo pueda seguir el estado de su reparación, revisar sus cotizaciones y descargar sus comprobantes sin necesidad de llamar al taller.
 
-**Cotizar.** Elige la recepción pendiente y el mecánico (el sistema propone el menos
-ocupado), registra el diagnóstico y agrega servicios y productos; el total se calcula solo.
-Genera la cotización y márcala como aprobada cuando el cliente acepte.
+**Portal del Trabajador** — para el equipo interno del taller. Según tu rol (Recepcionista, Mecánico, Almacenero o Administrador), ves solo las pantallas y opciones que te corresponden.
 
-**Abrir la orden de trabajo.** Órdenes → elige la cotización aprobada y el mecánico → Crear.
-Desde ese momento el mecánico puede avanzar el estado.
+## El flujo general del taller
 
-**Cobrar y entregar.** Pago y Entrega → Cobrar → Boleta (DNI) o Factura (RUC, razón social y
-dirección fiscal) → método de pago → Confirmar. El comprobante se imprime o se descarga en
-PDF. Al final, registra la entrega del vehículo.
+Todo vehículo que entra al taller sigue este camino:
 
-**Clientes.** Busca y abre la ficha: vehículos, visitas y comprobantes. Desde ahí puedes
-iniciar una recepción con el cliente ya cargado.
+![Diagrama del flujo del proceso central del taller](evidencia/anexo-c4-proceso.png)
 
-## 3. Mecánico
+Recepción → Diagnóstico → Cotización → Aprobación del cliente → Orden de trabajo → Reparación → Pago y comprobante → Entrega
 
-Tu panel muestra el saludo con los trabajos pendientes ordenados por prioridad. Cada orden se
-avanza con un botón: **Iniciar → Pasar a prueba → Finalizar**. Al finalizar se habilita el
-cobro en caja.
+No importa qué rol tengas: tu trabajo es parte de este flujo. Más adelante se verá exactamente qué te toca hacer de acuerdo a tu rol.
 
-Con la orden en proceso o en prueba puedes usar **+ Repuesto** para descontar un producto del
-inventario; si no hay stock, el sistema lo bloquea. El inventario se consulta en modo lectura
-y las órdenes en el tablero kanban.
+# 2. Cómo entrar al sistema
 
-## 4. Almacenero
+## Si eres cliente
 
-**Stock.** Busca productos y revisa precio, costo y margen; el semáforo señala el stock bajo.
+Entra desde tu navegador a la dirección del portal. Verás dos opciones:
 
-**Compras.** Pestaña Registrar compra → proveedor (o créalo con RUC validado), documento y
-líneas con su costo. Al confirmar se actualiza el stock y el último costo.
+![Portal del cliente con sus dos formas de ingreso](assets/capturas/portal-cliente-login.png)
 
-**Mermas y ajustes.** Tipo, producto, cantidad y motivo. El motivo es obligatorio y queda
-registrado con tu usuario.
+**Documento + Placa:** si ya te registraron en el taller, ingresa tu DNI (o RUC) y la placa de tu vehículo. No necesitas contraseña.
 
-**Movimientos.** Filtra por tipo o fecha; el motivo aparece en el detalle. En Reportes →
-Inventario están el kardex por producto y la valorización.
+**Crear cuenta:** si es tu primera vez, llena tus datos y crea una cuenta con contraseña. La sesión se cierra cuando cierras la pestaña del navegador.
 
-## 5. Administrador
+## Si eres trabajador del taller
 
-Incluye todo lo anterior y además:
+Entra a la dirección del portal del trabajador. Verás un formulario de inicio de sesión con usuario y contraseña.
 
-- **Equipo**: crear, editar y desactivar personal, y restablecer contraseñas. El sistema
-  impide desactivar la propia cuenta o dejar la instalación sin ningún administrador.
-- **Gastos**: alquiler, servicios y sueldos, por categoría y fecha.
-- **Resultado**: utilidad estimada con la fórmula a la vista.
-- **Anulación de comprobantes**: exige motivo, deja rastro de auditoría y el número no se
-  reutiliza.
-- **Reportes**: todas las pestañas, con exportación por tabla a Excel y PDF, y consolidado de varias pestañas.
+![Formulario de inicio de sesión del portal del trabajador](assets/capturas/portal-trabajador-login.png)
 
-## 6. Módulo de reportes
+Cada trabajador tiene un usuario (correo) y una contraseña asignada por el administrador.
 
-### Pestañas y roles
+### Credenciales de prueba
 
-| Pestaña | Qué muestra | Roles |
-| :-- | :-- | :-- |
-| Resumen | Indicadores del periodo: clientes atendidos, ingresos, comprobantes, inventario | ADMIN |
-| Clientes | Clientes atendidos por día y recepciones por estado | ADMIN, RECEPCIONISTA |
-| Ingresos | Ingresos por día, resumen de comprobantes y servicios más pedidos | ADMIN |
-| Inventario | Stock bajo, consumo, kardex y entradas | ADMIN, ALMACENERO |
-| Gastos | Gastos por categoría en el periodo | ADMIN |
-| Resultado | Ingresos netos, costo de lo consumido, gastos y utilidad estimada | ADMIN |
-| Mecánicos | Órdenes y productividad por mecánico | ADMIN |
+Para demostración, el sistema incluye estos usuarios precargados:
 
-Las pestañas que no corresponden al rol no se muestran, y el backend rechaza la consulta
-aunque se invoque directamente.
+| Rol | Usuario | Contraseña |
+| --- | --- | --- |
+| Administrador | admin@sanmartin.pe | Admin-2026* |
+| Recepcionista | recepcionista@sanmartin.pe | Recep-2026* |
+| Mecánico | mecanico1@sanmartin.pe | Meca-2026* |
+| Almacenero | almacen@sanmartin.pe | Alma-2026* |
 
-### Rangos de fecha
+> Nota: un mecánico puede tener varias cuentas. En el sistema de prueba hay tres mecánicos disponibles.
 
-Los botones **Hoy**, **7 días**, **Mes** y **Mes anterior** fijan el rango; también se pueden
-escribir las fechas a mano. Todos los indicadores y gráficos respetan el rango elegido y se
-calculan con la zona `America/Lima`. Sin filtro, el sistema toma el mes en curso.
+# 3. Portal del Cliente
 
-### Exportación
+Cuando entras como cliente, llegas a tu panel principal. Ahí ves un saludo con tu nombre, cuántas órdenes tienes activas y tus vehículos registrados.
 
-Cada tabla ofrece dos botones: **Excel** y **PDF**. El archivo sale con el mismo diseño de los
-reportes (encabezado fijo, importes con formato de moneda, cifras numéricas de verdad y
-área de impresión A4), y la exportación trae todas las filas aunque en pantalla se muestren
-solo las primeras cien.
+![Panel principal del portal del cliente](assets/capturas/portal-cliente-panel.png)
 
-La opción **Exportar consolidado** reúne las pestañas seleccionadas en un solo archivo con
-portada, y es la que se entrega cuando se pide el reporte del periodo completo. El botón
-**PDF / Imprimir** de la cabecera genera una vista de impresión de la pestaña activa.
+### Estado de tu vehículo
 
-Los gráficos llevan título y descripción accesibles, así que un lector de pantalla puede
-anunciar qué muestra cada uno.
+En "Tus órdenes de trabajo" ves en qué paso va la reparación de tu vehículo: si está en diagnóstico, en reparación, esperando tu aprobación o ya listo para recoger.
 
-### Lectura de los resultados
+### Cotizaciones
 
-El resultado es una **estimación académica**, no un estado financiero contable: no incluye
-depreciación, deudas ni obligaciones tributarias. Las mermas y los ajustes negativos se
-restan como línea propia para que la diferencia con el conteo físico quede visible.
+Cuando el taller te prepara un presupuesto, aparece en esta sección. Puedes ver el detalle de servicios y repuestos con sus precios, y decidir si lo apruebas o lo rechazas directamente desde el portal. También puedes solicitar una cotización nueva si necesitas un servicio.
 
-## 7. Portal del cliente
+![Cotizaciones en el portal del cliente](assets/capturas/portal-cliente-cotizaciones.png)
 
-Con el documento, el cliente consulta el estado de su vehículo sin crear cuenta. Al
-registrarse con el código de verificación obtiene además el panel con sus vehículos, el
-detalle de sus órdenes, las cotizaciones para aprobar o rechazar y la solicitud de
-cotización.
+### Comprobantes
 
-La solicitud desde el portal no es una cotización con precios: es un aviso para que el taller
-revise el vehículo y elabore la cotización en recepción. Mientras una solicitud sigue
-pendiente, el mismo vehículo no admite otra, y un cliente no puede acumular más de tres.
+Todas las boletas y facturas emitidas a tu nombre quedan en "Mis comprobantes". Puedes descargar el PDF de cada una. Si pagaste en el taller y todavía no aparece, pídelo en recepción con tu placa.
 
-Las pantallas de comprobantes, historial, citas y encuesta están maquetadas pero todavía no
-tienen endpoint: muestran un aviso en lugar de un formulario que no guarda nada. La política
-de datos personales sí es definitiva en cuanto al canal de contacto, que hoy es el correo
-publicado ahí para ejercer los derechos ARCO.
+### Historial
 
-## 8. Glosario
+En "Historial" ves todas las visitas anteriores de tus vehículos, agrupadas por vehículo. Te sirve para saber cuándo fue el último servicio y planificar el siguiente.
 
-| Término | Significado |
-| :-- | :-- |
-| OT | Orden de trabajo: lo que el mecánico ejecuta sobre el vehículo |
-| DNI / RUC | Documento de persona (8 dígitos) / de empresa (11 dígitos) |
-| Boleta | Comprobante a consumidor final; sobre S/ 700 exige DNI |
-| Factura | Comprobante a empresa con RUC; da derecho a crédito fiscal |
-| Serie y correlativo | Folio único del comprobante: serie `B001`/`F001` más número secuencial |
-| IGV | Impuesto General a las Ventas, 18 %, incluido en los precios |
-| Kardex | Cuenta corriente del producto: saldo inicial + entradas − salidas |
-| Merma | Pérdida de inventario registrada con motivo |
-| Utilidad estimada | Ingresos sin IGV − costo de lo consumido − gastos operativos |
+### Solicitar una cita
+
+Si quieres agendar tu próxima visita, puedes hacerlo desde "Soporte" o en inicio "Pedir cita".
+
+### Tu cuenta
+
+En "Mi cuenta" ves tus datos personales y tus vehículos. Tu celular y correo los puedes actualizar desde "Mis datos"; el nombre y documento los administra el taller. Si necesitas eliminar tu cuenta, también puedes hacerlo desde ahí: se borran tus datos personales, pero los comprobantes y órdenes emitidos se conservan por obligación contable.
+
+# 4. Portal del Trabajador
+
+Cuando inicias sesión como trabajador, el sistema te lleva directamente a tu pantalla principal según tu rol. Solo ves las opciones que te corresponden.
+
+## 4.1 Recepcionista
+
+Eres el punto de entrada y salida del taller: recibes al cliente, registras su vehículo, armas el presupuesto, y al final cobras y entregas.
+
+![Panel del recepcionista](assets/capturas/recepcion-panel.png)
+
+Tu panel te muestra de un vistazo cuántas recepciones tienes activas, cuántas cotizaciones están pendientes y cuántas ya fueron aprobadas. A la derecha tienes accesos rápidos a las tareas más comunes.
+
+### Registrar una recepción
+
+Cuando un cliente llega con su vehículo, lo registras en 4 pasos:
+
+1. **Cliente** — buscas si ya existe (por documento, nombre o teléfono) o lo creas nuevo.
+2. **Vehículo** — seleccionas de sus vehículos registrados o agregas uno nuevo (placa, marca, modelo, año).
+3. **Problema** — describes qué le pasa al vehículo, nivel de combustible, kilometraje, daños previos y qué accesorios deja.
+4. **Confirmar** — revisas el resumen y registras la recepción.
+
+![Asistente de recepción de vehículo en 4 pasos](assets/capturas/recepcion-nueva.png)
+
+A la derecha ves la lista de todas las recepciones con filtros para ver solo las pendientes, en diagnóstico, cotizadas, etc.
+
+### Diagnóstico y cotización
+
+Una vez registrada la recepción, registras el diagnóstico y preparas la cotización:
+
+1. **Diagnóstico** — seleccionas la recepción, asignas un mecánico y registras los hallazgos de la revisión.
+2. **Cotización** — agregas los servicios con sus precios y los repuestos necesarios. El sistema calcula el total.
+3. **Aprobación** — el cliente aprueba o rechaza desde su portal o, si es presencial, registras su decisión en el sistema.
+
+![Diagnóstico y cotización](assets/capturas/diagnostico-cotizacion.png)
+
+### Crear una orden de trabajo
+
+Con la cotización aprobada, creas la orden de trabajo: seleccionas la cotización y asignas al mecánico. El sistema te muestra a los mecánicos ordenados por carga de trabajo — el que tiene menos órdenes aparece primero.
+
+![Cotización aprobada y creación de la orden de trabajo](assets/capturas/cotizacion-aprobada.png)
+
+### Cobrar y entregar
+
+Cuando el mecánico termina, te toca cobrar y entregar. En "Pago y Entrega" ves las órdenes finalizadas listas para cobrar.
+
+1. Eliges el tipo de comprobante: Boleta (persona natural, DNI) o Factura (empresa, RUC).
+2. Llenas los datos del cliente y el método de pago.
+3. Confirmas y se genera el comprobante. Después registras la entrega del vehículo.
+
+![Pago y entrega del vehículo](assets/capturas/pago-entrega.png)
+
+### Gestión de clientes
+
+En "Clientes" tienes el directorio completo: busca por documento, nombre, teléfono o placa. Puedes filtrar por tipo de documento y estado (activos o inactivos), y exportar la lista a CSV.
+
+### Comentarios
+
+Aquí ves y gestionas los comentarios y encuestas de satisfacción que los clientes dejan desde el portal.
+
+### Reportes
+
+Tienes acceso al reporte de Clientes: seleccionas un rango de fechas y ves la actividad. Puedes exportar en PDF o Excel.
+
+## 4.2 Mecánico
+
+Tu trabajo es ejecutar las reparaciones. El sistema te muestra solo tus órdenes asignadas y el inventario de repuestos.
+
+![Panel del mecánico](assets/capturas/mecanico-panel.png)
+
+Tu panel te saluda por nombre con 4 indicadores: órdenes asignadas, en proceso, finalizadas y pendientes.
+
+### Tus órdenes de trabajo
+
+Debajo ves las tarjetas de cada orden con el número, estado, placa, cliente y descripción del problema. Tú avanzas el estado con los botones de cada tarjeta:
+
+- Pendiente → "Iniciar" → pasa a En Proceso.
+- En Proceso → "Pasar a prueba" → pasa a En Prueba.
+- En Prueba → "Finalizar" → pasa a Finalizada.
+
+![Tarjetas de órdenes de trabajo del mecánico](assets/capturas/mecanico-ordenes.png)
+
+Al finalizar una orden, se habilita el cobro en recepción y ya no puedes registrar más repuestos en ella.
+
+### Registrar repuestos usados
+
+Mientras la orden está en proceso o en prueba, registras los repuestos que usaste con el botón "+ Repuesto". Seleccionas el producto del inventario, la cantidad, y el stock se descuenta al instante.
+
+### Ver el inventario
+
+Puedes consultar el inventario para saber qué repuestos hay disponibles y cuánto stock queda. Solo ves las pestañas de Stock, Movimientos y Alertas — las de compras, mermas y proveedores no te aparecen porque son del almacenero.
+
+### Órdenes de trabajo (vista general)
+
+También puedes ver tus órdenes asignadas en el tablero Kanban, organizadas por estado. Puedes avanzar su estado, pero no crear nuevas — eso lo hace el recepcionista.
+
+## 4.3 Almacenero
+
+Tu trabajo es mantener el inventario al día: registrar compras, controlar el stock y gestionar proveedores. Cuando entras al sistema, llegas directamente al inventario.
+
+![Inventario: pestaña Stock](assets/capturas/inventario-stock.png)
+
+### Stock
+
+En la primera pestaña ves todos los productos: nombre, tipo, precio de venta, costo, margen, stock actual y stock mínimo. Puedes buscar productos, ajustar cantidades, agregar nuevos y exportar la lista a CSV.
+
+### Movimientos
+
+El Kardex de movimientos te muestra todo lo que pasó con el inventario: entradas por compras, consumos por órdenes de trabajo, ajustes y mermas. Puedes filtrar por tipo de movimiento y rango de fechas.
+
+### Registrar compra
+
+Cuando llega mercadería, registras la compra: seleccionas el proveedor (o creas uno nuevo), ingresas el número de documento, y agregas las líneas con cada producto, cantidad y costo unitario. Al confirmar, el stock se actualiza automáticamente.
+
+![Registrar compra de mercadería](assets/capturas/inventario-compra.png)
+
+### Mermas y ajustes
+
+Si un producto se dañó, venció o necesita un ajuste de cantidad, lo registras aquí. Cada ajuste queda auditado con motivo y responsable.
+
+### Proveedores
+
+Aquí gestionas el directorio de proveedores: datos de contacto, RUC y notas.
+
+### Alertas
+
+El sistema te avisa cuando un producto está por debajo del stock mínimo. Así puedes actuar antes de quedarte sin un repuesto importante.
+
+### Dashboard
+
+Además del inventario, tienes acceso al Dashboard general: un resumen visual del estado del taller con indicadores principales y alertas de stock.
+
+### Reportes
+
+Puedes ver el reporte de Inventario: movimientos, valores y stock filtrado por fechas. Exportable en PDF o Excel.
+
+## 4.4 Administrador
+
+Como administrador tienes acceso a todo el sistema. Tu pantalla principal es el Dashboard con el panorama completo del taller.
+
+![Dashboard del administrador](assets/capturas/dashboard-admin.png)
+
+### Todo lo del recepcionista
+
+Puedes hacer todo lo que hace el recepcionista: recepciones, cotizaciones, órdenes de trabajo, cobros y entregas, clientes y comentarios.
+
+### Gestión de equipo
+
+En "Equipo" administras al personal del taller: crear usuarios, asignar roles, activar o desactivar cuentas. Ves la carga de trabajo de cada mecánico y puedes filtrar por rol.
+
+![Gestión de equipo](assets/capturas/equipo.png)
+
+### Reportes completos
+
+Tienes acceso a todos los reportes del sistema:
+
+- **Resumen** — panorama general del período seleccionado.
+- **Clientes** — actividad y datos de los clientes.
+- **Ingresos** — lo que entró al taller por servicios.
+- **Inventario** — movimientos y valores del almacén.
+- **Gastos** — compras y egresos.
+- **Resultado** — ganancia o pérdida del período.
+- **Mecánicos** — rendimiento individual de cada mecánico.
+
+![Reportes del sistema](assets/capturas/reportes.png)
+
+Puedes seleccionar un rango de fechas con los botones rápidos (Hoy, 7 días, Mes) o con fechas personalizadas. Cada tabla tiene su botón de Excel/PDF, y con "Exportar consolidado" generas un documento con los reportes que elijas.
+
+# 5. Anexos
+
+## Diagrama de arquitectura
+
+![Arquitectura por capas del sistema](evidencia/anexo-c2-arquitectura.png)
+
+## Modelo de datos
+
+![Modelo de datos del núcleo operativo](evidencia/anexo-c1-modelo-datos.png)

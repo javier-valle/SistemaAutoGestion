@@ -26,7 +26,7 @@ Riesgos conocidos:
 11 ventanas nuevas (agenda, garantías, caja, checklist, auditoría, cuentas por cobrar, notificaciones, productividad, TV, compras, políticas admin). Cada una: página + backend + migración + permisos.
 
 ## Fase 3: Políticas y cumplimiento
-Borradores técnicos con advertencia de revisión legal. Páginas en `frontend/pages/politicas/` y `frontend/portal/politicas.html`. Funcionalidad de consentimiento, ARCO, portabilidad, retención.
+Borradores técnicos con advertencia de revisión legal. Páginas en `frontend/admin/pages/politicas/` y `frontend/portal/politicas.html`. Funcionalidad de consentimiento, ARCO, portabilidad, retención.
 
 ## Fase 4: Rediseño Bl4z3
 Reemplazo completo del CSS y reconstrucción de todas las pantallas (existentes + nuevas) con layout 100% fluido, tokens, componentes, accesibilidad. Consolidación de CSS en capas mantenibles.
